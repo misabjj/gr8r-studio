@@ -1,4 +1,5 @@
 <script>
+  import { tick } from 'svelte';
   import { register } from '../../routes';
   import { store as loginRoute } from '../../routes/login';
   import { request as passwordRequest } from '../../routes/password';
@@ -13,6 +14,12 @@
   let showPassword = $state(false);
   let busy = $state(false);
   let errors = $state({});
+
+  async function togglePasswordVisibility() {
+    showPassword = !showPassword;
+    await tick();
+    document.getElementById('l-pw')?.focus();
+  }
 
   async function submit(event) {
     event.preventDefault();
@@ -74,7 +81,7 @@
         <div class="row"><label class="label" for="l-pw">Password</label><span class="sp"></span><a class="link" href={passwordRequest.url()}>Forgot password?</a></div>
         <div class="inwrap">
           <input class="input input-lg" id="l-pw" type={showPassword ? 'text' : 'password'} bind:value={password} autocomplete="current-password" style="padding-right:38px" aria-invalid={!!errors.password} />
-          <button type="button" class="ibtn ibtn-sm" style="position:absolute;right:5px" onclick={() => showPassword = !showPassword} aria-label={showPassword ? 'Hide password' : 'Show password'}>{@html ic(showPassword ? 'eye-off' : 'eye', 15)}</button>
+          <button type="button" class="ibtn ibtn-sm" style="position:absolute;right:5px" onclick={togglePasswordVisibility} aria-label={showPassword ? 'Hide password' : 'Show password'}>{@html ic(showPassword ? 'eye-off' : 'eye', 15)}</button>
         </div>
         {#if errors.password}<span class="err">{@html ic('circle-alert', 12)}{errors.password[0]}</span>{/if}
       </div>

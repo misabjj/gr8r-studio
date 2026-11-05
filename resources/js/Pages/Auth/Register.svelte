@@ -4,25 +4,13 @@
   import { ic, LOGO } from '@/src/core/icons.js';
   import AuthSocialButtons from '../../Components/AuthSocialButtons.svelte';
   import AuthThemeToggle from '../../Components/AuthThemeToggle.svelte';
+  import { strengthMeter } from '../../lib/password.js';
 
   let name = $state('');
   let email = $state('');
   let password = $state('');
   let busy = $state(false);
   let errors = $state({});
-
-  function strengthMeter(value) {
-    let score = 0;
-    if (value.length >= 8) score++;
-    if (value.length >= 12) score++;
-    if (/[0-9]/.test(value) && /[a-zA-Z]/.test(value)) score++;
-    if (/[^a-zA-Z0-9]/.test(value)) score++;
-    const color = ['var(--red)', 'var(--red)', 'var(--amber)', 'var(--green)', 'var(--green)'][score];
-    const label = ['Too short', 'Weak', 'Fair', 'Good', 'Strong'][score];
-    return value
-      ? `<div class="row" style="gap:8px"><div class="strength grow" aria-hidden="true">${[0, 1, 2, 3].map(index => `<i class="${index < score ? 'on' : ''}" style="--c:${color}"></i>`).join('')}</div><span style="font-size:11.5px;color:${color};width:60px;text-align:right">${label}</span></div>`
-      : '';
-  }
 
   async function submit(event) {
     event.preventDefault();
@@ -92,8 +80,8 @@
         {#if errors.email}<span class="err">{@html ic('circle-alert', 12)}{errors.email[0]}</span>{/if}
       </div>
       <div class="field">
-        <label class="label" for="r-password">Password</label>
-        <input class="input input-lg" class:is-error={!!errors.password} id="r-password" type="password" bind:value={password} autocomplete="new-password" required aria-invalid={!!errors.password} />
+        <label class="label" for="s-pw">Password</label>
+        <input class="input input-lg" class:is-error={!!errors.password} id="s-pw" type="password" bind:value={password} autocomplete="new-password" required aria-invalid={!!errors.password} />
         {@html strengthMeter(password)}
         {#if errors.password}<span class="err">{@html ic('circle-alert', 12)}{errors.password[0]}</span>{:else}<span class="hint">At least 10 characters with a number or symbol.</span>{/if}
       </div>

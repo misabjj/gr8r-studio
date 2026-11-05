@@ -2,6 +2,7 @@
   import { update as resetPassword } from '../../routes/password';
   import { ic, LOGO } from '@/src/core/icons.js';
   import AuthThemeToggle from '../../Components/AuthThemeToggle.svelte';
+  import { strengthMeter } from '../../lib/password.js';
 
   let { email: initialEmail = '', token } = $props();
   let password = $state('');
@@ -60,6 +61,7 @@
       <div class="field">
         <label class="label" for="r-pw">New password</label>
         <input class="input input-lg" class:is-error={!!errors.password} id="r-pw" type="password" bind:value={password} autocomplete="new-password" aria-invalid={!!errors.password} />
+        {@html strengthMeter(password)}
         {#if errors.password}<span class="err">{@html ic('circle-alert', 12)}{errors.password[0]}</span>{/if}
         {#if errors.form}<span class="err">{@html ic('circle-alert', 12)}{errors.form}</span>{/if}
       </div>
