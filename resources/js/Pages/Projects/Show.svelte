@@ -1,6 +1,7 @@
 <script>
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import ProjectCalendar from '../../Components/ProjectCalendar.svelte';
+  import ProjectTimeline from '../../Components/ProjectTimeline.svelte';
   import { store as taskStore } from '../../routes/projects/tasks';
   import { update as taskUpdate } from '../../routes/tasks';
   import { jsonRequest } from '../../lib/http.js';
@@ -168,7 +169,7 @@
       {:else if tab === 'activity'}
         <div class="page" style="max-width:780px;padding-top:18px"><div class="empty"><span class="empty-ic">{@html ic('activity', 20)}</span><h2>No activity yet</h2><p>Changes to this project will appear here.</p></div></div>
       {:else if tab === 'timeline'}
-        <div class="page"><section class="panel"><div class="empty"><span class="empty-ic">{@html ic('chart-gantt', 20)}</span><h2>Nothing on the timeline</h2><p>Give tasks a start and due date to see them here.</p><button class="btn btn-primary btn-sm" onclick={() => openCreateTask()}>{@html ic('plus', 14)}New task</button></div></section></div>
+        <ProjectTimeline {tasks} onCreate={openCreateTask} />
       {/if}
     </div>
   </div>
