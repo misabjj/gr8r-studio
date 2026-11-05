@@ -2,8 +2,10 @@
   import { Link } from '@inertiajs/svelte';
   import { register } from '../../routes';
   import { store as loginRoute } from '../../routes/login';
+  import { request as passwordRequest } from '../../routes/password';
   import { ic, LOGO } from '@/src/core/icons.js';
 
+  let { status = null } = $props();
   let email = $state('hello@gr8rstudio.com');
   let password = $state('');
   let remember = $state(true);
@@ -59,6 +61,7 @@
       <div style="display:flex;justify-content:center">{@html LOGO(30)}</div>
       <h1>Welcome back</h1>
       <p class="sub">Sign in to Gr8r Studio</p>
+      {#if status}<div class="alert ok" role="status">{@html ic('circle-check', 15)}<span>{status}</span></div>{/if}
       {#if errors.login}<div class="alert danger" role="alert">{@html ic('circle-alert', 15)}<span>{errors.login}</span></div>{/if}
       <div class="field">
         <label class="label" for="l-email">Email</label>
@@ -66,7 +69,7 @@
         {#if errors.email}<span class="err">{@html ic('circle-alert', 12)}{errors.email[0]}</span>{/if}
       </div>
       <div class="field">
-        <div class="row"><label class="label" for="l-pw">Password</label><span class="sp"></span></div>
+        <div class="row"><label class="label" for="l-pw">Password</label><span class="sp"></span><Link class="link" href={passwordRequest().url}>Forgot password?</Link></div>
         <div class="inwrap">
           <input class="input input-lg" id="l-pw" type={showPassword ? 'text' : 'password'} bind:value={password} autocomplete="current-password" style="padding-right:38px" aria-invalid={!!errors.password} />
           <button type="button" class="ibtn ibtn-sm" style="position:absolute;right:5px" onclick={() => showPassword = !showPassword} aria-label={showPassword ? 'Hide password' : 'Show password'}>{@html ic(showPassword ? 'eye-off' : 'eye', 15)}</button>

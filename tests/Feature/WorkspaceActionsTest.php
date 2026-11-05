@@ -5,6 +5,9 @@ use App\Enums\TaskStatus;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Inertia\Testing\AssertableInertia;
 
 it('renders the workspace overview through Inertia with project and task data', function () {
@@ -147,6 +150,72 @@ it('rejects registration when password confirmation does not match', function ()
 
     $this->assertGuest();
     $this->assertDatabaseMissing('users', ['email' => 'misa@example.com']);
+});
+
+it('sends a password reset link for a registered email address', function () {
+    Notification::fake();
+    User::factory()->create(['email' => 'misa@example.com']);
+
+    $this->postJson('/forgot-password', ['email' => 'misa@example.com'])
+        ->assertOk()
+        ->assertJsonPath('message', 'If an account exists for that email, reset instructions will be sent.');
+
+    Notification::assertSentTo(User::query()->where('email', 'misa@example.com')->first(), ResetPassword::class);
+});
+
+it('does not reveal whether an email address has an account', function () {
+    Notification::fake();
+
+    $this->postJson('/forgot-password', ['email' => 'unknown@example.com'])
+        ->assertOk()
+        ->assertJsonPath('message', 'If an account exists for that email, reset instructions will be sent.');
+
+    Notification::assertNothingSent();
+});
+
+it('renders the password reset page with its token and email', function () {
+    $user = User::factory()->create(['email' => 'misa@example.com']);
+    $token = Password::createToken($user);
+
+    $this->get("/reset-password/{$token}?email=misa%40example.com")
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Auth/ResetPassword')
+            ->where('token', $token)
+            ->where('email', 'misa@example.com'));
+});
+
+it('rejects a password reset with an invalid token', function () {
+    $user = User::factory()->create(['email' => 'misa@example.com']);
+
+    $this->from('/reset-password/invalid?email=misa%40example.com')
+        ->post('/reset-password', [
+            'token' => 'invalid',
+            'email' => 'misa@example.com',
+            'password' => 'a-new-secure-password',
+            'password_confirmation' => 'a-new-secure-password',
+        ])
+        ->assertRedirect('/reset-password/invalid?email=misa%40example.com')
+        ->assertSessionHasErrors('email');
+
+    expect($user->refresh()->password)->not->toBe('a-new-secure-password');
+});
+
+it('resets a password with a valid token', function () {
+    $user = User::factory()->create(['email' => 'misa@example.com']);
+    $token = Password::createToken($user);
+
+    $this->post('/reset-password', [
+        'token' => $token,
+        'email' => 'misa@example.com',
+        'password' => 'a-new-secure-password',
+        'password_confirmation' => 'a-new-secure-password',
+    ])->assertRedirect('/login');
+
+    $this->assertGuest();
+    $this->post('/login', ['email' => 'misa@example.com', 'password' => 'a-new-secure-password'])
+        ->assertRedirect('/');
+    $this->assertAuthenticatedAs($user);
 });
 
 it('returns the updated task as JSON for an asynchronous action', function () {
