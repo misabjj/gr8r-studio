@@ -79,7 +79,7 @@ logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\WorkspaceController::home
-* @see app/Http/Controllers/WorkspaceController.php:13
+* @see app/Http/Controllers/WorkspaceController.php:14
 * @route '/'
 */
 export const home = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ home.definition = {
 
 /**
 * @see \App\Http\Controllers\WorkspaceController::home
-* @see app/Http/Controllers/WorkspaceController.php:13
+* @see app/Http/Controllers/WorkspaceController.php:14
 * @route '/'
 */
 home.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ home.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\WorkspaceController::home
-* @see app/Http/Controllers/WorkspaceController.php:13
+* @see app/Http/Controllers/WorkspaceController.php:14
 * @route '/'
 */
 home.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -113,7 +113,7 @@ home.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\WorkspaceController::home
-* @see app/Http/Controllers/WorkspaceController.php:13
+* @see app/Http/Controllers/WorkspaceController.php:14
 * @route '/'
 */
 home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

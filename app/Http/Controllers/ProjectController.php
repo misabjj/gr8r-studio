@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Actions\Projects\CreateProject;
 use App\Http\Requests\StoreProjectRequest;
 use App\Models\Project;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +18,11 @@ class ProjectController extends Controller
     public function index(Request $request): Response
     {
         return Inertia::render('Projects/Index', [
-            'projects' => Project::ownedBy($request->user())->withCount('tasks')->latest()->get(),
+            'projects' => Project::ownedBy($request->user())
+                ->withCount('tasks')
+                ->withCount(['tasks as completed_tasks_count' => fn (Builder $query) => $query->completed()])
+                ->latest()
+                ->get(),
         ]);
     }
 
@@ -41,7 +47,7 @@ class ProjectController extends Controller
         abort_unless($project->owner_id === request()->user()->id, 404);
 
         return Inertia::render('Projects/Show', [
-            'project' => $project->load(['tasks' => fn ($query) => $query->latest()]),
+            'project' => $project->load(['tasks' => fn (HasMany $query) => $query->latest()]),
         ]);
     }
 }

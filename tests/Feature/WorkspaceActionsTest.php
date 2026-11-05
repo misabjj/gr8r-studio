@@ -46,6 +46,46 @@ it('limits workspace data to the signed-in user', function () {
             ->where('stats.projects', 1));
 });
 
+it('provides recent completed tasks and per-project completion counts for the workspace', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->for($user, 'owner')->create();
+    $completed = Task::factory()->for($project)->create(['status' => TaskStatus::Done]);
+    Task::factory()->for($project)->create(['status' => TaskStatus::Todo]);
+
+    $this->actingAs($user)->get('/')
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('projects.0.tasks_count', 2)
+            ->where('projects.0.completed_tasks_count', 1)
+            ->where('tasks.0.id', $completed->id));
+});
+
+it('renders the projects page with task and completion counts', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->for($user, 'owner')->create();
+    Task::factory()->for($project)->create(['status' => TaskStatus::Done]);
+    Task::factory()->for($project)->create(['status' => TaskStatus::Todo]);
+
+    $this->actingAs($user)->get('/projects')
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Projects/Index')
+            ->where('projects.0.tasks_count', 2)
+            ->where('projects.0.completed_tasks_count', 1));
+});
+
+it('renders a project page with its tasks', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->for($user, 'owner')->create();
+    $task = Task::factory()->for($project)->create(['title' => 'Ship the new workspace']);
+
+    $this->actingAs($user)->get("/projects/{$project->id}")
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Projects/Show')
+            ->where('project.id', $project->id)
+            ->where('project.tasks.0.id', $task->id));
+});
+
 it('queries open and completed task sets by their domain meaning', function () {
     $project = Project::factory()->create();
     $openTask = Task::factory()->for($project)->create(['status' => TaskStatus::Progress]);
