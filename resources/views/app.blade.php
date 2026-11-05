@@ -15,5 +15,7 @@
     </head>
     <body>
         @inertia
+        <div id="layer"></div>
+        <div id="toasts"></div>
     </body>
 </html>

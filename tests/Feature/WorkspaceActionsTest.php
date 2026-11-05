@@ -14,6 +14,8 @@ it('renders the workspace overview through Inertia with project and task data', 
 
     $this->actingAs($user)->get('/')
         ->assertOk()
+        ->assertSee('id="layer"', false)
+        ->assertSee('id="toasts"', false)
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Home/Index')
             ->has('projects', 1)
