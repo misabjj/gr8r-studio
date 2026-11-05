@@ -25,6 +25,7 @@ class TaskController extends Controller
             status: TaskStatus::from($request->validated('status', TaskStatus::Todo->value)),
             priority: TaskPriority::from($request->validated('priority', TaskPriority::None->value)),
             dueDate: $request->validated('due_date'),
+            assigneeId: $request->validated('assignee_id'),
         );
 
         if ($request->expectsJson()) {
@@ -51,6 +52,8 @@ class TaskController extends Controller
                 priority: isset($validated['priority']) ? TaskPriority::from($validated['priority']) : null,
                 updatesDueDate: array_key_exists('due_date', $validated),
                 dueDate: $validated['due_date'] ?? null,
+                updatesAssignee: array_key_exists('assignee_id', $validated),
+                assigneeId: $validated['assignee_id'] ?? null,
             ),
         );
 

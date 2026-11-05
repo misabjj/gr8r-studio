@@ -18,5 +18,7 @@ class UpdateTaskData
         public readonly ?TaskPriority $priority = null,
         public readonly bool $updatesDueDate = false,
         public readonly ?string $dueDate = null,
+        public readonly bool $updatesAssignee = false,
+        public readonly ?int $assigneeId = null,
     ) {}
 }

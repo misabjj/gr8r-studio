@@ -8,19 +8,22 @@
   import { ic } from '@/src/core/icons.js';
   import { prIcon, stIcon } from '@/src/ui/helpers.js';
 
-  let { projects = [], tasks = [], stats = {} } = $props();
+  let { projects = [], tasks = [], myTasks = [], stats = {} } = $props();
   const page = usePage();
   let localTasks = $state([]);
+  let localMyTasks = $state([]);
   let localStats = $state({ openTasks: 0, completedTasks: 0, completedThisWeek: 0, projects: 0 });
   let selectedTab = $state('upcoming');
   let errorMessage = $state('');
 
   $effect(() => { localTasks = [...tasks]; });
+  $effect(() => { localMyTasks = [...myTasks]; });
   $effect(() => { localStats = { openTasks: 0, completedTasks: 0, completedThisWeek: 0, projects: 0, ...stats }; });
 
   let openTasks = $derived(localTasks.filter(task => task.status !== 'done'));
   let completedTasks = $derived(localTasks.filter(task => task.status === 'done'));
-  let shownTasks = $derived(selectedTab === 'completed' ? completedTasks : selectedTab === 'overdue' ? overdueTasks : openTasks.filter(task => !overdueTasks.includes(task)));
+  let myOverdueTasks = $derived(localMyTasks.filter(task => task.status !== 'done' && task.due_date && new Date(`${task.due_date}T00:00:00`) < new Date(new Date().toDateString())));
+  let shownTasks = $derived(selectedTab === 'completed' ? localMyTasks.filter(task => task.status === 'done') : selectedTab === 'overdue' ? myOverdueTasks : localMyTasks.filter(task => task.status !== 'done' && !myOverdueTasks.includes(task)));
   let activeProjects = $derived(projects.filter(project => ['active', 'paused'].includes(project.status)));
   let overdueTasks = $derived(openTasks.filter(task => task.due_date && new Date(`${task.due_date}T00:00:00`) < new Date(new Date().toDateString())));
   let upcomingTasks = $derived(openTasks.filter(task => !overdueTasks.includes(task)));
@@ -59,6 +62,7 @@
     try {
       const updated = await jsonRequest(updateTaskRoute(task.id).url, 'PATCH', { status: nextStatus });
       localTasks = localTasks.map(item => item.id === updated.id ? { ...item, ...updated } : item);
+      localMyTasks = localMyTasks.map(item => item.id === updated.id ? { ...item, ...updated } : item);
       localStats = {
         ...localStats,
         openTasks: localStats.openTasks + (nextStatus === 'done' ? -1 : 1),
@@ -77,7 +81,7 @@
   <div class="page">
     <div class="ph">
       <div>
-        <h1>{greeting()}, {(page.props.auth?.user?.name || 'Tanjim Islam').split(' ')[0]}</h1>
+        <h1>{greeting()}, {(page.props.auth?.user?.name || '').split(' ')[0]}</h1>
         <p><span class="num">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span> · Here's what's happening across your workspace.</p>
       </div>
       <div class="acts">
@@ -89,8 +93,8 @@
     {#if errorMessage}<div class="alert danger" role="alert">{errorMessage}</div>{/if}
 
     <div class="stats" style="margin-bottom:16px">
-      <Link class="stat" href={projectsRoute().url}><span class="k">{@html ic('folder-kanban', 14)}Active projects</span><span class="v">{activeProjects.length}</span><span class="d">{projects.filter(project => project.status === 'paused').length} on hold</span></Link>
-      <Link class="stat" href={projectsRoute().url}><span class="k">{@html ic('circle-dashed', 14)}Open tasks</span><span class="v">{localStats.openTasks}</span><span class="d">Across your projects</span></Link>
+      <Link class="stat" href={projectsRoute().url}><span class="k">{@html ic('folder-kanban', 14)}Active projects</span><span class="v">{activeProjects.length}</span><span class="d">{projects.filter(project => project.status === 'risk').length} at risk</span></Link>
+      <Link class="stat" href={projectsRoute().url}><span class="k">{@html ic('circle-dashed', 14)}Open tasks</span><span class="v">{localStats.openTasks}</span><span class="d">{localMyTasks.filter(task => task.status !== 'done').length} assigned to you</span></Link>
       <Link class="stat" href={projectsRoute().url}><span class="k">{@html ic('circle-check', 14)}Completed</span><span class="v">{localStats.completedThisWeek}</span><span class="d up">this week</span></Link>
       <Link class="stat" href={projectsRoute().url}><span class="k">{@html ic('clock-alert', 14)}Overdue</span><span class="v" style={overdueTasks.length ? 'color:var(--red)' : ''}>{overdueTasks.length}</span><span class:bad={overdueTasks.length > 0} class="d">{overdueTasks.length ? 'need attention' : 'all on track'}</span></Link>
     </div>
@@ -102,9 +106,9 @@
             <h2 id="h-mytasks">My tasks</h2>
             <div class="acts">
               <div class="seg" role="tablist" aria-label="Task status">
-                <button role="tab" aria-selected={selectedTab === 'upcoming'} class:on={selectedTab === 'upcoming'} onclick={() => selectedTab = 'upcoming'}>Upcoming <span class="faint">{openTasks.filter(task => !overdueTasks.includes(task)).length}</span></button>
-                <button role="tab" aria-selected={selectedTab === 'overdue'} class:on={selectedTab === 'overdue'} onclick={() => selectedTab = 'overdue'}>Overdue <span class="faint">{overdueTasks.length}</span></button>
-                <button role="tab" aria-selected={selectedTab === 'completed'} class:on={selectedTab === 'completed'} onclick={() => selectedTab = 'completed'}>Completed <span class="faint">{completedTasks.length}</span></button>
+                <button role="tab" aria-selected={selectedTab === 'upcoming'} class:on={selectedTab === 'upcoming'} onclick={() => selectedTab = 'upcoming'}>Upcoming <span class="faint">{localMyTasks.filter(task => task.status !== 'done' && !myOverdueTasks.includes(task)).length}</span></button>
+                <button role="tab" aria-selected={selectedTab === 'overdue'} class:on={selectedTab === 'overdue'} onclick={() => selectedTab = 'overdue'}>Overdue <span class="faint">{myOverdueTasks.length}</span></button>
+                <button role="tab" aria-selected={selectedTab === 'completed'} class:on={selectedTab === 'completed'} onclick={() => selectedTab = 'completed'}>Completed <span class="faint">{localMyTasks.filter(task => task.status === 'done').length}</span></button>
               </div>
             </div>
           </div>
@@ -150,16 +154,17 @@
           <div class="panel-h"><h2>Upcoming deadlines</h2><div class="acts"><Link class="btn btn-sm btn-ghost" href={calendarRoute().url}>{@html ic('calendar', 13)}Calendar</Link></div></div>
           <div class="panel-b" style="padding-bottom:6px">
             {#each [{ label: 'Today', days: 0 }, { label: 'Tomorrow', days: 1 }, { label: 'This week', days: 2 }] as group}
-              {@const groupedTasks = upcomingTasks.filter(task => {
+              {@const allGroupedTasks = upcomingTasks.filter(task => {
                 if (!task.due_date) return false;
                 const due = new Date(`${task.due_date}T00:00:00`);
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const days = Math.floor((due - today) / 86400000);
                 return group.days === 2 ? days >= 2 && days <= 7 : days === group.days;
-              }).slice(0, 4)}
+              })}
+              {@const groupedTasks = allGroupedTasks.slice(0, 4)}
               <div style="margin-bottom:10px">
-                <div class="row" style="font-size:11.5px;font-weight:600;color:var(--text-2);margin-bottom:4px">{group.label}<span class="faint" style="font-weight:500">{groupedTasks.length}</span></div>
+                <div class="row" style="font-size:11.5px;font-weight:600;color:var(--text-2);margin-bottom:4px">{group.label}<span class="faint" style="font-weight:500">{allGroupedTasks.length}</span></div>
                 {#if groupedTasks.length}
                   {#each groupedTasks as task (task.id)}
                     <div class="row" style="height:30px;gap:8px;font-size:13px"><span class="pdot" style={`--c:var(--${task.project?.color || 'accent'})`}></span><span class="trunc grow">{task.title}</span>{@html prIcon(task.priority, 13)}</div>

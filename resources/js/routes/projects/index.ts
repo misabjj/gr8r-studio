@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefa
 import tasks from './tasks'
 /**
 * @see \App\Http\Controllers\ProjectController::index
-* @see app/Http/Controllers/ProjectController.php:18
+* @see app/Http/Controllers/ProjectController.php:20
 * @route '/projects'
 */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -17,7 +17,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\ProjectController::index
-* @see app/Http/Controllers/ProjectController.php:18
+* @see app/Http/Controllers/ProjectController.php:20
 * @route '/projects'
 */
 index.url = (options?: RouteQueryOptions) => {
@@ -26,7 +26,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ProjectController::index
-* @see app/Http/Controllers/ProjectController.php:18
+* @see app/Http/Controllers/ProjectController.php:20
 * @route '/projects'
 */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -36,7 +36,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\ProjectController::index
-* @see app/Http/Controllers/ProjectController.php:18
+* @see app/Http/Controllers/ProjectController.php:20
 * @route '/projects'
 */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -46,7 +46,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\ProjectController::store
-* @see app/Http/Controllers/ProjectController.php:29
+* @see app/Http/Controllers/ProjectController.php:31
 * @route '/projects'
 */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -61,7 +61,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\ProjectController::store
-* @see app/Http/Controllers/ProjectController.php:29
+* @see app/Http/Controllers/ProjectController.php:31
 * @route '/projects'
 */
 store.url = (options?: RouteQueryOptions) => {
@@ -70,7 +70,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ProjectController::store
-* @see app/Http/Controllers/ProjectController.php:29
+* @see app/Http/Controllers/ProjectController.php:31
 * @route '/projects'
 */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -80,7 +80,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\ProjectController::show
-* @see app/Http/Controllers/ProjectController.php:45
+* @see app/Http/Controllers/ProjectController.php:47
 * @route '/projects/{project}'
 */
 export const show = (args: { project: string | number | { id: string | number } } | [project: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -95,7 +95,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\ProjectController::show
-* @see app/Http/Controllers/ProjectController.php:45
+* @see app/Http/Controllers/ProjectController.php:47
 * @route '/projects/{project}'
 */
 show.url = (args: { project: string | number | { id: string | number } } | [project: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
@@ -128,7 +128,7 @@ show.url = (args: { project: string | number | { id: string | number } } | [proj
 
 /**
 * @see \App\Http\Controllers\ProjectController::show
-* @see app/Http/Controllers/ProjectController.php:45
+* @see app/Http/Controllers/ProjectController.php:47
 * @route '/projects/{project}'
 */
 show.get = (args: { project: string | number | { id: string | number } } | [project: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -138,7 +138,7 @@ show.get = (args: { project: string | number | { id: string | number } } | [proj
 
 /**
 * @see \App\Http\Controllers\ProjectController::show
-* @see app/Http/Controllers/ProjectController.php:45
+* @see app/Http/Controllers/ProjectController.php:47
 * @route '/projects/{project}'
 */
 show.head = (args: { project: string | number | { id: string | number } } | [project: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -146,10 +146,69 @@ show.head = (args: { project: string | number | { id: string | number } } | [pro
     method: 'head',
 })
 
+/**
+* @see \App\Http\Controllers\ProjectController::favorite
+* @see app/Http/Controllers/ProjectController.php:56
+* @route '/projects/{project}/favorite'
+*/
+export const favorite = (args: { project: string | number | { id: string | number } } | [project: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: favorite.url(args, options),
+    method: 'patch',
+})
+
+favorite.definition = {
+    methods: ["patch"],
+    url: '/projects/{project}/favorite',
+} satisfies RouteDefinition<["patch"]>
+
+/**
+* @see \App\Http\Controllers\ProjectController::favorite
+* @see app/Http/Controllers/ProjectController.php:56
+* @route '/projects/{project}/favorite'
+*/
+favorite.url = (args: { project: string | number | { id: string | number } } | [project: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { project: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { project: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            project: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        project: typeof args.project === 'object'
+        ? args.project.id
+        : args.project,
+    }
+
+    return favorite.definition.url
+            .replace('{project}', parsedArgs.project.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\ProjectController::favorite
+* @see app/Http/Controllers/ProjectController.php:56
+* @route '/projects/{project}/favorite'
+*/
+favorite.patch = (args: { project: string | number | { id: string | number } } | [project: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: favorite.url(args, options),
+    method: 'patch',
+})
+
 const projects = {
     index: Object.assign(index, index),
     store: Object.assign(store, store),
     show: Object.assign(show, show),
+    favorite: Object.assign(favorite, favorite),
     tasks: Object.assign(tasks, tasks),
 }
 

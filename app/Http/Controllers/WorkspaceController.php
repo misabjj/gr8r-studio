@@ -24,6 +24,7 @@ class WorkspaceController extends Controller
                 ->orderBy('name')
                 ->get(),
             'tasks' => Task::ownedBy($user)->with('project:id,name,key,color')->latest()->get(),
+            'myTasks' => Task::ownedBy($user)->assignedTo($user)->with('project:id,name,key,color')->latest()->get(),
             'stats' => [
                 'openTasks' => Task::ownedBy($user)->open()->count(),
                 'completedTasks' => Task::ownedBy($user)->completed()->count(),

@@ -13,12 +13,13 @@ class Project extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['owner_id', 'name', 'key', 'description', 'color', 'status'];
+    protected $fillable = ['owner_id', 'name', 'key', 'description', 'color', 'status', 'is_favorite'];
 
     protected function casts(): array
     {
         return [
             'status' => ProjectStatus::class,
+            'is_favorite' => 'boolean',
         ];
     }
 
@@ -35,6 +36,11 @@ class Project extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', ProjectStatus::Active->value);
+    }
+
+    public function scopeFavorited(Builder $query): Builder
+    {
+        return $query->where('is_favorite', true);
     }
 
     public function scopeOwnedBy(Builder $query, User $owner): Builder

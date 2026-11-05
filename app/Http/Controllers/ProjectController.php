@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Projects\CreateProject;
+use App\Actions\Projects\ToggleProjectFavorite;
 use App\Http\Requests\StoreProjectRequest;
+use App\Http\Requests\ToggleProjectFavoriteRequest;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -49,5 +51,10 @@ class ProjectController extends Controller
         return Inertia::render('Projects/Show', [
             'project' => $project->load(['tasks' => fn (HasMany $query) => $query->latest()]),
         ]);
+    }
+
+    public function toggleFavorite(Project $project, ToggleProjectFavoriteRequest $request, ToggleProjectFavorite $toggleProjectFavorite): JsonResponse
+    {
+        return response()->json($toggleProjectFavorite->handle($project));
     }
 }

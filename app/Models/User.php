@@ -23,6 +23,11 @@ class User extends Authenticatable
         return $this->hasMany(Project::class, 'owner_id');
     }
 
+    public function assignedTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'assignee_id');
+    }
+
     /**
      * Get the attributes that should be cast.
      *

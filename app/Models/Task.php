@@ -13,7 +13,7 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['project_id', 'title', 'description', 'status', 'priority', 'due_date', 'completed_at'];
+    protected $fillable = ['project_id', 'assignee_id', 'title', 'description', 'status', 'priority', 'due_date', 'completed_at'];
 
     protected function casts(): array
     {
@@ -30,6 +30,11 @@ class Task extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assignee_id');
+    }
+
     public function scopeOpen(Builder $query): Builder
     {
         return $query->where('status', '!=', TaskStatus::Done);
@@ -43,5 +48,10 @@ class Task extends Model
     public function scopeOwnedBy(Builder $query, User $owner): Builder
     {
         return $query->whereHas('project', fn (Builder $projectQuery) => $projectQuery->whereBelongsTo($owner, 'owner'));
+    }
+
+    public function scopeAssignedTo(Builder $query, User $user): Builder
+    {
+        return $query->whereBelongsTo($user, 'assignee');
     }
 }

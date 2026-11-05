@@ -3,7 +3,7 @@
   import { jsonRequest } from '../lib/http.js';
   import { ic } from '@/src/core/icons.js';
 
-  let { open = false, projects = [], initialDate = '', onClose, onCreated } = $props();
+  let { open = false, projects = [], initialDate = '', initialAssignee = null, onClose, onCreated } = $props();
   let title = $state('');
   let projectId = $state('');
   let status = $state('todo');
@@ -43,6 +43,7 @@
         status,
         priority,
         due_date: dueDate || null,
+        assignee_id: initialAssignee,
       });
       onCreated(task);
     } catch (error) {

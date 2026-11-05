@@ -143,6 +143,38 @@ it('renders workspace tasks only from the signed-in user projects', function () 
             ->where('tasks.0.title', 'Review homepage'));
 });
 
+it('renders My Tasks with only tasks assigned to the signed-in user', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $project = Project::factory()->for($user, 'owner')->create();
+    $assignedTask = Task::factory()->for($project)->create(['assignee_id' => $user->id]);
+    Task::factory()->for($project)->create(['assignee_id' => $otherUser->id]);
+    Task::factory()->for($project)->create(['assignee_id' => null]);
+
+    $this->actingAs($user)->get('/my-tasks')
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Tasks/MyTasks')
+            ->has('tasks', 1)
+            ->where('tasks.0.id', $assignedTask->id));
+});
+
+it('creates tasks assigned to the project owner and rejects assignments outside this workspace', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $project = Project::factory()->for($user, 'owner')->create();
+
+    $this->actingAs($user)->postJson("/projects/{$project->id}/tasks", [
+        'title' => 'Review the launch plan',
+        'assignee_id' => $user->id,
+    ])->assertCreated()->assertJsonPath('assignee_id', $user->id);
+
+    $this->actingAs($user)->postJson("/projects/{$project->id}/tasks", [
+        'title' => 'Review a private task',
+        'assignee_id' => $otherUser->id,
+    ])->assertUnprocessable()->assertJsonValidationErrors('assignee_id');
+});
+
 it('renders the workspace calendar and timeline with owner scoped tasks', function () {
     $user = User::factory()->create();
     $otherUser = User::factory()->create();
@@ -159,6 +191,55 @@ it('renders the workspace calendar and timeline with owner scoped tasks', functi
                 ->has('tasks', 1)
                 ->where('tasks.0.id', $task->id));
     }
+});
+
+it('renders the source-defined empty workspace pages', function () {
+    $user = User::factory()->create();
+    foreach ([
+        ['/activity', 'Workspace/Activity'],
+        ['/favorites', 'Workspace/Favorites'],
+        ['/inbox', 'Workspace/Inbox'],
+        ['/notifications', 'Workspace/Notifications'],
+    ] as [$url, $component]) {
+        $this->actingAs($user)->get($url)
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page->component($component));
+    }
+});
+
+it('toggles a project favorite and exposes only the signed-in user favorites', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $project = Project::factory()->for($user, 'owner')->create();
+    Project::factory()->for($otherUser, 'owner')->create(['is_favorite' => true]);
+
+    $this->actingAs($user)->patchJson("/projects/{$project->id}/favorite")
+        ->assertOk()
+        ->assertJsonPath('is_favorite', true);
+
+    $this->get('/favorites')
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Workspace/Favorites')
+            ->has('projects', 1)
+            ->where('projects.0.id', $project->id));
+});
+
+it('searches the signed-in workspace projects and tasks by the source search terms', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $project = Project::factory()->for($user, 'owner')->create(['name' => 'Website Refresh']);
+    $matchingTask = Task::factory()->for($project)->create(['title' => 'Review navigation']);
+    Task::factory()->for($project)->create(['title' => 'Write launch copy']);
+    Task::factory()->for(Project::factory()->for($otherUser, 'owner'))->create(['title' => 'Private navigation task']);
+
+    $this->actingAs($user)->get('/search?q=navigation')
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Workspace/Search')
+            ->where('query', 'navigation')
+            ->has('projects', 0)
+            ->has('tasks', 1)
+            ->where('tasks.0.id', $matchingTask->id));
 });
 
 it('renders a project page with its tasks', function () {

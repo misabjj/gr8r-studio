@@ -45,7 +45,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\TaskController::update
-* @see app/Http/Controllers/TaskController.php:37
+* @see app/Http/Controllers/TaskController.php:38
 * @route '/tasks/{task}'
 */
 export const update = (args: { task: string | number | { id: string | number } } | [task: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -60,7 +60,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\TaskController::update
-* @see app/Http/Controllers/TaskController.php:37
+* @see app/Http/Controllers/TaskController.php:38
 * @route '/tasks/{task}'
 */
 update.url = (args: { task: string | number | { id: string | number } } | [task: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
@@ -93,7 +93,7 @@ update.url = (args: { task: string | number | { id: string | number } } | [task:
 
 /**
 * @see \App\Http\Controllers\TaskController::update
-* @see app/Http/Controllers/TaskController.php:37
+* @see app/Http/Controllers/TaskController.php:38
 * @route '/tasks/{task}'
 */
 update.patch = (args: { task: string | number | { id: string | number } } | [task: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({

@@ -4,6 +4,7 @@
   import ProjectTimeline from '../../Components/ProjectTimeline.svelte';
   import { store as taskStore } from '../../routes/projects/tasks';
   import { update as taskUpdate } from '../../routes/tasks';
+  import { favorite as projectFavorite } from '../../routes/projects';
   import { jsonRequest } from '../../lib/http.js';
   import { ic } from '@/src/core/icons.js';
   import { prIcon, stIcon } from '@/src/ui/helpers.js';
@@ -19,6 +20,9 @@
   let dueDate = $state('');
   let busy = $state(false);
   let errorMessage = $state('');
+  let isFavorite = $state(false);
+
+  $effect(() => { isFavorite = project.is_favorite; });
 
   const columns = [
     { id: 'backlog', name: 'Backlog', icon: 'circle-dashed' },
@@ -84,6 +88,16 @@
     if (!value) return '';
     return new Date(`${value}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
+
+  async function toggleFavorite() {
+    try {
+      const updated = await jsonRequest(projectFavorite(project.id).url, 'PATCH', {});
+      isFavorite = updated.is_favorite;
+      project.is_favorite = updated.is_favorite;
+    } catch (error) {
+      errorMessage = error.message;
+    }
+  }
 </script>
 
 <svelte:head><title>{tab === 'overview' ? 'Overview' : statusName(tab)} · {project.name}</title></svelte:head>
@@ -94,6 +108,7 @@
       <div class="t">
         <span class="pico lg" style="--c:var(--accent)">{@html ic('folder', 18)}</span>
         <h1>{project.name}</h1>
+        <button class="ibtn ibtn-sm" style={isFavorite ? 'color:var(--amber)' : ''} aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={isFavorite} onclick={toggleFavorite}>{@html ic('star', 15)}</button>
         <span class={`pill ${project.status === 'completed' ? 'st-done' : project.status === 'paused' ? 'st-backlog' : 'st-progress'}`}>{projectStatusName(project.status)}</span>
         <span class="sp"></span>
         <span class="key">{project.key}</span>

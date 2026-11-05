@@ -105,7 +105,7 @@
           <Link class="pcard" href={projectShow(project.id).url} aria-label={project.name}>
             <div class="row">
               <span class="pico" style={`--c:var(--${project.color || 'indigo'})`}>{@html ic('folder', 14)}</span>
-              <div class="grow" style="min-width:0"><div class="row" style="gap:6px"><b class="trunc" style="font-weight:600;font-size:14px">{project.name}</b></div></div>
+              <div class="grow" style="min-width:0"><div class="row" style="gap:6px"><b class="trunc" style="font-weight:600;font-size:14px">{project.name}</b>{#if project.is_favorite}<span style="color:var(--amber)">{@html ic('star', 12)}</span>{/if}</div></div>
               <span class={`pill ${project.status === 'completed' ? 'st-done' : project.status === 'paused' ? 'st-backlog' : 'st-progress'}`}>{statusName(project.status)}</span>
             </div>
             <div class="desc">{project.description || ''}</div>

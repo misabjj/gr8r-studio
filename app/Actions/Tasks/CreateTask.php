@@ -16,6 +16,7 @@ class CreateTask
         TaskStatus $status,
         TaskPriority $priority,
         ?string $dueDate,
+        ?int $assigneeId,
     ): Task {
         $task = $project->tasks()->make();
         $task->title = $title;
@@ -23,6 +24,7 @@ class CreateTask
         $task->status = $status;
         $task->priority = $priority;
         $task->due_date = $dueDate;
+        $task->assignee_id = $assigneeId;
         $task->save();
 
         return $task;
