@@ -238,6 +238,28 @@ it('renders the source-defined empty workspace pages', function () {
     }
 });
 
+it('provides the original workspace feed data to seeded demo pages', function () {
+    $this->seed(DatabaseSeeder::class);
+    $user = User::query()->where('email', 'hello@gr8rstudio.com')->firstOrFail();
+
+    $this->actingAs($user)->get('/')
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Home/Index')
+            ->has('workspaceData.activity', 13));
+
+    $this->actingAs($user)->get('/activity')
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Workspace/Activity')
+            ->has('workspaceData.activity', 13)
+            ->has('workspaceData.members', 8));
+
+    $this->actingAs($user)->get('/inbox')
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Workspace/Inbox')
+            ->has('workspaceData.notifs', 10)
+            ->has('workspaceData.comments', 9));
+});
+
 it('toggles a project favorite and exposes only the signed-in user favorites', function () {
     $user = User::factory()->create();
     $otherUser = User::factory()->create();

@@ -3,19 +3,31 @@
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import { index as projectsRoute } from '../../routes/projects';
   import { index as calendarRoute } from '../../routes/calendar';
+  import { index as activityRoute } from '../../routes/activity';
+  import { index as myTasksRoute } from '../../routes/my-tasks';
+  import { show as projectShowRoute } from '../../routes/projects';
   import { update as updateTaskRoute } from '../../routes/tasks';
   import { jsonRequest } from '../../lib/http.js';
   import { ic } from '@/src/core/icons.js';
   import { PCOLORS } from '@/src/core/constants.js';
   import { prIcon, stIcon } from '@/src/ui/helpers.js';
+  import { ago } from '@/src/core/utils.js';
 
-  let { projects = [], tasks = [], myTasks = [], stats = {} } = $props();
+  let { projects = [], tasks = [], myTasks = [], stats = {}, workspaceData = {} } = $props();
   const page = usePage();
   let localTasks = $state([]);
   let localMyTasks = $state([]);
   let localStats = $state({ openTasks: 0, completedTasks: 0, completedThisWeek: 0, projects: 0 });
   let selectedTab = $state('upcoming');
   let errorMessage = $state('');
+
+  const workspaceMembers = $derived(workspaceData.members || []);
+  const workspaceProjects = $derived(workspaceData.projects || []);
+  const workspaceSourceTasks = $derived(workspaceData.tasks || []);
+  const workspaceMemberById = $derived(new Map(workspaceMembers.map(member => [member.id, member])));
+  const workspaceProjectById = $derived(new Map(workspaceProjects.map(project => [project.id, project])));
+  const workspaceTaskById = $derived(new Map(workspaceSourceTasks.map(task => [task.id, task])));
+  let recentActivity = $derived((workspaceData.activity || []).slice(0, 7));
 
   $effect(() => { localTasks = [...tasks]; });
   $effect(() => { localMyTasks = [...myTasks]; });
@@ -181,8 +193,33 @@
           </div>
         </section>
         <section class="panel">
-          <div class="panel-h"><h2>Recent activity</h2><div class="acts"><span class="btn btn-sm btn-ghost">View all</span></div></div>
-          <div class="panel-b feed lined"></div>
+          <div class="panel-h"><h2>Recent activity</h2><div class="acts"><Link class="btn btn-sm btn-ghost" href={activityRoute().url}>View all</Link></div></div>
+          <div class="panel-b feed lined">
+            {#each recentActivity as activity (activity.id)}
+              {@const member = workspaceMemberById.get(activity.by)}
+              {@const task = workspaceTaskById.get(activity.task)}
+              {@const project = workspaceProjectById.get(activity.project)}
+              <div class="fitem">
+                <span class="av sm" style={`--c:${member?.c || '#8A867E'}`} aria-label={member?.name || 'Someone'}>{member?.name?.split(' ').map(part => part[0]).join('').slice(0, 2) || '?'}</span>
+                <div class="grow">
+                  <b>{activity.by === workspaceData.me ? 'You' : member?.name || 'Someone'}</b>
+                  <span class="muted"> {activity.verb} </span>
+                  {#if task && project?.database_id}
+                    <Link class="obj" href={projectShowRoute(project.database_id).url}>{task.title}</Link>
+                  {:else if task}
+                    <span class="obj">{task.title}</span>
+                  {:else if project?.database_id}
+                    <Link class="obj" href={projectShowRoute(project.database_id).url}>{project.name}</Link>
+                  {:else if project}
+                    <span class="obj">{project.name}</span>
+                  {/if}
+                  {#if activity.extra}<span class="muted"> {activity.extra}</span>{/if}
+                  {#if project && task}<span class="faint"> in {project.name}</span>{/if}
+                </div>
+                <time>{ago(activity.at)}</time>
+              </div>
+            {/each}
+          </div>
         </section>
       </div>
     </div>

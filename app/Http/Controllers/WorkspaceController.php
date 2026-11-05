@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Workspace\GetWorkspaceDemoData;
 use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Models\Task;
@@ -12,7 +13,7 @@ use Inertia\Response;
 
 class WorkspaceController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, GetWorkspaceDemoData $getWorkspaceDemoData): Response
     {
         $user = $request->user();
 
@@ -31,6 +32,7 @@ class WorkspaceController extends Controller
                 'completedThisWeek' => Task::ownedBy($user)->completed()->where('completed_at', '>=', now()->startOfWeek())->count(),
                 'projects' => Project::ownedBy($user)->count(),
             ],
+            'workspaceData' => $getWorkspaceDemoData->handle($user),
         ]);
     }
 }
