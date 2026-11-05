@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ToggleProjectFavoriteRequest extends FormRequest
@@ -10,7 +11,8 @@ class ToggleProjectFavoriteRequest extends FormRequest
     {
         $project = $this->route('project');
 
-        return $this->user() !== null && $project?->owner_id === $this->user()->id;
+        return $project instanceof Project
+            && ($this->user()?->can('update', $project) ?? false);
     }
 
     public function rules(): array

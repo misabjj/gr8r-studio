@@ -11,7 +11,8 @@ class ToggleTaskFavoriteRequest extends FormRequest
     {
         $task = $this->route('task');
 
-        return $task instanceof Task && $this->user()?->id === $task->project->owner_id;
+        return $task instanceof Task
+            && ($this->user()?->can('update', $task) ?? false);
     }
 
     public function rules(): array

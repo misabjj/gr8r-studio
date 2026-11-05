@@ -533,3 +533,22 @@ it('does not allow a user to view or change another users project tasks', functi
     $this->actingAs($otherUser)->patch("/tasks/{$task->id}", ['status' => 'done'])->assertForbidden();
     $this->actingAs($otherUser)->post("/projects/{$project->id}/tasks", ['title' => 'Unauthorized'])->assertForbidden();
 });
+
+it('authorizes projects and tasks through their policies', function () {
+    $owner = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $project = Project::factory()->for($owner, 'owner')->create();
+    $task = Task::factory()->for($project)->create();
+
+    expect($owner->can('viewAny', Project::class))->toBeTrue()
+        ->and($owner->can('view', $project))->toBeTrue()
+        ->and($otherUser->can('view', $project))->toBeFalse()
+        ->and($owner->can('create', Project::class))->toBeTrue()
+        ->and($owner->can('update', $project))->toBeTrue()
+        ->and($otherUser->can('update', $project))->toBeFalse()
+        ->and($owner->can('viewAny', Task::class))->toBeTrue()
+        ->and($owner->can('create', [Task::class, $project]))->toBeTrue()
+        ->and($otherUser->can('create', [Task::class, $project]))->toBeFalse()
+        ->and($owner->can('update', $task))->toBeTrue()
+        ->and($otherUser->can('update', $task))->toBeFalse();
+});

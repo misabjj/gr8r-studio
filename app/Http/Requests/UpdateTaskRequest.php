@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -13,7 +14,8 @@ class UpdateTaskRequest extends FormRequest
     {
         $task = $this->route('task');
 
-        return $this->user() !== null && $task?->project?->owner_id === $this->user()->id;
+        return $task instanceof Task
+            && ($this->user()?->can('update', $task) ?? false);
     }
 
     public function rules(): array

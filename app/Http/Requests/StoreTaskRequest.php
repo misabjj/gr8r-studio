@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Models\Project;
+use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -13,7 +15,8 @@ class StoreTaskRequest extends FormRequest
     {
         $project = $this->route('project');
 
-        return $this->user() !== null && $project?->owner_id === $this->user()->id;
+        return $project instanceof Project
+            && ($this->user()?->can('create', [Task::class, $project]) ?? false);
     }
 
     public function rules(): array

@@ -19,6 +19,8 @@ class ProjectController extends Controller
 {
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Project::class);
+
         return Inertia::render('Projects/Index', [
             'projects' => Project::ownedBy($request->user())
                 ->withCount('tasks')
@@ -48,7 +50,7 @@ class ProjectController extends Controller
 
     public function show(Project $project): Response
     {
-        abort_unless($project->owner_id === request()->user()->id, 404);
+        $this->authorize('view', $project);
 
         return Inertia::render('Projects/Show', [
             'project' => $project->load(['tasks' => fn (HasMany $query) => $query->with('assignee:id,name')->latest()]),
