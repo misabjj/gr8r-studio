@@ -64,6 +64,11 @@ function lucideSubset() {
 }
 
 export default defineConfig({
+	resolve: {
+		alias: {
+			"@": path.resolve("."),
+		},
+	},
 	plugins: [
 		wayfinder({ skipDatabase: true }),
 		svelte(),

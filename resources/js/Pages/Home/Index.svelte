@@ -4,7 +4,7 @@
   import { index as projectsRoute } from '../../routes/projects';
   import { update as updateTaskRoute } from '../../routes/tasks';
   import { jsonRequest } from '../../lib/http.js';
-  import { ic } from '../../../../src/core/icons.js';
+  import { ic } from '@/src/core/icons.js';
 
   let { projects = [], tasks = [], stats = {} } = $props();
   const page = usePage();

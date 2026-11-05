@@ -2,7 +2,7 @@
   import { Link, router, usePage } from '@inertiajs/svelte';
   import { home, logout } from '../routes';
   import { index as projectsIndex, show as projectShow } from '../routes/projects';
-  import { ic, wsLogo } from '../../../src/core/icons.js';
+  import { ic, wsLogo } from '@/src/core/icons.js';
 
   const page = usePage();
   let { children } = $props();

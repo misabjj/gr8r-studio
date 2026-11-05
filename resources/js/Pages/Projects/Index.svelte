@@ -3,7 +3,7 @@
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import { show as projectShow, store as projectStore } from '../../routes/projects';
   import { jsonRequest } from '../../lib/http.js';
-  import { ic } from '../../../../src/core/icons.js';
+  import { ic } from '@/src/core/icons.js';
 
   let { projects: incomingProjects = [] } = $props();
   let projects = $state([]);

@@ -3,7 +3,7 @@
   import { store as taskStore } from '../../routes/projects/tasks';
   import { update as taskUpdate } from '../../routes/tasks';
   import { jsonRequest } from '../../lib/http.js';
-  import { ic } from '../../../../src/core/icons.js';
+  import { ic } from '@/src/core/icons.js';
 
   let { project } = $props();
   let tasks = $state([]);

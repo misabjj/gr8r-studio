@@ -1,6 +1,6 @@
 <script>
   import { store as loginRoute } from '../../routes/login';
-  import { ic, LOGO } from '../../../../src/core/icons.js';
+  import { ic, LOGO } from '@/src/core/icons.js';
 
   let email = $state('hello@gr8rstudio.com');
   let password = $state('');
