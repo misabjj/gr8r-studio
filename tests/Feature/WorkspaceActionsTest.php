@@ -242,6 +242,30 @@ it('toggles a project favorite and exposes only the signed-in user favorites', f
             ->where('projects.0.id', $project->id));
 });
 
+it('toggles task favorites and returns only the signed-in users favorite tasks', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $project = Project::factory()->for($user, 'owner')->create();
+    $task = Task::factory()->for($project)->create();
+    Task::factory()->for(Project::factory()->for($otherUser, 'owner'))->create(['is_favorite' => true]);
+
+    $this->actingAs($otherUser)->patchJson("/tasks/{$task->id}/favorite")->assertForbidden();
+
+    $this->actingAs($user)->patchJson("/tasks/{$task->id}/favorite")
+        ->assertOk()
+        ->assertJsonPath('is_favorite', true);
+
+    $this->get('/favorites')
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Workspace/Favorites')
+            ->has('tasks', 1)
+            ->where('tasks.0.id', $task->id));
+
+    $this->actingAs($user)->patchJson("/tasks/{$task->id}/favorite")
+        ->assertOk()
+        ->assertJsonPath('is_favorite', false);
+});
+
 it('searches the signed-in workspace projects and tasks by the source search terms', function () {
     $user = User::factory()->create();
     $otherUser = User::factory()->create();

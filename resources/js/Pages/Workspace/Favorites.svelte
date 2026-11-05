@@ -2,9 +2,11 @@
   import { Link } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import { index as projectsIndex } from '../../routes/projects';
+  import { favorite as taskFavorite } from '../../routes/tasks';
+  import { jsonRequest } from '../../lib/http.js';
   import { ic } from '@/src/core/icons.js';
 
-  let { projects = [] } = $props();
+  let { projects = [], tasks = [] } = $props();
 
   function completionFor(project) {
     return project.tasks_count ? Math.round((project.completed_tasks_count / project.tasks_count) * 100) : 0;
@@ -25,6 +27,11 @@
     if (!value) return '—';
     return new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
+
+  async function toggleTaskFavorite(task) {
+    const updated = await jsonRequest(taskFavorite(task.id).url, 'PATCH', {});
+    tasks = tasks.filter(item => item.id !== updated.id);
+  }
 </script>
 
 <svelte:head><title>Favorites · Gr8r Studio</title></svelte:head>
@@ -32,7 +39,7 @@
 <AppLayout>
   <div class="page wide">
     <div class="ph"><div><h1>Favorites</h1><p>Projects and tasks you've starred for quick access.</p></div></div>
-    {#if !projects.length}
+    {#if !projects.length && !tasks.length}
       <div class="panel"><div class="empty"><span class="empty-ic">{@html ic('star', 20)}</span><h2>No favorites yet</h2><p>Star a project or task to pin it here.</p><Link class="btn btn-secondary btn-sm" href={projectsIndex().url}>Browse projects</Link></div></div>
     {:else}
       <h2 class="sec" style="margin-bottom:10px">Projects <span class="faint" style="font-weight:500">{projects.length}</span></h2>
@@ -46,8 +53,22 @@
           </Link>
         {/each}
       </div>
-      <h2 class="sec" style="margin-bottom:6px">Tasks <span class="faint" style="font-weight:500">0</span></h2>
-      <p class="faint">Open a task and click the star to add it here.</p>
+      <h2 class="sec" style="margin-bottom:6px">Tasks <span class="faint" style="font-weight:500">{tasks.length}</span></h2>
+      {#if tasks.length}
+        <div class="panel" style="overflow:hidden">
+          {#each tasks as task (task.id)}
+            <div class="mini">
+              <span>{@html ic(task.status === 'done' ? 'circle-check' : 'circle', 14)}</span>
+              <span class="tt grow">{task.title}</span>
+              <span class="pj hide-m"><span class="pdot" style={`--c:var(--${task.project.color || 'indigo'})`}></span>{task.project.name}</span>
+              <span class="num muted hide-m">{shortDate(task.due_date)}</span>
+              <button type="button" class="ibtn ibtn-xs" style="color:var(--amber)" aria-label={`Remove ${task.title} from favorites`} onclick={() => toggleTaskFavorite(task)}>{@html ic('star', 13)}</button>
+            </div>
+          {/each}
+        </div>
+      {:else}
+        <p class="faint">Open a task and click the star to add it here.</p>
+      {/if}
     {/if}
   </div>
 </AppLayout>

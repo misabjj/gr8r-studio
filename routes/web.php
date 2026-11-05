@@ -47,4 +47,5 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('projects/{project}/favorite', [ProjectController::class, 'toggleFavorite'])->name('projects.favorite');
     Route::post('projects/{project}/tasks', [TaskController::class, 'store'])->name('projects.tasks.store');
     Route::patch('tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::patch('tasks/{task}/favorite', [TaskController::class, 'toggleFavorite'])->name('tasks.favorite');
 });

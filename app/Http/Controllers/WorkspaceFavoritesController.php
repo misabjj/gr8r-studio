@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\Task;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,6 +19,11 @@ class WorkspaceFavoritesController extends Controller
                 ->withCount('tasks')
                 ->withCount(['tasks as completed_tasks_count' => fn (Builder $query) => $query->completed()])
                 ->orderBy('name')
+                ->get(),
+            'tasks' => Task::ownedBy($request->user())
+                ->favorited()
+                ->with(['project:id,name,key,color', 'assignee:id,name'])
+                ->orderBy('title')
                 ->get(),
         ]);
     }

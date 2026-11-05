@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Actions\Tasks\CreateTask;
 use App\Actions\Tasks\UpdateTask;
+use App\Actions\Tasks\ToggleTaskFavorite;
 use App\Data\Tasks\UpdateTaskData;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
+use App\Http\Requests\ToggleTaskFavoriteRequest;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
@@ -16,6 +18,11 @@ use Illuminate\Http\RedirectResponse;
 
 class TaskController extends Controller
 {
+    public function toggleFavorite(Task $task, ToggleTaskFavoriteRequest $request, ToggleTaskFavorite $toggleTaskFavorite): JsonResponse
+    {
+        return response()->json($toggleTaskFavorite->handle($task));
+    }
+
     public function store(Project $project, StoreTaskRequest $request, CreateTask $createTask): RedirectResponse|JsonResponse
     {
         $task = $createTask->handle(

@@ -13,7 +13,7 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['project_id', 'assignee_id', 'title', 'description', 'status', 'priority', 'start_date', 'due_date', 'completed_at'];
+    protected $fillable = ['project_id', 'assignee_id', 'title', 'description', 'status', 'priority', 'is_favorite', 'start_date', 'due_date', 'completed_at'];
 
     protected function casts(): array
     {
@@ -21,6 +21,7 @@ class Task extends Model
             'due_date' => 'date',
             'start_date' => 'date',
             'completed_at' => 'datetime',
+            'is_favorite' => 'boolean',
             'status' => TaskStatus::class,
             'priority' => TaskPriority::class,
         ];
@@ -54,5 +55,10 @@ class Task extends Model
     public function scopeAssignedTo(Builder $query, User $user): Builder
     {
         return $query->whereBelongsTo($user, 'assignee');
+    }
+
+    public function scopeFavorited(Builder $query): Builder
+    {
+        return $query->where('is_favorite', true);
     }
 }

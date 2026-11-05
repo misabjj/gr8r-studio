@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\TaskController::store
-* @see app/Http/Controllers/TaskController.php:19
+* @see app/Http/Controllers/TaskController.php:26
 * @route '/projects/{project}/tasks'
 */
 export const store = (args: { project: string | number | { id: string | number } } | [project: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\TaskController::store
-* @see app/Http/Controllers/TaskController.php:19
+* @see app/Http/Controllers/TaskController.php:26
 * @route '/projects/{project}/tasks'
 */
 store.url = (args: { project: string | number | { id: string | number } } | [project: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
@@ -49,7 +49,7 @@ store.url = (args: { project: string | number | { id: string | number } } | [pro
 
 /**
 * @see \App\Http\Controllers\TaskController::store
-* @see app/Http/Controllers/TaskController.php:19
+* @see app/Http/Controllers/TaskController.php:26
 * @route '/projects/{project}/tasks'
 */
 store.post = (args: { project: string | number | { id: string | number } } | [project: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({

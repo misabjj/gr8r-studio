@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\TaskController::store
-* @see app/Http/Controllers/TaskController.php:19
+* @see app/Http/Controllers/TaskController.php:26
 * @route '/projects/{project}/tasks'
 */
 export const store = (args: { project: string | number | { id: string | number } } | [project: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\TaskController::store
-* @see app/Http/Controllers/TaskController.php:19
+* @see app/Http/Controllers/TaskController.php:26
 * @route '/projects/{project}/tasks'
 */
 store.url = (args: { project: string | number | { id: string | number } } | [project: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
@@ -49,7 +49,7 @@ store.url = (args: { project: string | number | { id: string | number } } | [pro
 
 /**
 * @see \App\Http\Controllers\TaskController::store
-* @see app/Http/Controllers/TaskController.php:19
+* @see app/Http/Controllers/TaskController.php:26
 * @route '/projects/{project}/tasks'
 */
 store.post = (args: { project: string | number | { id: string | number } } | [project: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ store.post = (args: { project: string | number | { id: string | number } } | [pr
 
 /**
 * @see \App\Http\Controllers\TaskController::update
-* @see app/Http/Controllers/TaskController.php:39
+* @see app/Http/Controllers/TaskController.php:46
 * @route '/tasks/{task}'
 */
 export const update = (args: { task: string | number | { id: string | number } } | [task: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -74,7 +74,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\TaskController::update
-* @see app/Http/Controllers/TaskController.php:39
+* @see app/Http/Controllers/TaskController.php:46
 * @route '/tasks/{task}'
 */
 update.url = (args: { task: string | number | { id: string | number } } | [task: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
@@ -107,7 +107,7 @@ update.url = (args: { task: string | number | { id: string | number } } | [task:
 
 /**
 * @see \App\Http\Controllers\TaskController::update
-* @see app/Http/Controllers/TaskController.php:39
+* @see app/Http/Controllers/TaskController.php:46
 * @route '/tasks/{task}'
 */
 update.patch = (args: { task: string | number | { id: string | number } } | [task: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -115,6 +115,64 @@ update.patch = (args: { task: string | number | { id: string | number } } | [tas
     method: 'patch',
 })
 
-const TaskController = { store, update }
+/**
+* @see \App\Http\Controllers\TaskController::toggleFavorite
+* @see app/Http/Controllers/TaskController.php:21
+* @route '/tasks/{task}/favorite'
+*/
+export const toggleFavorite = (args: { task: string | number | { id: string | number } } | [task: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: toggleFavorite.url(args, options),
+    method: 'patch',
+})
+
+toggleFavorite.definition = {
+    methods: ["patch"],
+    url: '/tasks/{task}/favorite',
+} satisfies RouteDefinition<["patch"]>
+
+/**
+* @see \App\Http\Controllers\TaskController::toggleFavorite
+* @see app/Http/Controllers/TaskController.php:21
+* @route '/tasks/{task}/favorite'
+*/
+toggleFavorite.url = (args: { task: string | number | { id: string | number } } | [task: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { task: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { task: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            task: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        task: typeof args.task === 'object'
+        ? args.task.id
+        : args.task,
+    }
+
+    return toggleFavorite.definition.url
+            .replace('{task}', parsedArgs.task.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\TaskController::toggleFavorite
+* @see app/Http/Controllers/TaskController.php:21
+* @route '/tasks/{task}/favorite'
+*/
+toggleFavorite.patch = (args: { task: string | number | { id: string | number } } | [task: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: toggleFavorite.url(args, options),
+    method: 'patch',
+})
+
+const TaskController = { store, update, toggleFavorite }
 
 export default TaskController
