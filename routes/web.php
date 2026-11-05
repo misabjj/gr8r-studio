@@ -6,7 +6,11 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskIndexController;
 use App\Http\Controllers\WorkspaceController;
+use App\Http\Controllers\WorkspaceCalendarController;
+use App\Http\Controllers\WorkspaceOverviewController;
+use App\Http\Controllers\WorkspaceTimelineController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function (): void {
@@ -23,6 +27,10 @@ Route::middleware('guest')->group(function (): void {
 Route::middleware('auth')->group(function (): void {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::get('/', [WorkspaceController::class, 'index'])->name('home');
+    Route::get('/overview', [WorkspaceOverviewController::class, 'index'])->name('overview');
+    Route::get('/tasks', [TaskIndexController::class, 'index'])->name('tasks.index');
+    Route::get('/calendar', [WorkspaceCalendarController::class, 'index'])->name('calendar.index');
+    Route::get('/timeline', [WorkspaceTimelineController::class, 'index'])->name('timeline.index');
     Route::resource('projects', ProjectController::class)->only(['index', 'store', 'show']);
     Route::post('projects/{project}/tasks', [TaskController::class, 'store'])->name('projects.tasks.store');
     Route::patch('tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');

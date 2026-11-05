@@ -108,6 +108,59 @@ it('renders the projects page with task and completion counts', function () {
             ->where('projects.0.completed_tasks_count', 1));
 });
 
+it('renders the workspace overview with projects and task status totals', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->for($user, 'owner')->create(['name' => 'Website Redesign']);
+    Task::factory()->for($project)->create(['status' => TaskStatus::Todo]);
+    Task::factory()->for($project)->create(['status' => TaskStatus::Done]);
+
+    $this->actingAs($user)->get('/overview')
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Workspace/Overview')
+            ->has('projects', 1)
+            ->where('stats.tasks', 2)
+            ->where('stats.openTasks', 1)
+            ->where('stats.completedTasks', 1)
+            ->where('statusCounts.todo', 1)
+            ->where('statusCounts.done', 1));
+});
+
+it('renders workspace tasks only from the signed-in user projects', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $project = Project::factory()->for($user, 'owner')->create();
+    $otherProject = Project::factory()->for($otherUser, 'owner')->create();
+    $task = Task::factory()->for($project)->create(['title' => 'Review homepage']);
+    Task::factory()->for($otherProject)->create(['title' => 'Private task']);
+
+    $this->actingAs($user)->get('/tasks')
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Tasks/Index')
+            ->has('tasks', 1)
+            ->where('tasks.0.id', $task->id)
+            ->where('tasks.0.title', 'Review homepage'));
+});
+
+it('renders the workspace calendar and timeline with owner scoped tasks', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $project = Project::factory()->for($user, 'owner')->create();
+    $otherProject = Project::factory()->for($otherUser, 'owner')->create();
+    $task = Task::factory()->for($project)->create();
+    Task::factory()->for($otherProject)->create();
+
+    foreach ([['/calendar', 'Workspace/Calendar'], ['/timeline', 'Workspace/Timeline']] as [$url, $component]) {
+        $this->actingAs($user)->get($url)
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component($component)
+                ->has('tasks', 1)
+                ->where('tasks.0.id', $task->id));
+    }
+});
+
 it('renders a project page with its tasks', function () {
     $user = User::factory()->create();
     $project = Project::factory()->for($user, 'owner')->create();

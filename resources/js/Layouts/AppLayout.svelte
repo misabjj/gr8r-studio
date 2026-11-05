@@ -1,7 +1,10 @@
 <script>
   import { Link, router, usePage } from '@inertiajs/svelte';
-  import { home, logout } from '../routes';
+  import { home, logout, overview } from '../routes';
   import { index as projectsIndex, show as projectShow } from '../routes/projects';
+  import { index as tasksIndex } from '../routes/tasks';
+  import { index as calendarIndex } from '../routes/calendar';
+  import { index as timelineIndex } from '../routes/timeline';
   import { ic, wsLogo } from '@/src/core/icons.js';
 
   const page = usePage();
@@ -9,6 +12,8 @@
   let collapsed = $state(false);
   let projects = $derived(page.props.projects || []);
   let currentPath = $derived(page.url.split('?')[0]);
+  let currentLabel = $derived(currentPath === '/overview' ? 'Overview' : currentPath === '/tasks' ? 'Tasks' : currentPath === '/calendar' ? 'Calendar' : currentPath === '/timeline' ? 'Timeline' : currentPath.startsWith('/projects') ? 'Projects' : 'Home');
+  let currentHref = $derived(currentPath === '/overview' ? overview().url : currentPath === '/tasks' ? tasksIndex().url : currentPath === '/calendar' ? calendarIndex().url : currentPath === '/timeline' ? timelineIndex().url : currentPath.startsWith('/projects') ? projectsIndex().url : home().url);
   let initials = $derived((page.props.auth?.user?.name || 'Tanjim Islam').split(' ').map(name => name[0]).slice(0, 2).join(''));
 
   function signOut() {
@@ -36,11 +41,11 @@
       <button class="sitem" type="button">{@html ic('bell', 16)}<span>Notifications</span></button>
       <div class="sgroup">
         <div class="sgroup-h">Workspace</div>
-        <Link class="sitem" href={home().url}>{@html ic('layout-dashboard', 16)}<span>Overview</span></Link>
+        <Link class={currentPath === '/overview' ? 'sitem active' : 'sitem'} href={overview().url}>{@html ic('layout-dashboard', 16)}<span>Overview</span></Link>
         <Link class={currentPath.startsWith('/projects') ? 'sitem active' : 'sitem'} href={projectsIndex().url}>{@html ic('folder-kanban', 16)}<span>Projects</span></Link>
-        <button class="sitem" type="button">{@html ic('list-checks', 16)}<span>Tasks</span></button>
-        <button class="sitem" type="button">{@html ic('calendar', 16)}<span>Calendar</span></button>
-        <button class="sitem" type="button">{@html ic('chart-gantt', 16)}<span>Timeline</span></button>
+        <Link class={currentPath === '/tasks' ? 'sitem active' : 'sitem'} href={tasksIndex().url}>{@html ic('list-checks', 16)}<span>Tasks</span></Link>
+        <Link class={currentPath === '/calendar' ? 'sitem active' : 'sitem'} href={calendarIndex().url}>{@html ic('calendar', 16)}<span>Calendar</span></Link>
+        <Link class={currentPath === '/timeline' ? 'sitem active' : 'sitem'} href={timelineIndex().url}>{@html ic('chart-gantt', 16)}<span>Timeline</span></Link>
         <button class="sitem" type="button">{@html ic('users', 16)}<span>Members</span></button>
         <button class="sitem" type="button">{@html ic('activity', 16)}<span>Activity</span></button>
       </div>
@@ -65,7 +70,7 @@
   <main class="main" id="main">
     <header class="topbar">
       <nav class="crumbs trunc" aria-label="Breadcrumb">
-        <Link class="cur" href={currentPath.startsWith('/projects') ? projectsIndex().url : home().url}>{currentPath.startsWith('/projects') ? 'Projects' : 'Home'}</Link>
+        <Link class="cur" href={currentHref}>{currentLabel}</Link>
       </nav>
       <span class="sp"></span>
       <button class="topsearch" aria-label="Search and commands">{@html ic('search', 14)}<span class="lbltxt">Search or jump to…</span><span class="kbd">⌘K</span></button>

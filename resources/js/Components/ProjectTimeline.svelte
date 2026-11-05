@@ -2,10 +2,11 @@
   import { ic } from '@/src/core/icons.js';
   import { stIcon } from '@/src/ui/helpers.js';
 
-  let { tasks = [], onCreate } = $props();
+  let { tasks = [], onCreate, initialGroup = 'status', project = null } = $props();
   let zoom = $state('week');
   let group = $state('status');
   let anchor = $state(new Date());
+  $effect(() => { group = initialGroup; });
   const statuses = [
     { id: 'backlog', name: 'Backlog' },
     { id: 'todo', name: 'To Do' },
@@ -51,7 +52,14 @@
     return months;
   });
   let datedTasks = $derived(tasks.filter(task => task.due_date));
-  let groups = $derived(group === 'none' ? [{ id: 'all', name: '', tasks: datedTasks }] : statuses.map(status => ({ ...status, tasks: datedTasks.filter(task => task.status === status.id) })).filter(status => status.tasks.length));
+  let groups = $derived.by(() => {
+    if (group === 'none') return [{ id: 'all', name: '', tasks: datedTasks }];
+    if (group === 'project') {
+      const projects = new Map(datedTasks.map(task => [String(task.project_id), task.project]));
+      return [...projects.entries()].map(([id, taskProject]) => ({ id, name: taskProject?.name || '', color: taskProject?.color, tasks: datedTasks.filter(task => String(task.project_id) === id) }));
+    }
+    return statuses.map(status => ({ ...status, tasks: datedTasks.filter(task => task.status === status.id) })).filter(status => status.tasks.length);
+  });
   let todayOffset = $derived(Math.floor((new Date().setHours(0, 0, 0, 0) - firstDate.getTime()) / 86400000) * dayWidth);
 </script>
 
@@ -66,7 +74,7 @@
   <div class="tl">
     <div class="tl-left"><div class="tl-head">Task</div><div class="tl-rows">
       {#each groups as taskGroup (taskGroup.id)}
-        {#if group !== 'none'}<div class="tl-row g">{@html ic('circle-dot', 12)}{taskGroup.name}<span class="faint" style="font-weight:500">{taskGroup.tasks.length}</span></div>{/if}
+        {#if group !== 'none'}<div class="tl-row g">{#if group === 'project'}<span class="pdot" style={`--c:var(--${taskGroup.color || 'indigo'})`}></span>{:else}{@html stIcon(taskGroup.id, 12)}{/if}{taskGroup.name}<span class="faint" style="font-weight:500">{taskGroup.tasks.length}</span></div>{/if}
         {#each taskGroup.tasks as task (task.id)}<div class="tl-row">{@html stIcon(task.status, 13)}<span class="trunc grow" style={task.status === 'done' ? 'color:var(--text-3)' : ''}>{task.title}</span></div>{/each}
       {/each}
       <div style="height:40px"></div>
@@ -84,7 +92,7 @@
             {@const taskDate = new Date(`${task.due_date}T00:00:00`)}
             {@const offset = Math.floor((taskDate.getTime() - firstDate.getTime()) / 86400000)}
             <div class="tl-rowbg" style={`top:${row * rowHeight}px`}></div>
-            <div class={`bar ${task.status === 'done' ? 'done' : ''}`} style={`--c:var(--st-${task.status});left:${offset * dayWidth}px;top:${row * rowHeight + 7}px;width:${dayWidth}px`} title={task.title}></div>
+            <div class={`bar ${task.status === 'done' ? 'done' : ''}`} style={`--c:${project ? `var(--${project.color || 'indigo'})` : `var(--st-${task.status})`};left:${offset * dayWidth}px;top:${row * rowHeight + 7}px;width:${dayWidth}px`} title={task.title}></div>
             <div class="bar-lbl" style={`left:${offset * dayWidth + dayWidth + 8}px;top:${row * rowHeight + 10}px`}>{task.title}</div>
           {/each}
         {/each}

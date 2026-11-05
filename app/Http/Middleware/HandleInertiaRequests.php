@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ProjectStatus;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -41,7 +42,11 @@ class HandleInertiaRequests extends Middleware
             'appName' => config('app.name'),
             'locale' => app()->getLocale(),
             'projects' => $request->user()
-                ? Project::active()->ownedBy($request->user())->withCount('tasks')->orderBy('name')->get()
+                ? Project::ownedBy($request->user())
+                    ->whereNotIn('status', [ProjectStatus::Completed->value, ProjectStatus::Archived->value])
+                    ->withCount('tasks')
+                    ->orderBy('name')
+                    ->get()
                 : collect(),
             'auth' => [
                 'user' => $request->user(),

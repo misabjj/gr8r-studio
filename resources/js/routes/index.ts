@@ -165,3 +165,47 @@ home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+/**
+* @see \App\Http\Controllers\WorkspaceOverviewController::overview
+* @see app/Http/Controllers/WorkspaceOverviewController.php:16
+* @route '/overview'
+*/
+export const overview = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: overview.url(options),
+    method: 'get',
+})
+
+overview.definition = {
+    methods: ["get","head"],
+    url: '/overview',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\WorkspaceOverviewController::overview
+* @see app/Http/Controllers/WorkspaceOverviewController.php:16
+* @route '/overview'
+*/
+overview.url = (options?: RouteQueryOptions) => {
+    return overview.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\WorkspaceOverviewController::overview
+* @see app/Http/Controllers/WorkspaceOverviewController.php:16
+* @route '/overview'
+*/
+overview.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: overview.url(options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\WorkspaceOverviewController::overview
+* @see app/Http/Controllers/WorkspaceOverviewController.php:16
+* @route '/overview'
+*/
+overview.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: overview.url(options),
+    method: 'head',
+})
+

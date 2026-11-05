@@ -2,6 +2,7 @@
   import { Link, usePage } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import { index as projectsRoute } from '../../routes/projects';
+  import { index as calendarRoute } from '../../routes/calendar';
   import { update as updateTaskRoute } from '../../routes/tasks';
   import { jsonRequest } from '../../lib/http.js';
   import { ic } from '@/src/core/icons.js';
@@ -146,7 +147,7 @@
 
       <div class="stack">
         <section class="panel">
-          <div class="panel-h"><h2>Upcoming deadlines</h2><div class="acts"><span class="btn btn-sm btn-ghost">{@html ic('calendar', 13)}Calendar</span></div></div>
+          <div class="panel-h"><h2>Upcoming deadlines</h2><div class="acts"><Link class="btn btn-sm btn-ghost" href={calendarRoute().url}>{@html ic('calendar', 13)}Calendar</Link></div></div>
           <div class="panel-b" style="padding-bottom:6px">
             {#each [{ label: 'Today', days: 0 }, { label: 'Tomorrow', days: 1 }, { label: 'This week', days: 2 }] as group}
               {@const groupedTasks = upcomingTasks.filter(task => {
