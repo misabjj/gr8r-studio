@@ -43,7 +43,7 @@ class HandleInertiaRequests extends Middleware
             'locale' => app()->getLocale(),
             'projects' => $request->user()
                 ? Project::ownedBy($request->user())
-                    ->whereNotIn('status', [ProjectStatus::Completed->value, ProjectStatus::Archived->value])
+                    ->whereNotIn('status', [ProjectStatus::Complete->value, ProjectStatus::Completed->value, ProjectStatus::Archived->value])
                     ->withCount('tasks')
                     ->orderBy('name')
                     ->get()

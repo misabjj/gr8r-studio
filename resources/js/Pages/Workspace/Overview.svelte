@@ -4,6 +4,7 @@
   import { show as projectShow, index as projectsIndex } from '../../routes/projects';
   import { index as timelineRoute } from '../../routes/timeline';
   import { ic } from '@/src/core/icons.js';
+  import { PCOLORS } from '@/src/core/constants.js';
   import { stIcon } from '@/src/ui/helpers.js';
 
   let { projects = [], stats = {}, statusCounts = {}, workload = [] } = $props();
@@ -21,7 +22,7 @@
   let maximumWorkload = $derived(Math.max(...workload.map(person => person.tasks), 1));
 
   function statusName(status) {
-    return ({ active: 'In Progress', paused: 'On Hold', completed: 'Completed', archived: 'Archived' })[status] || status;
+    return ({ active: 'In Progress', planning: 'Planning', risk: 'At Risk', hold: 'On Hold', complete: 'Completed', paused: 'On Hold', completed: 'Completed', archived: 'Archived' })[status] || status;
   }
 
   function completionFor(project) {
@@ -56,7 +57,7 @@
             <tbody>
               {#each projects as project (project.id)}
                 {@const progress = completionFor(project)}
-                <tr><td style="padding-left:14px"><Link class="row" href={projectShow(project.id).url}><span class="pico" style={`--c:var(--${project.color || 'indigo'})`}>{@html ic('folder', 14)}</span><span class="trunc" style="font-weight:500">{project.name}</span></Link></td><td style="text-align:left"><span class={`pill ${project.status === 'completed' ? 'st-done' : project.status === 'paused' ? 'st-backlog' : 'st-progress'}`}>{statusName(project.status)}</span></td><td><span class="row"><span class="prog"><i style={`width:${progress}%`}></i></span><span class="num faint" style="font-size:11.5px;width:30px">{progress}%</span></span></td><td class="num">{(project.tasks_count || 0) - (project.completed_tasks_count || 0)}</td><td class="num" style={`color:${project.overdue_tasks_count ? 'var(--red)' : 'var(--text-3)'}`}>{project.overdue_tasks_count || 0}</td><td style="text-align:left" class="num muted">{formatDate(project.due_date)}</td></tr>
+                <tr><td style="padding-left:14px"><Link class="row" href={projectShow(project.id).url}><span class="pico" style={`--c:${PCOLORS[project.color] || PCOLORS.slate}`}>{@html ic(project.icon || 'folder', 14)}</span><span class="trunc" style="font-weight:500">{project.name}</span></Link></td><td style="text-align:left"><span class={`pill ${['completed', 'complete'].includes(project.status) ? 'st-done' : ['paused', 'hold', 'planning'].includes(project.status) ? 'st-backlog' : 'st-progress'}`}>{statusName(project.status)}</span></td><td><span class="row"><span class="prog"><i style={`width:${progress}%`}></i></span><span class="num faint" style="font-size:11.5px;width:30px">{progress}%</span></span></td><td class="num">{(project.tasks_count || 0) - (project.completed_tasks_count || 0)}</td><td class="num" style={`color:${project.overdue_tasks_count ? 'var(--red)' : 'var(--text-3)'}`}>{project.overdue_tasks_count || 0}</td><td style="text-align:left" class="num muted">{formatDate(project.due_date)}</td></tr>
               {/each}
             </tbody>
           </table>

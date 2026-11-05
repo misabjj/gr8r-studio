@@ -12,6 +12,7 @@
   import { index as calendarIndex } from '../routes/calendar';
   import { index as timelineIndex } from '../routes/timeline';
   import { ic, wsLogo } from '@/src/core/icons.js';
+  import { PCOLORS } from '@/src/core/constants.js';
 
   const page = usePage();
   let { children } = $props();
@@ -59,7 +60,7 @@
         <div class="sgroup-h"><span>Projects</span><span class="sp"></span><Link class="ibtn ibtn-xs" href={projectsIndex().url} aria-label="New project">{@html ic('plus', 14)}</Link></div>
         {#each projects as project (project.id)}
           <Link class="sitem" href={projectShow(project.id).url}>
-            <span class="pico" style={`--c:var(--${project.color || 'indigo'})`}>{@html ic('folder', 12)}</span>
+            <span class="pico" style={`--c:${PCOLORS[project.color] || PCOLORS.slate}`}>{@html ic(project.icon || 'folder', 12)}</span>
             <span class="trunc">{project.name}</span>
             <span class="sdot" style={`background:var(--${project.status === 'completed' ? 'green' : 'blue'})`}></span>
           </Link>

@@ -53,7 +53,7 @@ class ProjectController extends Controller
         $this->authorize('view', $project);
 
         return Inertia::render('Projects/Show', [
-            'project' => $project->load(['tasks' => fn (HasMany $query) => $query->with('assignee:id,name')->latest()]),
+            'project' => $project->load(['tasks' => fn (HasMany $query) => $query->with('assignee:id,name')->orderBy('sort_order')]),
         ]);
     }
 

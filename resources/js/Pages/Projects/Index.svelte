@@ -4,6 +4,7 @@
   import { show as projectShow, store as projectStore } from '../../routes/projects';
   import { jsonRequest } from '../../lib/http.js';
   import { ic } from '@/src/core/icons.js';
+  import { PCOLORS } from '@/src/core/constants.js';
 
   let { projects: incomingProjects = [] } = $props();
   let projects = $state([]);
@@ -19,8 +20,8 @@
   let busy = $state(false);
   let errors = $state({});
 
-  let activeCount = $derived(projects.filter(project => !['completed', 'archived'].includes(project.status)).length);
-  let completedCount = $derived(projects.filter(project => project.status === 'completed').length);
+  let activeCount = $derived(projects.filter(project => !['complete', 'completed', 'archived'].includes(project.status)).length);
+  let completedCount = $derived(projects.filter(project => ['complete', 'completed'].includes(project.status)).length);
   let visibleProjects = $derived.by(() => {
     const filtered = projects.filter(project => {
       const matchesQuery = !query || `${project.name} ${project.description || ''}`.toLowerCase().includes(query.toLowerCase());
@@ -36,7 +37,7 @@
   });
 
   function statusName(status) {
-    return ({ active: 'In Progress', paused: 'On Hold', completed: 'Completed', archived: 'Archived' })[status] || status;
+    return ({ active: 'In Progress', planning: 'Planning', risk: 'At Risk', hold: 'On Hold', complete: 'Completed', paused: 'On Hold', completed: 'Completed', archived: 'Archived' })[status] || status;
   }
 
   function formatDate(value) {
@@ -95,7 +96,7 @@
     <div class="row" style="margin-bottom:16px;flex-wrap:wrap;gap:8px">
       <div class="inwrap">{@html ic('search', 13)}<input class="input search-sm" bind:value={query} placeholder="Search projects" aria-label="Search projects" /></div>
       <select class="select" style="height:26px;width:auto;font-size:12px" bind:value={statusFilter} aria-label="Filter by status">
-        <option value="all">All statuses</option><option value="active">In Progress</option><option value="paused">On Hold</option><option value="completed">Completed</option><option value="archived">Archived</option>
+        <option value="all">All statuses</option><option value="planning">Planning</option><option value="active">In Progress</option><option value="risk">At Risk</option><option value="hold">On Hold</option><option value="complete">Completed</option>
       </select>
       <select class="select" style="height:26px;width:auto;font-size:12px" bind:value={sortBy} aria-label="Sort projects">
         <option value="recent">Sort: Recently active</option><option value="name">Sort: Name</option><option value="due">Sort: Due date</option><option value="progress">Sort: Progress</option>
@@ -115,9 +116,9 @@
         {#each visibleProjects as project (project.id)}
           <Link class="pcard" href={projectShow(project.id).url} aria-label={project.name}>
             <div class="row">
-              <span class="pico" style={`--c:var(--${project.color || 'indigo'})`}>{@html ic('folder', 14)}</span>
+              <span class="pico" style={`--c:${PCOLORS[project.color] || PCOLORS.slate}`}>{@html ic(project.icon || 'folder', 14)}</span>
               <div class="grow" style="min-width:0"><div class="row" style="gap:6px"><b class="trunc" style="font-weight:600;font-size:14px">{project.name}</b>{#if project.is_favorite}<span style="color:var(--amber)">{@html ic('star', 12)}</span>{/if}</div></div>
-              <span class={`pill ${project.status === 'completed' ? 'st-done' : project.status === 'paused' ? 'st-backlog' : 'st-progress'}`}>{statusName(project.status)}</span>
+              <span class={`pill ${['completed', 'complete'].includes(project.status) ? 'st-done' : ['paused', 'hold', 'planning'].includes(project.status) ? 'st-backlog' : 'st-progress'}`}>{statusName(project.status)}</span>
             </div>
             <div class="desc">{project.description || ''}</div>
             <div class="row" style="gap:10px"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num" style="font-size:12px;font-weight:500">{completionFor(project)}%</span></div>
@@ -129,9 +130,9 @@
       <div class="panel" style="overflow:hidden">
         {#each visibleProjects as project (project.id)}
           <Link class="mini" href={projectShow(project.id).url}>
-            <span class="pico" style={`--c:var(--${project.color || 'indigo'})`}>{@html ic('folder', 14)}</span>
+            <span class="pico" style={`--c:${PCOLORS[project.color] || PCOLORS.slate}`}>{@html ic(project.icon || 'folder', 14)}</span>
             <span class="grow"><b>{project.name}</b><span class="trunc faint" style="display:block;font-size:12px">{project.description}</span></span>
-            <span class={`pill ${project.status === 'completed' ? 'st-done' : 'st-progress'}`}>{statusName(project.status)}</span>
+            <span class={`pill ${['completed', 'complete'].includes(project.status) ? 'st-done' : ['paused', 'hold', 'planning'].includes(project.status) ? 'st-backlog' : 'st-progress'}`}>{statusName(project.status)}</span>
             <span class="row hide-m" style="width:140px"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num faint" style="font-size:11.5px">{completionFor(project)}%</span></span>
             <span class="num muted hide-m" style="width:70px;font-size:12px">{formatDate(project.due_date)}</span>
           </Link>
@@ -140,7 +141,7 @@
     {:else}
       <div class="panel" style="overflow-x:auto"><table class="perm-t" style="min-width:600px"><thead><tr><th style="padding-left:14px">Project</th><th style="text-align:left">Status</th><th style="text-align:left;width:26%">Progress</th><th>Tasks</th><th style="text-align:left">Due</th></tr></thead><tbody>
         {#each visibleProjects as project (project.id)}
-          <tr><td style="padding-left:14px"><Link class="row" href={projectShow(project.id).url}><span class="pico" style={`--c:var(--${project.color || 'indigo'})`}>{@html ic('folder', 14)}</span><span style="font-weight:500">{project.name}</span></Link></td><td style="text-align:left"><span class={`pill ${project.status === 'completed' ? 'st-done' : project.status === 'paused' ? 'st-backlog' : 'st-progress'}`}>{statusName(project.status)}</span></td><td><span class="row"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num faint" style="font-size:11.5px">{completionFor(project)}%</span></span></td><td class="num">{project.tasks_count || 0}</td><td class="num muted" style="text-align:left">{formatDate(project.due_date)}</td></tr>
+          <tr><td style="padding-left:14px"><Link class="row" href={projectShow(project.id).url}><span class="pico" style={`--c:${PCOLORS[project.color] || PCOLORS.slate}`}>{@html ic(project.icon || 'folder', 14)}</span><span style="font-weight:500">{project.name}</span></Link></td><td style="text-align:left"><span class={`pill ${['completed', 'complete'].includes(project.status) ? 'st-done' : ['paused', 'hold', 'planning'].includes(project.status) ? 'st-backlog' : 'st-progress'}`}>{statusName(project.status)}</span></td><td><span class="row"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num faint" style="font-size:11.5px">{completionFor(project)}%</span></span></td><td class="num">{project.tasks_count || 0}</td><td class="num muted" style="text-align:left">{formatDate(project.due_date)}</td></tr>
         {/each}
       </tbody></table></div>
     {/if}

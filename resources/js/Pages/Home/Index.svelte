@@ -6,6 +6,7 @@
   import { update as updateTaskRoute } from '../../routes/tasks';
   import { jsonRequest } from '../../lib/http.js';
   import { ic } from '@/src/core/icons.js';
+  import { PCOLORS } from '@/src/core/constants.js';
   import { prIcon, stIcon } from '@/src/ui/helpers.js';
 
   let { projects = [], tasks = [], myTasks = [], stats = {} } = $props();
@@ -22,15 +23,15 @@
 
   let openTasks = $derived(localTasks.filter(task => task.status !== 'done'));
   let completedTasks = $derived(localTasks.filter(task => task.status === 'done'));
-  let myOverdueTasks = $derived(localMyTasks.filter(task => task.status !== 'done' && task.due_date && new Date(`${task.due_date}T00:00:00`) < new Date(new Date().toDateString())));
+  let myOverdueTasks = $derived(localMyTasks.filter(task => task.status !== 'done' && task.due_date && new Date(`${task.due_date.slice(0, 10)}T00:00:00`) < new Date(new Date().toDateString())));
   let shownTasks = $derived(selectedTab === 'completed' ? localMyTasks.filter(task => task.status === 'done') : selectedTab === 'overdue' ? myOverdueTasks : localMyTasks.filter(task => task.status !== 'done' && !myOverdueTasks.includes(task)));
-  let activeProjects = $derived(projects.filter(project => ['active', 'paused'].includes(project.status)));
-  let overdueTasks = $derived(openTasks.filter(task => task.due_date && new Date(`${task.due_date}T00:00:00`) < new Date(new Date().toDateString())));
+  let activeProjects = $derived(projects.filter(project => project.status !== 'complete'));
+  let overdueTasks = $derived(openTasks.filter(task => task.due_date && new Date(`${task.due_date.slice(0, 10)}T00:00:00`) < new Date(new Date().toDateString())));
   let upcomingTasks = $derived(openTasks.filter(task => !overdueTasks.includes(task)));
 
   function formatDate(value) {
     if (!value) return 'No date';
-    return new Date(`${value}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
   function shortDate(value) {
@@ -49,7 +50,7 @@
   }
 
   function projectStatusLabel(status) {
-    return ({ active: 'In Progress', paused: 'On Hold', completed: 'Completed', archived: 'Archived' })[status] || status;
+    return ({ active: 'In Progress', planning: 'Planning', risk: 'At Risk', hold: 'On Hold', complete: 'Completed', paused: 'On Hold', completed: 'Completed', archived: 'Archived' })[status] || status;
   }
 
   function isThisWeek(value) {
@@ -141,8 +142,8 @@
               <tbody>
                 {#each activeProjects as project (project.id)}
                   <tr>
-                    <td style="padding-left:14px"><Link class="row" href={`/projects/${project.id}`}><span class="pico" style="--c:var(--accent)">{@html ic('folder', 14)}</span><b style="font-weight:500">{project.name}</b></Link></td>
-                    <td style="text-align:left"><span class={`pill ${project.status === 'completed' ? 'st-done' : project.status === 'paused' ? 'st-backlog' : 'st-progress'}`}>{projectStatusLabel(project.status)}</span></td>
+                    <td style="padding-left:14px"><Link class="row" href={`/projects/${project.id}`}><span class="pico" style={`--c:${PCOLORS[project.color] || PCOLORS.slate}`}>{@html ic(project.icon || 'folder', 14)}</span><b style="font-weight:500">{project.name}</b></Link></td>
+                    <td style="text-align:left"><span class={`pill ${['completed', 'complete'].includes(project.status) ? 'st-done' : ['paused', 'hold', 'planning'].includes(project.status) ? 'st-backlog' : 'st-progress'}`}>{projectStatusLabel(project.status)}</span></td>
                     <td><span class="row"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num faint" style="font-size:11.5px;width:30px">{completionFor(project)}%</span></span></td>
                     <td class="num muted">{shortDate(project.due_date)}</td>
                     <td class="num muted" style="text-align:right;padding-right:14px">—</td>
@@ -161,7 +162,7 @@
             {#each [{ label: 'Today', days: 0 }, { label: 'Tomorrow', days: 1 }, { label: 'This week', days: 2 }] as group}
               {@const allGroupedTasks = upcomingTasks.filter(task => {
                 if (!task.due_date) return false;
-                const due = new Date(`${task.due_date}T00:00:00`);
+                const due = new Date(`${task.due_date.slice(0, 10)}T00:00:00`);
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const days = Math.floor((due - today) / 86400000);

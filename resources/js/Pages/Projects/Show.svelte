@@ -7,6 +7,7 @@
   import { favorite as projectFavorite } from '../../routes/projects';
   import { jsonRequest } from '../../lib/http.js';
   import { ic } from '@/src/core/icons.js';
+  import { PCOLORS } from '@/src/core/constants.js';
   import { prIcon, stIcon } from '@/src/ui/helpers.js';
 
   let { project } = $props();
@@ -44,7 +45,7 @@
   }
 
   function projectStatusName(value) {
-    return ({ active: 'In Progress', paused: 'On Hold', completed: 'Completed', archived: 'Archived' })[value] || value;
+    return ({ active: 'In Progress', planning: 'Planning', risk: 'At Risk', hold: 'On Hold', complete: 'Completed', paused: 'On Hold', completed: 'Completed', archived: 'Archived' })[value] || value;
   }
 
   function openCreateTask(date = '') {
@@ -91,7 +92,7 @@
 
   function formatDate(value) {
     if (!value) return '';
-    return new Date(`${value}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
   function daysUntil(value) {
@@ -119,10 +120,10 @@
   <div class="page flush">
     <div class="proj-h">
       <div class="t">
-        <span class="pico lg" style="--c:var(--accent)">{@html ic('folder', 18)}</span>
+        <span class="pico lg" style={`--c:${PCOLORS[project.color] || PCOLORS.slate}`}>{@html ic(project.icon || 'folder', 18)}</span>
         <h1>{project.name}</h1>
         <button class="ibtn ibtn-sm" style={isFavorite ? 'color:var(--amber)' : ''} aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={isFavorite} onclick={toggleFavorite}>{@html ic('star', 15)}</button>
-        <span class={`pill ${project.status === 'completed' ? 'st-done' : project.status === 'paused' ? 'st-backlog' : 'st-progress'}`}>{projectStatusName(project.status)}</span>
+        <span class={`pill ${['completed', 'complete'].includes(project.status) ? 'st-done' : ['paused', 'hold', 'planning'].includes(project.status) ? 'st-backlog' : 'st-progress'}`}>{projectStatusName(project.status)}</span>
         <span class="sp"></span>
         <span class="key">{project.key}</span>
         <button class="btn btn-secondary btn-sm hide-m" onclick={() => openCreateTask()}>{@html ic('plus', 13)}New task</button>

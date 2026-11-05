@@ -4,8 +4,11 @@ use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\Team;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Inertia\Testing\AssertableInertia;
@@ -551,4 +554,39 @@ it('authorizes projects and tasks through their policies', function () {
         ->and($otherUser->can('create', [Task::class, $project]))->toBeFalse()
         ->and($owner->can('update', $task))->toBeTrue()
         ->and($otherUser->can('update', $task))->toBeFalse();
+});
+
+it('seeds the complete source dataset without duplicating records', function () {
+    $legacyOwner = User::factory()->create(['email' => 'hello@gr8rstudio.com']);
+    $legacyProject = Project::factory()->for($legacyOwner, 'owner')->create([
+        'name' => 'Website Redesign',
+        'key' => 'WEB',
+    ]);
+    $legacyTask = Task::factory()->for($legacyProject)->create([
+        'title' => 'Review the new navigation structure',
+    ]);
+    $seeder = app(DatabaseSeeder::class);
+    $seeder->run();
+    $seeder->run();
+
+    expect(User::query()->count())->toBe(8)
+        ->and(Team::query()->count())->toBe(4)
+        ->and(Project::query()->count())->toBe(7)
+        ->and(Task::query()->count())->toBe(49)
+        ->and(User::query()->where('email', 'sarah@gr8rstudio.com')->value('name'))->toBe('Sarah Chen')
+        ->and(Project::query()->where('key', 'WEB')->value('name'))->toBe('Website Redesign')
+        ->and(Project::query()->where('source_key', 'p1')->value('due_date')->toDateString())->toBe(today()->addDays(24)->toDateString())
+        ->and(Task::query()->where('source_key', 't3')->value('is_favorite'))->toBeTrue()
+        ->and(Task::query()->where('source_key', 't3')->value('labels'))->toBe(['design'])
+        ->and(Task::query()->find($legacyTask->id))->toBeNull()
+        ->and(DB::table('project_user')->count())->toBe(30);
+
+    $sourceData = json_decode(DB::table('workspace_demo_snapshots')->where('name', 'Gr8r Studio')->value('source_data'), true);
+
+    expect(count($sourceData['comments']))->toBe(9)
+        ->and(count($sourceData['activity']))->toBe(13)
+        ->and(count($sourceData['notifs']))->toBe(10)
+        ->and(count($sourceData['files']))->toBe(12)
+        ->and(count($sourceData['events']))->toBe(6)
+        ->and(count($sourceData['workspaces']))->toBe(3);
 });

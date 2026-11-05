@@ -26,6 +26,7 @@ class WorkspaceOverviewController extends Controller
             ->selectRaw('status, count(*) as aggregate')
             ->groupBy('status')
             ->pluck('aggregate', 'status');
+
         return Inertia::render('Workspace/Overview', [
             'projects' => Project::ownedBy($user)
                 ->where('status', '!=', ProjectStatus::Archived->value)
@@ -36,7 +37,7 @@ class WorkspaceOverviewController extends Controller
                 ->get(),
             'stats' => [
                 'projects' => Project::ownedBy($user)->where('status', '!=', ProjectStatus::Archived->value)->count(),
-                'completedProjects' => Project::ownedBy($user)->where('status', ProjectStatus::Completed->value)->count(),
+                'completedProjects' => Project::ownedBy($user)->whereIn('status', [ProjectStatus::Completed->value, ProjectStatus::Complete->value])->count(),
                 'tasks' => Task::ownedBy($user)->count(),
                 'openTasks' => Task::ownedBy($user)->open()->count(),
                 'completedTasks' => Task::ownedBy($user)->completed()->count(),

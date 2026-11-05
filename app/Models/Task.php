@@ -13,7 +13,7 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['project_id', 'assignee_id', 'title', 'description', 'status', 'priority', 'is_favorite', 'start_date', 'due_date', 'completed_at'];
+    protected $fillable = ['source_key', 'project_id', 'assignee_id', 'title', 'description', 'status', 'priority', 'is_favorite', 'start_date', 'due_date', 'completed_at', 'labels', 'subtasks', 'attachments', 'dependencies', 'estimate', 'sort_order', 'recurrence'];
 
     protected function casts(): array
     {
@@ -24,6 +24,10 @@ class Task extends Model
             'is_favorite' => 'boolean',
             'status' => TaskStatus::class,
             'priority' => TaskPriority::class,
+            'labels' => 'array',
+            'subtasks' => 'array',
+            'attachments' => 'array',
+            'dependencies' => 'array',
         ];
     }
 

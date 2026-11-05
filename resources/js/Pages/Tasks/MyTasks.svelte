@@ -18,14 +18,14 @@
 
   function isOverdue(task) {
     if (!task.due_date || task.status === 'done') return false;
-    const due = new Date(`${task.due_date}T00:00:00`);
+    const due = new Date(`${task.due_date.slice(0, 10)}T00:00:00`);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return due < today;
   }
 
   function dayDifference(value) {
-    const due = new Date(`${value}T00:00:00`);
+    const due = new Date(`${value.slice(0, 10)}T00:00:00`);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return Math.floor((due - today) / 86400000);
@@ -53,7 +53,7 @@
 
   function formatDate(value) {
     if (!value) return '';
-    return new Date(`${value}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 </script>
 

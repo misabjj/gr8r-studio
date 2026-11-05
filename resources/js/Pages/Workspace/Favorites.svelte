@@ -5,6 +5,7 @@
   import { favorite as taskFavorite } from '../../routes/tasks';
   import { jsonRequest } from '../../lib/http.js';
   import { ic } from '@/src/core/icons.js';
+  import { PCOLORS } from '@/src/core/constants.js';
 
   let { projects = [], tasks = [] } = $props();
 
@@ -46,7 +47,7 @@
       <div class="pgrid" style="margin-bottom:28px">
         {#each projects as project (project.id)}
           <Link class="pcard" href={`/projects/${project.id}`} aria-label={project.name}>
-            <div class="row"><span class="pico" style={`--c:var(--${project.color || 'indigo'})`}>{@html ic('folder', 14)}</span><div class="grow trunc"><b style="font-weight:600;font-size:14px">{project.name}</b></div><span style="color:var(--amber)">{@html ic('star', 12)}</span></div>
+            <div class="row"><span class="pico" style={`--c:${PCOLORS[project.color] || PCOLORS.slate}`}>{@html ic(project.icon || 'folder', 14)}</span><div class="grow trunc"><b style="font-weight:600;font-size:14px">{project.name}</b></div><span style="color:var(--amber)">{@html ic('star', 12)}</span></div>
             <div class="desc">{project.description || ''}</div>
             <div class="row" style="gap:10px"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num" style="font-size:12px;font-weight:500">{completionFor(project)}%</span></div>
             <div class="foot"><span class="row" style="gap:4px">{@html ic('circle-check', 12)}{project.completed_tasks_count || 0}/{project.tasks_count || 0}</span><span class="row" style="gap:4px">{@html ic('calendar', 12)}{shortDate(project.due_date)}</span><span class="row hide-m" style="gap:4px">{@html ic('clock', 12)}{timeSince(project.updated_at)}</span><span class="sp"></span></div>
