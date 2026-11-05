@@ -26,10 +26,11 @@ class TaskController extends Controller
             priority: TaskPriority::from($request->validated('priority', TaskPriority::None->value)),
             dueDate: $request->validated('due_date'),
             assigneeId: $request->validated('assignee_id'),
+            startDate: $request->validated('start_date'),
         );
 
         if ($request->expectsJson()) {
-            return response()->json($task->load('project:id,name,key,color'), 201);
+            return response()->json($task->load(['project:id,name,key,color', 'assignee:id,name']), 201);
         }
 
         return to_route('projects.show', $project);
@@ -54,11 +55,13 @@ class TaskController extends Controller
                 dueDate: $validated['due_date'] ?? null,
                 updatesAssignee: array_key_exists('assignee_id', $validated),
                 assigneeId: $validated['assignee_id'] ?? null,
+                updatesStartDate: array_key_exists('start_date', $validated),
+                startDate: $validated['start_date'] ?? null,
             ),
         );
 
         if ($request->expectsJson()) {
-            return response()->json($updatedTask->load('project:id,name,key,color'));
+            return response()->json($updatedTask->load(['project:id,name,key,color', 'assignee:id,name']));
         }
 
         return back();

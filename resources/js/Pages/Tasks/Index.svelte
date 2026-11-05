@@ -22,6 +22,7 @@
   let status = $state('todo');
   let priority = $state('none');
   let dueDate = $state('');
+  let startDate = $state('');
   let busy = $state(false);
   let errorMessage = $state('');
 
@@ -64,6 +65,7 @@
     status = 'todo';
     priority = 'none';
     dueDate = '';
+    startDate = '';
     errorMessage = '';
     createOpen = true;
   }
@@ -79,6 +81,7 @@
         status,
         priority,
         due_date: dueDate || null,
+        start_date: startDate || null,
       });
       tasks = [task, ...tasks];
       createOpen = false;
@@ -126,6 +129,6 @@
   </div>
 
   {#if createOpen}
-    <div class="modal-wrap" role="presentation" onclick={event => event.target === event.currentTarget && (createOpen = false)}><div class="modal" role="dialog" aria-modal="true" aria-labelledby="new-task-title" tabindex="-1"><form onsubmit={createTask}><div class="modal-h"><h2 id="new-task-title">New task</h2><button type="button" class="ibtn" aria-label="Close" onclick={() => createOpen = false}>{@html ic('x', 16)}</button></div><div class="modal-b">{#if errorMessage}<div class="alert danger" role="alert">{errorMessage}</div>{/if}<div class="field"><label class="label" for="task-title">Task name</label><input class="input" id="task-title" bind:value={title} required maxlength="255" /></div><div class="field"><label class="label" for="task-project">Project</label><select class="select" id="task-project" bind:value={projectId} required>{#each projects as project (project.id)}<option value={String(project.id)}>{project.name}</option>{/each}</select></div><div class="row" style="gap:12px"><div class="field grow"><label class="label" for="task-status">Status</label><select class="select" id="task-status" bind:value={status}>{#each statuses as item}<option value={item.id}>{item.name}</option>{/each}</select></div><div class="field grow"><label class="label" for="task-priority">Priority</label><select class="select" id="task-priority" bind:value={priority}>{#each priorities as item}<option value={item}>{item === 'none' ? 'No priority' : item[0].toUpperCase() + item.slice(1)}</option>{/each}</select></div></div><div class="field"><label class="label" for="task-due">Due date</label><input class="input" id="task-due" type="date" bind:value={dueDate} /></div></div><div class="modal-f"><button type="button" class="btn btn-secondary" onclick={() => createOpen = false}>Cancel</button><button class="btn btn-primary" disabled={busy || !projects.length}>{busy ? 'Creating…' : 'Create task'}</button></div></form></div></div>
+    <div class="modal-wrap" role="presentation" onclick={event => event.target === event.currentTarget && (createOpen = false)}><div class="modal" role="dialog" aria-modal="true" aria-labelledby="new-task-title" tabindex="-1"><form onsubmit={createTask}><div class="modal-h"><h2 id="new-task-title">New task</h2><button type="button" class="ibtn" aria-label="Close" onclick={() => createOpen = false}>{@html ic('x', 16)}</button></div><div class="modal-b">{#if errorMessage}<div class="alert danger" role="alert">{errorMessage}</div>{/if}<div class="field"><label class="label" for="task-title">Task name</label><input class="input" id="task-title" bind:value={title} required maxlength="255" /></div><div class="field"><label class="label" for="task-project">Project</label><select class="select" id="task-project" bind:value={projectId} required>{#each projects as project (project.id)}<option value={String(project.id)}>{project.name}</option>{/each}</select></div><div class="row" style="gap:12px"><div class="field grow"><label class="label" for="task-status">Status</label><select class="select" id="task-status" bind:value={status}>{#each statuses as item}<option value={item.id}>{item.name}</option>{/each}</select></div><div class="field grow"><label class="label" for="task-priority">Priority</label><select class="select" id="task-priority" bind:value={priority}>{#each priorities as item}<option value={item}>{item === 'none' ? 'No priority' : item[0].toUpperCase() + item.slice(1)}</option>{/each}</select></div></div><div class="field"><label class="label" for="task-due">Due date</label><input class="input" id="task-due" type="date" bind:value={dueDate} /></div><div class="field"><label class="label" for="task-start">Start date</label><input class="input" id="task-start" type="date" bind:value={startDate} /></div></div><div class="modal-f"><button type="button" class="btn btn-secondary" onclick={() => createOpen = false}>Cancel</button><button class="btn btn-primary" disabled={busy || !projects.length}>{busy ? 'Creating…' : 'Create task'}</button></div></form></div></div>
   {/if}
 </AppLayout>

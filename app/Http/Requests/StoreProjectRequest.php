@@ -18,6 +18,8 @@ class StoreProjectRequest extends FormRequest
             'name' => ['required', 'string', 'max:120'],
             'key' => ['required', 'string', 'max:12', 'alpha_num', 'uppercase', Rule::unique('projects', 'key')],
             'description' => ['nullable', 'string', 'max:5000'],
+            'start_date' => ['nullable', 'date'],
+            'due_date' => ['nullable', 'date'],
         ];
     }
 }

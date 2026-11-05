@@ -1,6 +1,7 @@
 <script>
   import { update as resetPassword } from '../../routes/password';
   import { ic, LOGO } from '@/src/core/icons.js';
+  import AuthThemeToggle from '../../Components/AuthThemeToggle.svelte';
 
   let { email: initialEmail = '', token } = $props();
   let password = $state('');
@@ -48,7 +49,7 @@
 <div class="auth">
   <div class="auth-top">
     <span class="brand">{@html LOGO(22)}</span>
-    <div class="row"><button class="ibtn" type="button" aria-label="Toggle theme">{@html ic('moon', 16)}</button></div>
+    <div class="row"><AuthThemeToggle /></div>
   </div>
   <div class="auth-c">
     <form class="auth-card" onsubmit={submit} novalidate>

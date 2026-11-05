@@ -4,6 +4,7 @@
   import { request as passwordRequest } from '../../routes/password';
   import { ic, LOGO } from '@/src/core/icons.js';
   import AuthSocialButtons from '../../Components/AuthSocialButtons.svelte';
+  import AuthThemeToggle from '../../Components/AuthThemeToggle.svelte';
 
   let { status = null } = $props();
   let email = $state('hello@gr8rstudio.com');
@@ -54,7 +55,7 @@
     <span class="brand">{@html LOGO(22)}</span>
     <div class="row">
       <a class="btn btn-ghost btn-sm" href={register.url()}>Sign up</a>
-      <button class="ibtn" type="button" aria-label="Toggle theme">{@html ic('moon', 16)}</button>
+      <AuthThemeToggle />
     </div>
   </div>
   <div class="auth-c">

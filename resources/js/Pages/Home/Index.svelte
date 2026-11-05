@@ -33,6 +33,11 @@
     return new Date(`${value}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
+  function shortDate(value) {
+    if (!value) return '—';
+    return new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
   function greeting() {
     const hour = new Date().getHours();
     return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -139,7 +144,7 @@
                     <td style="padding-left:14px"><Link class="row" href={`/projects/${project.id}`}><span class="pico" style="--c:var(--accent)">{@html ic('folder', 14)}</span><b style="font-weight:500">{project.name}</b></Link></td>
                     <td style="text-align:left"><span class={`pill ${project.status === 'completed' ? 'st-done' : project.status === 'paused' ? 'st-backlog' : 'st-progress'}`}>{projectStatusLabel(project.status)}</span></td>
                     <td><span class="row"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num faint" style="font-size:11.5px;width:30px">{completionFor(project)}%</span></span></td>
-                    <td class="num muted">—</td>
+                    <td class="num muted">{shortDate(project.due_date)}</td>
                     <td class="num muted" style="text-align:right;padding-right:14px">—</td>
                   </tr>
                 {/each}

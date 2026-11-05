@@ -35,6 +35,8 @@ class ProjectController extends Controller
             key: $request->validated('key'),
             description: $request->validated('description'),
             owner: $request->user(),
+            startDate: $request->validated('start_date'),
+            dueDate: $request->validated('due_date'),
         );
 
         if ($request->expectsJson()) {
@@ -49,7 +51,7 @@ class ProjectController extends Controller
         abort_unless($project->owner_id === request()->user()->id, 404);
 
         return Inertia::render('Projects/Show', [
-            'project' => $project->load(['tasks' => fn (HasMany $query) => $query->latest()]),
+            'project' => $project->load(['tasks' => fn (HasMany $query) => $query->with('assignee:id,name')->latest()]),
         ]);
     }
 

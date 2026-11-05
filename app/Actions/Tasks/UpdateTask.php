@@ -35,6 +35,10 @@ class UpdateTask
             $task->assignee_id = $data->assigneeId;
         }
 
+        if ($data->updatesStartDate) {
+            $task->start_date = $data->startDate;
+        }
+
         $task->save();
 
         return $task->refresh();

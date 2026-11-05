@@ -20,6 +20,11 @@
     const days = Math.floor(hours / 24);
     return `${days}d ago`;
   }
+
+  function shortDate(value) {
+    if (!value) return '—';
+    return new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
 </script>
 
 <svelte:head><title>Favorites · Gr8r Studio</title></svelte:head>
@@ -37,7 +42,7 @@
             <div class="row"><span class="pico" style={`--c:var(--${project.color || 'indigo'})`}>{@html ic('folder', 14)}</span><div class="grow trunc"><b style="font-weight:600;font-size:14px">{project.name}</b></div><span style="color:var(--amber)">{@html ic('star', 12)}</span></div>
             <div class="desc">{project.description || ''}</div>
             <div class="row" style="gap:10px"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num" style="font-size:12px;font-weight:500">{completionFor(project)}%</span></div>
-            <div class="foot"><span class="row" style="gap:4px">{@html ic('circle-check', 12)}{project.completed_tasks_count || 0}/{project.tasks_count || 0}</span><span class="row" style="gap:4px">{@html ic('calendar', 12)}—</span><span class="row hide-m" style="gap:4px">{@html ic('clock', 12)}{timeSince(project.updated_at)}</span><span class="sp"></span></div>
+            <div class="foot"><span class="row" style="gap:4px">{@html ic('circle-check', 12)}{project.completed_tasks_count || 0}/{project.tasks_count || 0}</span><span class="row" style="gap:4px">{@html ic('calendar', 12)}{shortDate(project.due_date)}</span><span class="row hide-m" style="gap:4px">{@html ic('clock', 12)}{timeSince(project.updated_at)}</span><span class="sp"></span></div>
           </Link>
         {/each}
       </div>

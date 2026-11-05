@@ -18,6 +18,7 @@
   let status = $state('todo');
   let priority = $state('medium');
   let dueDate = $state('');
+  let startDate = $state('');
   let busy = $state(false);
   let errorMessage = $state('');
   let isFavorite = $state(false);
@@ -34,6 +35,7 @@
 
   let completedCount = $derived(tasks.filter(task => task.status === 'done').length);
   let progress = $derived(tasks.length ? Math.round(completedCount / tasks.length * 100) : 0);
+  let overdueCount = $derived(tasks.filter(task => task.status !== 'done' && task.due_date && new Date(`${task.due_date.slice(0, 10)}T00:00:00`) < new Date(new Date().toDateString())).length);
   let statusCounts = $derived(columns.map(column => ({ ...column, count: tasks.filter(task => task.status === column.id).length })));
   let comingUp = $derived(tasks.filter(task => task.status !== 'done' && task.due_date).sort((first, second) => new Date(first.due_date) - new Date(second.due_date)).slice(0, 6));
 
@@ -47,6 +49,7 @@
 
   function openCreateTask(date = '') {
     dueDate = date;
+    startDate = '';
     status = 'todo';
     showTaskForm = true;
   }
@@ -61,10 +64,12 @@
         status,
         priority,
         due_date: dueDate || null,
+        start_date: startDate || null,
       });
       tasks = [created, ...tasks];
       title = '';
       dueDate = '';
+      startDate = '';
       showTaskForm = false;
     } catch (error) {
       errorMessage = error.errors?.title?.[0] || error.message;
@@ -87,6 +92,14 @@
   function formatDate(value) {
     if (!value) return '';
     return new Date(`${value}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function daysUntil(value) {
+    if (!value) return null;
+    const due = new Date(`${value.slice(0, 10)}T00:00:00`);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Math.floor((due - today) / 86400000);
   }
 
   async function toggleFavorite() {
@@ -130,7 +143,7 @@
               <section class="panel"><div class="panel-h"><h2>About</h2></div><div class="panel-b" style="font-size:14px;line-height:1.6;color:var(--text)">{project.description || ''}</div></section>
               <section class="panel"><div class="panel-h"><h2>Progress</h2><div class="acts"><span class="faint" style="font-size:12px">{completedCount} of {tasks.length} tasks done</span></div></div>
                 <div class="panel-b">
-                  <div class="row" style="align-items:baseline;gap:10px;margin-bottom:10px"><span style="font-size:30px;font-weight:600;letter-spacing:-.03em" class="num">{progress}%</span></div>
+                  <div class="row" style="align-items:baseline;gap:10px;margin-bottom:10px"><span style="font-size:30px;font-weight:600;letter-spacing:-.03em" class="num">{progress}%</span>{#if project.due_date}<span class="muted">{daysUntil(project.due_date) >= 0 ? `${daysUntil(project.due_date)} days until ${formatDate(project.due_date)}` : `Ended ${formatDate(project.due_date)}`}</span>{/if}{#if overdueCount}<span class="badge red">{@html ic('clock-alert', 11)}{overdueCount} overdue</span>{/if}</div>
                   <div class="stackbar" style="height:8px;margin-bottom:12px">{#each statusCounts as column (column.id)}<i style={`width:${(column.count / Math.max(tasks.length, 1)) * 100}%;background:var(--st-${column.id})`} title={`${column.name}: ${column.count}`}></i>{/each}</div>
                   <div class="row" style="flex-wrap:wrap;gap:14px;font-size:12.5px">{#each statusCounts as column (column.id)}<span class="row" style="gap:5px">{@html ic(column.icon, 12)}<span class="muted">{column.name}</span><b class="num" style="font-weight:600">{column.count}</b></span>{/each}</div>
                 </div>
@@ -140,7 +153,7 @@
               </section>
             </div>
             <div class="stack">
-              <section class="panel"><div class="panel-h"><h2>Details</h2></div><div class="panel-b"><dl class="details"><dt>{@html ic('circle-dot', 14)}Status</dt><dd>{projectStatusName(project.status)}</dd></dl></div></section>
+              <section class="panel"><div class="panel-h"><h2>Details</h2></div><div class="panel-b"><dl class="kv"><dt>{@html ic('circle-dot', 14)}Status</dt><dd>{projectStatusName(project.status)}</dd><dt>{@html ic('calendar-arrow-up', 14)}Start</dt><dd><span class="pillbtn num">{formatDate(project.start_date)}</span></dd><dt>{@html ic('flag', 14)}Due</dt><dd><span class="pillbtn num">{formatDate(project.due_date)}</span></dd></dl></div></section>
               <section class="panel"><div class="panel-h"><h2>Milestones</h2></div><div class="panel-b faint">No milestones yet</div></section>
               <section class="panel"><div class="panel-h"><h2>Recent activity</h2></div><div class="panel-b feed"><span class="faint">No activity yet</span></div></section>
             </div>
@@ -201,6 +214,7 @@
               <div class="field grow"><label class="label" for="task-priority">Priority</label><select class="select" id="task-priority" bind:value={priority}><option value="none">No priority</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
             </div>
             <div class="field"><label class="label" for="task-due">Due date</label><input class="input" id="task-due" type="date" bind:value={dueDate} /></div>
+            <div class="field"><label class="label" for="task-start">Start date</label><input class="input" id="task-start" type="date" bind:value={startDate} /></div>
           </div>
           <div class="modal-f"><button type="button" class="btn btn-secondary" onclick={() => showTaskForm = false}>Cancel</button><button class="btn btn-primary" disabled={busy}>{busy ? 'Creating…' : 'Create task'}</button></div>
         </form>

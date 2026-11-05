@@ -24,6 +24,7 @@ class UpdateTaskRequest extends FormRequest
             'status' => ['sometimes', Rule::enum(TaskStatus::class)],
             'priority' => ['sometimes', Rule::enum(TaskPriority::class)],
             'due_date' => ['sometimes', 'nullable', 'date'],
+            'start_date' => ['sometimes', 'nullable', 'date'],
             'assignee_id' => ['sometimes', 'nullable', 'integer', Rule::in([$this->route('task')?->project?->owner_id])],
         ];
     }

@@ -175,6 +175,24 @@ it('creates tasks assigned to the project owner and rejects assignments outside 
     ])->assertUnprocessable()->assertJsonValidationErrors('assignee_id');
 });
 
+it('stores task and project start and due dates for schedule views', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->for($user, 'owner')->create();
+
+    $this->actingAs($user)->postJson("/projects/{$project->id}/tasks", [
+        'title' => 'Build the release plan',
+        'start_date' => '2026-11-10',
+        'due_date' => '2026-11-20',
+    ])->assertCreated()->assertJsonPath('start_date', '2026-11-10T00:00:00.000000Z')->assertJsonPath('due_date', '2026-11-20T00:00:00.000000Z');
+
+    $this->actingAs($user)->postJson('/projects', [
+        'name' => 'Release planning',
+        'key' => 'REL',
+        'start_date' => '2026-11-05',
+        'due_date' => '2026-12-01',
+    ])->assertCreated()->assertJsonPath('start_date', '2026-11-05T00:00:00.000000Z')->assertJsonPath('due_date', '2026-12-01T00:00:00.000000Z');
+});
+
 it('renders the workspace calendar and timeline with owner scoped tasks', function () {
     $user = User::factory()->create();
     $otherUser = User::factory()->create();

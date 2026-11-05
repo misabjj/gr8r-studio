@@ -13,13 +13,15 @@ class Project extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['owner_id', 'name', 'key', 'description', 'color', 'status', 'is_favorite'];
+    protected $fillable = ['owner_id', 'name', 'key', 'description', 'color', 'status', 'is_favorite', 'start_date', 'due_date'];
 
     protected function casts(): array
     {
         return [
             'status' => ProjectStatus::class,
             'is_favorite' => 'boolean',
+            'start_date' => 'date',
+            'due_date' => 'date',
         ];
     }
 

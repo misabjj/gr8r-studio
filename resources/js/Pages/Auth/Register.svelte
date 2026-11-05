@@ -3,6 +3,7 @@
   import { login } from '../../routes';
   import { ic, LOGO } from '@/src/core/icons.js';
   import AuthSocialButtons from '../../Components/AuthSocialButtons.svelte';
+  import AuthThemeToggle from '../../Components/AuthThemeToggle.svelte';
 
   let name = $state('');
   let email = $state('');
@@ -69,7 +70,7 @@
     <span class="brand">{@html LOGO(22)}</span>
     <div class="row">
       <a class="btn btn-ghost btn-sm" href={login.url()}>Log in</a>
-      <button class="ibtn" type="button" aria-label="Toggle theme">{@html ic('moon', 16)}</button>
+      <AuthThemeToggle />
     </div>
   </div>
   <div class="auth-c">

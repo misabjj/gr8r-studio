@@ -15,6 +15,7 @@
   let modalOpen = $state(false);
   let name = $state('');
   let description = $state('');
+  let dueDate = $state('');
   let busy = $state(false);
   let errors = $state({});
 
@@ -28,13 +29,19 @@
     });
     return filtered.sort((first, second) => {
       if (sortBy === 'name') return first.name.localeCompare(second.name);
+      if (sortBy === 'due') return (first.due_date || '9999-12-31').localeCompare(second.due_date || '9999-12-31');
       if (sortBy === 'progress') return completionFor(second) - completionFor(first);
-      return new Date(second.created_at || 0) - new Date(first.created_at || 0);
+      return new Date(second.updated_at || 0) - new Date(first.updated_at || 0);
     });
   });
 
   function statusName(status) {
     return ({ active: 'In Progress', paused: 'On Hold', completed: 'Completed', archived: 'Archived' })[status] || status;
+  }
+
+  function formatDate(value) {
+    if (!value) return '—';
+    return new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
   function completionFor(project) {
@@ -49,6 +56,9 @@
   function openCreateProject() {
     name = '';
     description = '';
+    const target = new Date();
+    target.setDate(target.getDate() + 30);
+    dueDate = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
     errors = {};
     modalOpen = true;
   }
@@ -62,6 +72,7 @@
         name: name.trim(),
         key: makeKey(name),
         description: description.trim() || null,
+        due_date: dueDate || null,
       });
       modalOpen = false;
       router.visit(projectShow(project.id).url);
@@ -87,7 +98,7 @@
         <option value="all">All statuses</option><option value="active">In Progress</option><option value="paused">On Hold</option><option value="completed">Completed</option><option value="archived">Archived</option>
       </select>
       <select class="select" style="height:26px;width:auto;font-size:12px" bind:value={sortBy} aria-label="Sort projects">
-        <option value="recent">Sort: Recently added</option><option value="name">Sort: Name</option><option value="progress">Sort: Progress</option>
+        <option value="recent">Sort: Recently active</option><option value="name">Sort: Name</option><option value="due">Sort: Due date</option><option value="progress">Sort: Progress</option>
       </select>
       <span class="sp"></span>
       <div class="seg" role="tablist" aria-label="Project layout">
@@ -110,7 +121,7 @@
             </div>
             <div class="desc">{project.description || ''}</div>
             <div class="row" style="gap:10px"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num" style="font-size:12px;font-weight:500">{completionFor(project)}%</span></div>
-            <div class="foot"><span class="row" style="gap:4px">{@html ic('circle-check', 12)}{project.completed_tasks_count || 0}/{project.tasks_count || 0}</span><span class="row" style="gap:4px">{@html ic('calendar', 12)}—</span><span class="sp"></span></div>
+            <div class="foot"><span class="row" style="gap:4px">{@html ic('circle-check', 12)}{project.completed_tasks_count || 0}/{project.tasks_count || 0}</span><span class="row" style="gap:4px">{@html ic('calendar', 12)}{formatDate(project.due_date)}</span><span class="sp"></span></div>
           </Link>
         {/each}
       </div>
@@ -122,14 +133,14 @@
             <span class="grow"><b>{project.name}</b><span class="trunc faint" style="display:block;font-size:12px">{project.description}</span></span>
             <span class={`pill ${project.status === 'completed' ? 'st-done' : 'st-progress'}`}>{statusName(project.status)}</span>
             <span class="row hide-m" style="width:140px"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num faint" style="font-size:11.5px">{completionFor(project)}%</span></span>
-            <span class="num muted hide-m" style="width:70px;font-size:12px">—</span>
+            <span class="num muted hide-m" style="width:70px;font-size:12px">{formatDate(project.due_date)}</span>
           </Link>
         {/each}
       </div>
     {:else}
       <div class="panel" style="overflow-x:auto"><table class="perm-t" style="min-width:600px"><thead><tr><th style="padding-left:14px">Project</th><th style="text-align:left">Status</th><th style="text-align:left;width:26%">Progress</th><th>Tasks</th><th style="text-align:left">Due</th></tr></thead><tbody>
         {#each visibleProjects as project (project.id)}
-          <tr><td style="padding-left:14px"><Link class="row" href={projectShow(project.id).url}><span class="pico" style={`--c:var(--${project.color || 'indigo'})`}>{@html ic('folder', 14)}</span><span style="font-weight:500">{project.name}</span></Link></td><td style="text-align:left"><span class={`pill ${project.status === 'completed' ? 'st-done' : project.status === 'paused' ? 'st-backlog' : 'st-progress'}`}>{statusName(project.status)}</span></td><td><span class="row"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num faint" style="font-size:11.5px">{completionFor(project)}%</span></span></td><td class="num">{project.tasks_count || 0}</td><td class="num muted" style="text-align:left">—</td></tr>
+          <tr><td style="padding-left:14px"><Link class="row" href={projectShow(project.id).url}><span class="pico" style={`--c:var(--${project.color || 'indigo'})`}>{@html ic('folder', 14)}</span><span style="font-weight:500">{project.name}</span></Link></td><td style="text-align:left"><span class={`pill ${project.status === 'completed' ? 'st-done' : project.status === 'paused' ? 'st-backlog' : 'st-progress'}`}>{statusName(project.status)}</span></td><td><span class="row"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num faint" style="font-size:11.5px">{completionFor(project)}%</span></span></td><td class="num">{project.tasks_count || 0}</td><td class="num muted" style="text-align:left">{formatDate(project.due_date)}</td></tr>
         {/each}
       </tbody></table></div>
     {/if}
@@ -144,6 +155,7 @@
             {#if errors.form}<div class="alert danger" role="alert">{errors.form}</div>{/if}
             <div class="field"><label class="label" for="project-name">Project name</label><input class="input" id="project-name" bind:value={name} maxlength="120" required aria-invalid={!!errors.name} placeholder="e.g. Website redesign" />{#if errors.name}<span class="err">{errors.name[0]}</span>{/if}</div>
             <div class="field"><label class="label" for="project-description">Description</label><textarea class="input" id="project-description" bind:value={description} rows="3" maxlength="5000" placeholder="What is this project about?"></textarea></div>
+            <div class="field"><label class="label" for="project-target-date">Target date</label><input class="input" id="project-target-date" type="date" bind:value={dueDate} /></div>
             <div class="hint">Project key: <b>{name ? makeKey(name) : '—'}</b></div>
           </div>
           <div class="modal-f"><button type="button" class="btn btn-secondary" onclick={() => modalOpen = false}>Cancel</button><button class="btn btn-primary" disabled={busy}>{busy ? 'Creating…' : 'Create project'}</button></div>

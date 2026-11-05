@@ -24,6 +24,7 @@ class StoreTaskRequest extends FormRequest
             'status' => ['sometimes', Rule::enum(TaskStatus::class)],
             'priority' => ['sometimes', Rule::enum(TaskPriority::class)],
             'due_date' => ['nullable', 'date'],
+            'start_date' => ['nullable', 'date'],
             'assignee_id' => ['nullable', 'integer', Rule::in([$this->route('project')?->owner_id])],
         ];
     }

@@ -13,12 +13,13 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['project_id', 'assignee_id', 'title', 'description', 'status', 'priority', 'due_date', 'completed_at'];
+    protected $fillable = ['project_id', 'assignee_id', 'title', 'description', 'status', 'priority', 'start_date', 'due_date', 'completed_at'];
 
     protected function casts(): array
     {
         return [
             'due_date' => 'date',
+            'start_date' => 'date',
             'completed_at' => 'datetime',
             'status' => TaskStatus::class,
             'priority' => TaskPriority::class,

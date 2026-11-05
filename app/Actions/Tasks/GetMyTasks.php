@@ -16,7 +16,7 @@ class GetMyTasks
         return Task::ownedBy($user)
             ->assignedTo($user)
             ->whereHas('project', fn (Builder $query) => $query->where('status', '!=', ProjectStatus::Archived->value))
-            ->with('project:id,name,key,color')
+            ->with(['project:id,name,key,color', 'assignee:id,name'])
             ->latest()
             ->get();
     }

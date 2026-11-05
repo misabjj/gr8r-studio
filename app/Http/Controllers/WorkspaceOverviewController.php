@@ -20,6 +20,12 @@ class WorkspaceOverviewController extends Controller
             ->selectRaw('status, count(*) as aggregate')
             ->groupBy('status')
             ->pluck('aggregate', 'status');
+        $assignedStatusCounts = Task::ownedBy($user)
+            ->assignedTo($user)
+            ->open()
+            ->selectRaw('status, count(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
         return Inertia::render('Workspace/Overview', [
             'projects' => Project::ownedBy($user)
                 ->where('status', '!=', ProjectStatus::Archived->value)
@@ -38,6 +44,14 @@ class WorkspaceOverviewController extends Controller
             ],
             'statusCounts' => collect(TaskStatus::cases())
                 ->mapWithKeys(fn (TaskStatus $status): array => [$status->value => (int) $statusCounts->get($status->value, 0)]),
+            'workload' => [[
+                'id' => $user->id,
+                'name' => $user->name,
+                'tasks' => (int) $assignedStatusCounts->sum(),
+                'statusCounts' => collect(TaskStatus::cases())
+                    ->reject(fn (TaskStatus $status): bool => $status === TaskStatus::Done)
+                    ->mapWithKeys(fn (TaskStatus $status): array => [$status->value => (int) $assignedStatusCounts->get($status->value, 0)]),
+            ]],
         ]);
     }
 }
