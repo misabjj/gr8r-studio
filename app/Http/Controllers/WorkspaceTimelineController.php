@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Workspace\GetWorkspaceTasks;
-use App\Enums\ProjectStatus;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,7 +15,7 @@ class WorkspaceTimelineController extends Controller
         return Inertia::render('Workspace/Timeline', [
             'tasks' => $getWorkspaceTasks->handle($request->user()),
             'projects' => Project::ownedBy($request->user())
-                ->where('status', '!=', ProjectStatus::Archived->value)
+                ->notArchived()
                 ->orderBy('name')
                 ->get(['id', 'name', 'key', 'color']),
         ]);

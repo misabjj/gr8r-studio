@@ -52,6 +52,11 @@ class Project extends Model
         return $query->where('status', ProjectStatus::Active->value);
     }
 
+    public function scopeNotArchived(Builder $query): Builder
+    {
+        return $query->where('status', '!=', ProjectStatus::Archived->value);
+    }
+
     public function scopeFavorited(Builder $query): Builder
     {
         return $query->where('is_favorite', true);

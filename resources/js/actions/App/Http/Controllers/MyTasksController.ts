@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\MyTasksController::index
-* @see app/Http/Controllers/MyTasksController.php:14
+* @see app/Http/Controllers/MyTasksController.php:13
 * @route '/my-tasks'
 */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\MyTasksController::index
-* @see app/Http/Controllers/MyTasksController.php:14
+* @see app/Http/Controllers/MyTasksController.php:13
 * @route '/my-tasks'
 */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MyTasksController::index
-* @see app/Http/Controllers/MyTasksController.php:14
+* @see app/Http/Controllers/MyTasksController.php:13
 * @route '/my-tasks'
 */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -35,7 +35,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\MyTasksController::index
-* @see app/Http/Controllers/MyTasksController.php:14
+* @see app/Http/Controllers/MyTasksController.php:13
 * @route '/my-tasks'
 */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

@@ -2,7 +2,6 @@
 
 namespace App\Actions\Tasks;
 
-use App\Enums\ProjectStatus;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,7 +14,7 @@ class GetMyTasks
     {
         return Task::ownedBy($user)
             ->assignedTo($user)
-            ->whereHas('project', fn (Builder $query) => $query->where('status', '!=', ProjectStatus::Archived->value))
+            ->whereHas('project', fn (Builder $query) => $query->notArchived())
             ->with(['project:id,name,key,color', 'assignee:id,name'])
             ->latest()
             ->get();

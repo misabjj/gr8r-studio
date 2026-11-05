@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Workspace\GetWorkspaceTasks;
-use App\Enums\ProjectStatus;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,7 +17,7 @@ class TaskIndexController extends Controller
         return Inertia::render('Tasks/Index', [
             'tasks' => $getWorkspaceTasks->handle($user),
             'projects' => Project::ownedBy($user)
-                ->where('status', '!=', ProjectStatus::Archived->value)
+                ->notArchived()
                 ->orderBy('name')
                 ->get(['id', 'name', 'key', 'color']),
         ]);

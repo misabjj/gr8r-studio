@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProjectStatus;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Models\Project;
@@ -12,6 +13,15 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Inertia\Testing\AssertableInertia;
+
+it('filters archived projects through the not archived scope', function () {
+    $user = User::factory()->create();
+    $visibleProject = Project::factory()->for($user, 'owner')->create();
+    Project::factory()->for($user, 'owner')->create(['status' => ProjectStatus::Archived]);
+
+    expect(Project::ownedBy($user)->notArchived()->pluck('id')->all())
+        ->toBe([$visibleProject->id]);
+});
 
 it('renders the workspace overview through Inertia with project and task data', function () {
     $this->withoutVite();

@@ -29,14 +29,14 @@ class WorkspaceOverviewController extends Controller
 
         return Inertia::render('Workspace/Overview', [
             'projects' => Project::ownedBy($user)
-                ->where('status', '!=', ProjectStatus::Archived->value)
+                ->notArchived()
                 ->withCount('tasks')
                 ->withCount(['tasks as completed_tasks_count' => fn (Builder $query) => $query->completed()])
                 ->withCount(['tasks as overdue_tasks_count' => fn (Builder $query) => $query->open()->whereDate('due_date', '<', today())])
                 ->orderBy('name')
                 ->get(),
             'stats' => [
-                'projects' => Project::ownedBy($user)->where('status', '!=', ProjectStatus::Archived->value)->count(),
+                'projects' => Project::ownedBy($user)->notArchived()->count(),
                 'completedProjects' => Project::ownedBy($user)->whereIn('status', [ProjectStatus::Completed->value, ProjectStatus::Complete->value])->count(),
                 'tasks' => Task::ownedBy($user)->count(),
                 'openTasks' => Task::ownedBy($user)->open()->count(),

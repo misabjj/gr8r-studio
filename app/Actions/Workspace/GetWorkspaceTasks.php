@@ -2,7 +2,6 @@
 
 namespace App\Actions\Workspace;
 
-use App\Enums\ProjectStatus;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,7 +13,7 @@ class GetWorkspaceTasks
     public function handle(User $owner): Collection
     {
         return Task::ownedBy($owner)
-            ->whereHas('project', fn (Builder $query) => $query->where('status', '!=', ProjectStatus::Archived->value))
+            ->whereHas('project', fn (Builder $query) => $query->notArchived())
             ->with(['project:id,name,key,color', 'assignee:id,name'])
             ->latest()
             ->get();
