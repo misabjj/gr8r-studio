@@ -18,7 +18,7 @@
   let busy = $state(false);
   let errors = $state({});
 
-  let activeCount = $derived(projects.filter(project => project.status === 'active').length);
+  let activeCount = $derived(projects.filter(project => !['completed', 'archived'].includes(project.status)).length);
   let completedCount = $derived(projects.filter(project => project.status === 'completed').length);
   let visibleProjects = $derived.by(() => {
     const filtered = projects.filter(project => {
@@ -28,7 +28,7 @@
     });
     return filtered.sort((first, second) => {
       if (sortBy === 'name') return first.name.localeCompare(second.name);
-      if (sortBy === 'tasks') return (second.tasks_count || 0) - (first.tasks_count || 0);
+      if (sortBy === 'progress') return completionFor(second) - completionFor(first);
       return new Date(second.created_at || 0) - new Date(first.created_at || 0);
     });
   });
@@ -87,44 +87,51 @@
         <option value="all">All statuses</option><option value="active">In Progress</option><option value="paused">On Hold</option><option value="completed">Completed</option><option value="archived">Archived</option>
       </select>
       <select class="select" style="height:26px;width:auto;font-size:12px" bind:value={sortBy} aria-label="Sort projects">
-        <option value="recent">Sort: Recently added</option><option value="name">Sort: Name</option><option value="tasks">Sort: Task count</option>
+        <option value="recent">Sort: Recently added</option><option value="name">Sort: Name</option><option value="progress">Sort: Progress</option>
       </select>
       <span class="sp"></span>
       <div class="seg" role="tablist" aria-label="Project layout">
         <button class:on={view === 'grid'} aria-label="Grid" aria-pressed={view === 'grid'} onclick={() => view = 'grid'}>{@html ic('layout-grid', 13)}<span class="hide-m">Grid</span></button>
         <button class:on={view === 'list'} aria-label="List" aria-pressed={view === 'list'} onclick={() => view = 'list'}>{@html ic('list', 13)}<span class="hide-m">List</span></button>
+        <button class:on={view === 'table'} aria-label="Table" aria-pressed={view === 'table'} onclick={() => view = 'table'}>{@html ic('table-2', 13)}<span class="hide-m">Table</span></button>
       </div>
     </div>
 
     {#if visibleProjects.length === 0}
-      <section class="panel"><div class="empty"><span class="empty-ic">{@html ic('folder-kanban', 20)}</span><h2>{projects.length ? 'No results found' : 'No projects yet'}</h2><p>{projects.length ? 'No projects match your search or filters.' : 'Create your first project to start organizing your work.'}</p>{#if !projects.length}<button class="btn btn-primary btn-sm" onclick={openCreateProject}>{@html ic('plus', 14)}Create project</button>{/if}</div></section>
+      <section class="panel"><div class="empty"><span class="empty-ic">{@html ic(projects.length ? 'search-x' : 'folder-kanban', 20)}</span><h2>{projects.length ? 'No results found' : 'No projects yet'}</h2><p>{projects.length ? 'No projects match your search or filters. Try a different term.' : 'Create your first project to start organizing your work.'}</p>{#if projects.length}<button class="btn btn-secondary btn-sm" onclick={() => { query = ''; statusFilter = 'all'; }}>Clear filters</button>{:else}<button class="btn btn-primary btn-sm" onclick={openCreateProject}>{@html ic('plus', 14)}Create project</button>{/if}</div></section>
     {:else if view === 'grid'}
       <div class="pgrid">
         {#each visibleProjects as project (project.id)}
           <Link class="pcard" href={projectShow(project.id).url} aria-label={project.name}>
             <div class="row">
-              <span class="pico" style="--c:var(--accent)">{@html ic('folder', 14)}</span>
+              <span class="pico" style={`--c:var(--${project.color || 'indigo'})`}>{@html ic('folder', 14)}</span>
               <div class="grow" style="min-width:0"><div class="row" style="gap:6px"><b class="trunc" style="font-weight:600;font-size:14px">{project.name}</b></div></div>
               <span class={`pill ${project.status === 'completed' ? 'st-done' : project.status === 'paused' ? 'st-backlog' : 'st-progress'}`}>{statusName(project.status)}</span>
             </div>
-            <div class="desc">{project.description || 'No description yet.'}</div>
-            <div class="row" style="gap:10px"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num" style="font-size:12px;font-weight:500">{project.tasks_count || 0} tasks</span></div>
-            <div class="foot"><span class="row" style="gap:4px">{@html ic('hash', 12)}{project.key}</span><span class="sp"></span><span class="row faint" style="gap:4px">{@html ic('clock', 12)}{project.created_at ? new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}</span></div>
+            <div class="desc">{project.description || ''}</div>
+            <div class="row" style="gap:10px"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num" style="font-size:12px;font-weight:500">{completionFor(project)}%</span></div>
+            <div class="foot"><span class="row" style="gap:4px">{@html ic('circle-check', 12)}{project.completed_tasks_count || 0}/{project.tasks_count || 0}</span><span class="row" style="gap:4px">{@html ic('calendar', 12)}—</span><span class="sp"></span></div>
+          </Link>
+        {/each}
+      </div>
+    {:else if view === 'list'}
+      <div class="panel" style="overflow:hidden">
+        {#each visibleProjects as project (project.id)}
+          <Link class="mini" href={projectShow(project.id).url}>
+            <span class="pico" style={`--c:var(--${project.color || 'indigo'})`}>{@html ic('folder', 14)}</span>
+            <span class="grow"><b>{project.name}</b><span class="trunc faint" style="display:block;font-size:12px">{project.description}</span></span>
+            <span class={`pill ${project.status === 'completed' ? 'st-done' : 'st-progress'}`}>{statusName(project.status)}</span>
+            <span class="row hide-m" style="width:140px"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num faint" style="font-size:11.5px">{completionFor(project)}%</span></span>
+            <span class="num muted hide-m" style="width:70px;font-size:12px">—</span>
           </Link>
         {/each}
       </div>
     {:else}
-      <div class="panel" style="overflow:hidden">
+      <div class="panel" style="overflow-x:auto"><table class="perm-t" style="min-width:600px"><thead><tr><th style="padding-left:14px">Project</th><th style="text-align:left">Status</th><th style="text-align:left;width:26%">Progress</th><th>Tasks</th><th style="text-align:left">Due</th></tr></thead><tbody>
         {#each visibleProjects as project (project.id)}
-          <Link class="mini" href={projectShow(project.id).url}>
-            <span class="pico" style="--c:var(--accent)">{@html ic('folder', 14)}</span>
-            <span class="grow"><b>{project.name}</b><span class="trunc faint" style="display:block;font-size:12px">{project.description}</span></span>
-            <span class={`pill ${project.status === 'completed' ? 'st-done' : 'st-progress'}`}>{statusName(project.status)}</span>
-            <span class="num muted">{project.tasks_count || 0} tasks</span>
-            <span class="key">{project.key}</span>
-          </Link>
+          <tr><td style="padding-left:14px"><Link class="row" href={projectShow(project.id).url}><span class="pico" style={`--c:var(--${project.color || 'indigo'})`}>{@html ic('folder', 14)}</span><span style="font-weight:500">{project.name}</span></Link></td><td style="text-align:left"><span class={`pill ${project.status === 'completed' ? 'st-done' : project.status === 'paused' ? 'st-backlog' : 'st-progress'}`}>{statusName(project.status)}</span></td><td><span class="row"><span class="prog"><i style={`width:${completionFor(project)}%`}></i></span><span class="num faint" style="font-size:11.5px">{completionFor(project)}%</span></span></td><td class="num">{project.tasks_count || 0}</td><td class="num muted" style="text-align:left">—</td></tr>
         {/each}
-      </div>
+      </tbody></table></div>
     {/if}
   </div>
 

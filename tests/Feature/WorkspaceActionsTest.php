@@ -62,6 +62,38 @@ it('provides recent completed tasks and per-project completion counts for the wo
             ->where('tasks.0.id', $completed->id));
 });
 
+it('counts completed tasks from this week separately from all completed tasks', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->for($user, 'owner')->create();
+    Task::factory()->for($project)->create([
+        'status' => TaskStatus::Done,
+        'completed_at' => now()->startOfWeek()->addDay(),
+    ]);
+    Task::factory()->for($project)->create([
+        'status' => TaskStatus::Done,
+        'completed_at' => now()->startOfWeek()->subSecond(),
+    ]);
+
+    $this->actingAs($user)->get('/')
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('stats.completedTasks', 2)
+            ->where('stats.completedThisWeek', 1));
+});
+
+it('includes paused projects in the workspace project progress list', function () {
+    $user = User::factory()->create();
+    $activeProject = Project::factory()->for($user, 'owner')->create(['name' => 'Active']);
+    $pausedProject = Project::factory()->for($user, 'owner')->create(['name' => 'Paused', 'status' => 'paused']);
+    Project::factory()->for($user, 'owner')->create(['status' => 'completed']);
+    Project::factory()->for($user, 'owner')->create(['status' => 'archived']);
+
+    $this->actingAs($user)->get('/')
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('projects', 2)
+            ->where('projects.0.id', $activeProject->id)
+            ->where('projects.1.id', $pausedProject->id));
+});
+
 it('renders the projects page with task and completion counts', function () {
     $user = User::factory()->create();
     $project = Project::factory()->for($user, 'owner')->create();
@@ -150,6 +182,28 @@ it('rejects registration when password confirmation does not match', function ()
 
     $this->assertGuest();
     $this->assertDatabaseMissing('users', ['email' => 'misa@example.com']);
+});
+
+it('rejects registration passwords that do not meet the Gr8r password rule', function (string $password) {
+    $this->from('/register')->post('/register', [
+        'name' => 'Misa B',
+        'email' => 'misa@example.com',
+        'password' => $password,
+        'password_confirmation' => $password,
+    ])->assertRedirect('/register')->assertSessionHasErrors('password');
+
+    $this->assertGuest();
+})->with(['short1abc' => 'short1abc', 'onlyletters' => 'onlyletters']);
+
+it('accepts a registration password with ten characters and a symbol', function () {
+    $this->post('/register', [
+        'name' => 'Misa B',
+        'email' => 'misa@example.com',
+        'password' => 'abcdefgh!j',
+        'password_confirmation' => 'abcdefgh!j',
+    ])->assertRedirect('/');
+
+    $this->assertAuthenticated();
 });
 
 it('sends a password reset link for a registered email address', function () {

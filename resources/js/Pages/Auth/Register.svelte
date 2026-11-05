@@ -2,14 +2,26 @@
   import { store as registerRoute } from '../../routes/register';
   import { login } from '../../routes';
   import { ic, LOGO } from '@/src/core/icons.js';
+  import AuthSocialButtons from '../../Components/AuthSocialButtons.svelte';
 
   let name = $state('');
   let email = $state('');
   let password = $state('');
-  let passwordConfirmation = $state('');
-  let showPassword = $state(false);
   let busy = $state(false);
   let errors = $state({});
+
+  function strengthMeter(value) {
+    let score = 0;
+    if (value.length >= 8) score++;
+    if (value.length >= 12) score++;
+    if (/[0-9]/.test(value) && /[a-zA-Z]/.test(value)) score++;
+    if (/[^a-zA-Z0-9]/.test(value)) score++;
+    const color = ['var(--red)', 'var(--red)', 'var(--amber)', 'var(--green)', 'var(--green)'][score];
+    const label = ['Too short', 'Weak', 'Fair', 'Good', 'Strong'][score];
+    return value
+      ? `<div class="row" style="gap:8px"><div class="strength grow" aria-hidden="true">${[0, 1, 2, 3].map(index => `<i class="${index < score ? 'on' : ''}" style="--c:${color}"></i>`).join('')}</div><span style="font-size:11.5px;color:${color};width:60px;text-align:right">${label}</span></div>`
+      : '';
+  }
 
   async function submit(event) {
     event.preventDefault();
@@ -29,7 +41,7 @@
           name: name.trim(),
           email: email.trim(),
           password,
-          password_confirmation: passwordConfirmation,
+          password_confirmation: password,
         }),
       });
 
@@ -66,27 +78,23 @@
       <h1>Create your account</h1>
       <p class="sub">Free for up to 3 members. No credit card required.</p>
       {#if errors.register}<div class="alert danger" role="alert">{@html ic('circle-alert', 15)}<span>{errors.register}</span></div>{/if}
+      <AuthSocialButtons />
+      <div class="or">or sign up with email</div>
       <div class="field">
         <label class="label" for="r-name">Full name</label>
         <input class="input input-lg" class:is-error={!!errors.name} id="r-name" type="text" bind:value={name} autocomplete="name" maxlength="255" required aria-invalid={!!errors.name} />
         {#if errors.name}<span class="err">{@html ic('circle-alert', 12)}{errors.name[0]}</span>{/if}
       </div>
       <div class="field">
-        <label class="label" for="r-email">Email</label>
+        <label class="label" for="r-email">Work email</label>
         <input class="input input-lg" class:is-error={!!errors.email} id="r-email" type="email" bind:value={email} autocomplete="email" required aria-invalid={!!errors.email} />
         {#if errors.email}<span class="err">{@html ic('circle-alert', 12)}{errors.email[0]}</span>{/if}
       </div>
       <div class="field">
         <label class="label" for="r-password">Password</label>
-        <div class="inwrap">
-          <input class="input input-lg" class:is-error={!!errors.password} id="r-password" type={showPassword ? 'text' : 'password'} bind:value={password} autocomplete="new-password" minlength="8" required style="padding-right:38px" aria-invalid={!!errors.password} />
-          <button type="button" class="ibtn ibtn-sm" style="position:absolute;right:5px" onclick={() => showPassword = !showPassword} aria-label={showPassword ? 'Hide password' : 'Show password'}>{@html ic(showPassword ? 'eye-off' : 'eye', 15)}</button>
-        </div>
-        {#if errors.password}<span class="err">{@html ic('circle-alert', 12)}{errors.password[0]}</span>{/if}
-      </div>
-      <div class="field">
-        <label class="label" for="r-password-confirmation">Confirm password</label>
-        <input class="input input-lg" id="r-password-confirmation" type={showPassword ? 'text' : 'password'} bind:value={passwordConfirmation} autocomplete="new-password" required aria-invalid={!!errors.password} />
+        <input class="input input-lg" class:is-error={!!errors.password} id="r-password" type="password" bind:value={password} autocomplete="new-password" required aria-invalid={!!errors.password} />
+        {@html strengthMeter(password)}
+        {#if errors.password}<span class="err">{@html ic('circle-alert', 12)}{errors.password[0]}</span>{:else}<span class="hint">At least 10 characters with a number or symbol.</span>{/if}
       </div>
       <button class="btn btn-primary btn-lg btn-block" class:is-loading={busy} disabled={busy}>{busy ? 'Creating account…' : 'Create account'}</button>
       <p class="hint" style="text-align:center">By creating an account you agree to the Terms and Privacy Policy.</p>

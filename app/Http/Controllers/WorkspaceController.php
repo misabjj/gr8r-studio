@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,15 +17,17 @@ class WorkspaceController extends Controller
         $user = $request->user();
 
         return Inertia::render('Home/Index', [
-            'projects' => Project::active()->ownedBy($user)
+            'projects' => Project::ownedBy($user)
+                ->whereNotIn('status', [ProjectStatus::Completed->value, ProjectStatus::Archived->value])
                 ->withCount('tasks')
                 ->withCount(['tasks as completed_tasks_count' => fn (Builder $query) => $query->completed()])
                 ->orderBy('name')
                 ->get(),
-            'tasks' => Task::ownedBy($user)->with('project:id,name,key,color')->latest()->limit(14)->get(),
+            'tasks' => Task::ownedBy($user)->with('project:id,name,key,color')->latest()->get(),
             'stats' => [
                 'openTasks' => Task::ownedBy($user)->open()->count(),
                 'completedTasks' => Task::ownedBy($user)->completed()->count(),
+                'completedThisWeek' => Task::ownedBy($user)->completed()->where('completed_at', '>=', now()->startOfWeek())->count(),
                 'projects' => Project::ownedBy($user)->count(),
             ],
         ]);

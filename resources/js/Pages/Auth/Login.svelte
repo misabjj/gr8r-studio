@@ -3,6 +3,7 @@
   import { store as loginRoute } from '../../routes/login';
   import { request as passwordRequest } from '../../routes/password';
   import { ic, LOGO } from '@/src/core/icons.js';
+  import AuthSocialButtons from '../../Components/AuthSocialButtons.svelte';
 
   let { status = null } = $props();
   let email = $state('hello@gr8rstudio.com');
@@ -78,6 +79,8 @@
       </div>
       <label class="row" style="font-size:13px;gap:8px;cursor:pointer"><input type="checkbox" class="check" bind:checked={remember} />Remember me for 30 days</label>
       <button class="btn btn-primary btn-lg btn-block" class:is-loading={busy} disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+      <div class="or">or</div>
+      <AuthSocialButtons />
       <p class="auth-foot">Don't have an account? <a class="link" href={register.url()}>Sign up</a></p>
     </form>
   </div>
