@@ -5,28 +5,19 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "check": "svelte-check --tsconfig ./tsconfig.json",
-        "lint": "biome check resources/js/app.ts resources/js/types.ts resources/css/app.css resources/css/workspace.css vite.config.js",
-        "format": "biome format --write resources/js/app.ts resources/js/types.ts resources/css/app.css resources/css/workspace.css vite.config.js"
+        "lint": "biome check src/core/laravel.js vite.config.js",
+        "format": "biome format --write src/core/laravel.js vite.config.js"
     },
     "devDependencies": {
         "@biomejs/biome": "^2.6.5",
         "@laravel/vite-plugin-wayfinder": "^0.1.11",
-        "@sveltejs/vite-plugin-svelte": "^7.3.1",
-        "@tailwindcss/vite": "^4.0.0",
         "concurrently": "^10.0.3",
         "laravel-vite-plugin": "^3.1",
-        "svelte-check": "^4.7.8",
-        "tailwindcss": "^4.0.0",
+        "lucide": "^0.460.0",
         "typescript": "^6.0.3",
         "vite": "^8.0.0"
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.1"
-    },
-    "dependencies": {
-        "@inertiajs/svelte": "^3.11.0",
-        "@lucide/svelte": "^1.69.0",
-        "svelte": "^5.57.3"
     }
 }
