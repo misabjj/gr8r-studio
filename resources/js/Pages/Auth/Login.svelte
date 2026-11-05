@@ -52,7 +52,7 @@
   <div class="auth-top">
     <span class="brand">{@html LOGO(22)}</span>
     <div class="row">
-      <a class="link" href={register.url()}>Create account</a>
+      <a class="btn btn-ghost btn-sm" href={register.url()}>Sign up</a>
       <button class="ibtn" type="button" aria-label="Toggle theme">{@html ic('moon', 16)}</button>
     </div>
   </div>
@@ -78,6 +78,7 @@
       </div>
       <label class="row" style="font-size:13px;gap:8px;cursor:pointer"><input type="checkbox" class="check" bind:checked={remember} />Remember me for 30 days</label>
       <button class="btn btn-primary btn-lg btn-block" class:is-loading={busy} disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+      <p class="auth-foot">Don't have an account? <a class="link" href={register.url()}>Sign up</a></p>
     </form>
   </div>
   <div class="auth-foot" style="padding:18px;font-size:12px"><span class="faint">© 2026 Gr8r Studio · Terms · Privacy</span></div>

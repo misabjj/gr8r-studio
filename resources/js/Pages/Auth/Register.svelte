@@ -56,7 +56,7 @@
   <div class="auth-top">
     <span class="brand">{@html LOGO(22)}</span>
     <div class="row">
-      <a class="link" href={login.url()}>Sign in</a>
+      <a class="btn btn-ghost btn-sm" href={login.url()}>Log in</a>
       <button class="ibtn" type="button" aria-label="Toggle theme">{@html ic('moon', 16)}</button>
     </div>
   </div>
@@ -64,7 +64,7 @@
     <form class="auth-card" onsubmit={submit} novalidate>
       <div style="display:flex;justify-content:center">{@html LOGO(30)}</div>
       <h1>Create your account</h1>
-      <p class="sub">Get started with Gr8r Studio</p>
+      <p class="sub">Free for up to 3 members. No credit card required.</p>
       {#if errors.register}<div class="alert danger" role="alert">{@html ic('circle-alert', 15)}<span>{errors.register}</span></div>{/if}
       <div class="field">
         <label class="label" for="r-name">Full name</label>
@@ -89,6 +89,8 @@
         <input class="input input-lg" id="r-password-confirmation" type={showPassword ? 'text' : 'password'} bind:value={passwordConfirmation} autocomplete="new-password" required aria-invalid={!!errors.password} />
       </div>
       <button class="btn btn-primary btn-lg btn-block" class:is-loading={busy} disabled={busy}>{busy ? 'Creating account…' : 'Create account'}</button>
+      <p class="hint" style="text-align:center">By creating an account you agree to the Terms and Privacy Policy.</p>
+      <p class="auth-foot">Already have an account? <a class="link" href={login.url()}>Sign in</a></p>
     </form>
   </div>
   <div class="auth-foot" style="padding:18px;font-size:12px"><span class="faint">© 2026 Gr8r Studio · Terms · Privacy</span></div>
