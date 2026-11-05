@@ -8,13 +8,44 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: gr8r_studio
+          POSTGRES_USER: gr8r
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: shivammathur/setup-php@v2
         with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run format:check
-      - run: npm run build
+          php-version: '8.5'
+          extensions: pdo_pgsql, redis
+          coverage: none
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: composer install --no-interaction --prefer-dist
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run check
+      - run: vendor/bin/pint --test
+      - run: php artisan test --compact
+      - run: vendor/bin/pest --type-coverage
+      - run: bun run build
