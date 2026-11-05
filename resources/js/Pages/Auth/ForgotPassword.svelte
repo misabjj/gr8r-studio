@@ -1,5 +1,6 @@
 <script>
   import { login } from '../../routes';
+  import { register } from '../../routes';
   import { email as sendResetLink } from '../../routes/password';
   import { ic, LOGO } from '@/src/core/icons.js';
 
@@ -47,7 +48,7 @@
 <div class="auth">
   <div class="auth-top">
     <span class="brand">{@html LOGO(22)}</span>
-    <div class="row"><a class="link" href={login.url()}>Sign in</a><button class="ibtn" type="button" aria-label="Toggle theme">{@html ic('moon', 16)}</button></div>
+    <div class="row"><a class="link" href={register.url()}>Create account</a><a class="link" href={login.url()}>Sign in</a><button class="ibtn" type="button" aria-label="Toggle theme">{@html ic('moon', 16)}</button></div>
   </div>
   <div class="auth-c">
     <form class="auth-card" onsubmit={submit} novalidate>
