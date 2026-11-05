@@ -1,4 +1,6 @@
 <script>
+  import { Link } from '@inertiajs/svelte';
+  import { register } from '../../routes';
   import { store as loginRoute } from '../../routes/login';
   import { ic, LOGO } from '@/src/core/icons.js';
 
@@ -73,6 +75,7 @@
       </div>
       <label class="row" style="font-size:13px;gap:8px;cursor:pointer"><input type="checkbox" class="check" bind:checked={remember} />Remember me for 30 days</label>
       <button class="btn btn-primary btn-lg btn-block" class:is-loading={busy} disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+      <p class="sub" style="margin:0">New to Gr8r Studio? <Link class="link" href={register().url}>Create an account</Link></p>
     </form>
   </div>
   <div class="auth-foot" style="padding:18px;font-size:12px"><span class="faint">© 2026 Gr8r Studio · Terms · Privacy</span></div>

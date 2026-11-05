@@ -116,6 +116,39 @@ it('rejects invalid login credentials', function () {
     $this->assertGuest();
 });
 
+it('registers a user and signs them in', function () {
+    $this->post('/register', [
+        'name' => 'Misa B',
+        'email' => 'misa@example.com',
+        'password' => 'a-secure-password',
+        'password_confirmation' => 'a-secure-password',
+    ])->assertRedirect('/');
+
+    $this->assertAuthenticated();
+    $this->assertDatabaseHas('users', [
+        'name' => 'Misa B',
+        'email' => 'misa@example.com',
+    ]);
+});
+
+it('renders the registration page through Inertia', function () {
+    $this->get('/register')
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('Auth/Register'));
+});
+
+it('rejects registration when password confirmation does not match', function () {
+    $this->from('/register')->post('/register', [
+        'name' => 'Misa B',
+        'email' => 'misa@example.com',
+        'password' => 'a-secure-password',
+        'password_confirmation' => 'a-different-password',
+    ])->assertRedirect('/register')->assertSessionHasErrors('password');
+
+    $this->assertGuest();
+    $this->assertDatabaseMissing('users', ['email' => 'misa@example.com']);
+});
+
 it('returns the updated task as JSON for an asynchronous action', function () {
     $user = User::factory()->create();
     $project = Project::factory()->for($user, 'owner')->create();

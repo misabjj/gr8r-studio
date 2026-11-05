@@ -44,6 +44,50 @@ login.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 })
 
 /**
+* @see \App\Http\Controllers\Auth\RegisteredUserController::register
+* @see app/Http/Controllers/Auth/RegisteredUserController.php:15
+* @route '/register'
+*/
+export const register = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: register.url(options),
+    method: 'get',
+})
+
+register.definition = {
+    methods: ["get","head"],
+    url: '/register',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Auth\RegisteredUserController::register
+* @see app/Http/Controllers/Auth/RegisteredUserController.php:15
+* @route '/register'
+*/
+register.url = (options?: RouteQueryOptions) => {
+    return register.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Auth\RegisteredUserController::register
+* @see app/Http/Controllers/Auth/RegisteredUserController.php:15
+* @route '/register'
+*/
+register.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: register.url(options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\Auth\RegisteredUserController::register
+* @see app/Http/Controllers/Auth/RegisteredUserController.php:15
+* @route '/register'
+*/
+register.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: register.url(options),
+    method: 'head',
+})
+
+/**
 * @see \App\Http\Controllers\Auth\AuthenticatedSessionController::logout
 * @see app/Http/Controllers/Auth/AuthenticatedSessionController.php:31
 * @route '/logout'
