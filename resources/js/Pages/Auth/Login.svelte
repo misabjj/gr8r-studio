@@ -1,5 +1,4 @@
 <script>
-  import { Link } from '@inertiajs/svelte';
   import { register } from '../../routes';
   import { store as loginRoute } from '../../routes/login';
   import { request as passwordRequest } from '../../routes/password';
@@ -53,6 +52,7 @@
   <div class="auth-top">
     <span class="brand">{@html LOGO(22)}</span>
     <div class="row">
+      <a class="link" href={register.url()}>Create account</a>
       <button class="ibtn" type="button" aria-label="Toggle theme">{@html ic('moon', 16)}</button>
     </div>
   </div>
@@ -69,7 +69,7 @@
         {#if errors.email}<span class="err">{@html ic('circle-alert', 12)}{errors.email[0]}</span>{/if}
       </div>
       <div class="field">
-        <div class="row"><label class="label" for="l-pw">Password</label><span class="sp"></span><Link class="link" href={passwordRequest().url}>Forgot password?</Link></div>
+        <div class="row"><label class="label" for="l-pw">Password</label><span class="sp"></span><a class="link" href={passwordRequest.url()}>Forgot password?</a></div>
         <div class="inwrap">
           <input class="input input-lg" id="l-pw" type={showPassword ? 'text' : 'password'} bind:value={password} autocomplete="current-password" style="padding-right:38px" aria-invalid={!!errors.password} />
           <button type="button" class="ibtn ibtn-sm" style="position:absolute;right:5px" onclick={() => showPassword = !showPassword} aria-label={showPassword ? 'Hide password' : 'Show password'}>{@html ic(showPassword ? 'eye-off' : 'eye', 15)}</button>
@@ -78,7 +78,6 @@
       </div>
       <label class="row" style="font-size:13px;gap:8px;cursor:pointer"><input type="checkbox" class="check" bind:checked={remember} />Remember me for 30 days</label>
       <button class="btn btn-primary btn-lg btn-block" class:is-loading={busy} disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
-      <p class="sub" style="margin:0">New to Gr8r Studio? <Link class="link" href={register().url}>Create an account</Link></p>
     </form>
   </div>
   <div class="auth-foot" style="padding:18px;font-size:12px"><span class="faint">© 2026 Gr8r Studio · Terms · Privacy</span></div>

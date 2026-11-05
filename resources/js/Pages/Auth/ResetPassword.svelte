@@ -1,5 +1,4 @@
 <script>
-  import { Link } from '@inertiajs/svelte';
   import { login } from '../../routes';
   import { update as resetPassword } from '../../routes/password';
   import { ic, LOGO } from '@/src/core/icons.js';
@@ -55,7 +54,7 @@
 <div class="auth">
   <div class="auth-top">
     <span class="brand">{@html LOGO(22)}</span>
-    <div class="row"><button class="ibtn" type="button" aria-label="Toggle theme">{@html ic('moon', 16)}</button></div>
+    <div class="row"><a class="link" href={login.url()}>Sign in</a><button class="ibtn" type="button" aria-label="Toggle theme">{@html ic('moon', 16)}</button></div>
   </div>
   <div class="auth-c">
     <form class="auth-card" onsubmit={submit} novalidate>
@@ -82,7 +81,6 @@
         <input class="input input-lg" id="rp-password-confirmation" type={showPassword ? 'text' : 'password'} bind:value={passwordConfirmation} autocomplete="new-password" required />
       </div>
       <button class="btn btn-primary btn-lg btn-block" class:is-loading={busy} disabled={busy}>{busy ? 'Updating password…' : 'Reset password'}</button>
-      <p class="sub" style="margin:0"><Link class="link" href={login().url}>Back to sign in</Link></p>
     </form>
   </div>
   <div class="auth-foot" style="padding:18px;font-size:12px"><span class="faint">© 2026 Gr8r Studio · Terms · Privacy</span></div>

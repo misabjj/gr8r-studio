@@ -1,5 +1,4 @@
 <script>
-  import { Link } from '@inertiajs/svelte';
   import { login } from '../../routes';
   import { email as sendResetLink } from '../../routes/password';
   import { ic, LOGO } from '@/src/core/icons.js';
@@ -48,7 +47,7 @@
 <div class="auth">
   <div class="auth-top">
     <span class="brand">{@html LOGO(22)}</span>
-    <div class="row"><button class="ibtn" type="button" aria-label="Toggle theme">{@html ic('moon', 16)}</button></div>
+    <div class="row"><a class="link" href={login.url()}>Sign in</a><button class="ibtn" type="button" aria-label="Toggle theme">{@html ic('moon', 16)}</button></div>
   </div>
   <div class="auth-c">
     <form class="auth-card" onsubmit={submit} novalidate>
@@ -63,7 +62,6 @@
         {#if errors.email}<span class="err">{@html ic('circle-alert', 12)}{errors.email[0]}</span>{/if}
       </div>
       <button class="btn btn-primary btn-lg btn-block" class:is-loading={busy} disabled={busy}>{busy ? 'Sending…' : 'Send reset link'}</button>
-      <p class="sub" style="margin:0"><Link class="link" href={login().url}>Back to sign in</Link></p>
     </form>
   </div>
   <div class="auth-foot" style="padding:18px;font-size:12px"><span class="faint">© 2026 Gr8r Studio · Terms · Privacy</span></div>
