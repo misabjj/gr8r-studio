@@ -32,12 +32,12 @@ class Task extends Model
 
     public function scopeOpen(Builder $query): Builder
     {
-        return $query->where('status', '!=', TaskStatus::Done->value);
+        return $query->where('status', '!=', TaskStatus::Done);
     }
 
-    public function scopeWithStatus(Builder $query, TaskStatus $status): Builder
+    public function scopeCompleted(Builder $query): Builder
     {
-        return $query->where('status', $status->value);
+        return $query->where('status', TaskStatus::Done);
     }
 
     public function scopeOwnedBy(Builder $query, User $owner): Builder

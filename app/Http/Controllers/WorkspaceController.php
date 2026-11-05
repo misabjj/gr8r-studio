@@ -18,8 +18,8 @@ class WorkspaceController extends Controller
             'projects' => Project::active()->ownedBy($user)->withCount('tasks')->orderBy('name')->get(),
             'tasks' => Task::ownedBy($user)->open()->with('project:id,name,key,color')->latest()->limit(8)->get(),
             'stats' => [
-                'openTasks' => Task::ownedBy($user)->where('status', '!=', 'done')->count(),
-                'completedTasks' => Task::ownedBy($user)->where('status', 'done')->count(),
+                'openTasks' => Task::ownedBy($user)->open()->count(),
+                'completedTasks' => Task::ownedBy($user)->completed()->count(),
                 'projects' => Project::ownedBy($user)->count(),
             ],
         ]);

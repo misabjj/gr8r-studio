@@ -44,6 +44,17 @@ it('limits workspace data to the signed-in user', function () {
             ->where('stats.projects', 1));
 });
 
+it('queries open and completed task sets by their domain meaning', function () {
+    $project = Project::factory()->create();
+    $openTask = Task::factory()->for($project)->create(['status' => TaskStatus::Progress]);
+    $completedTask = Task::factory()->for($project)->create(['status' => TaskStatus::Done]);
+
+    expect(Task::query()->open()->pluck('id')->all())
+        ->toBe([$openTask->id])
+        ->and(Task::query()->completed()->pluck('id')->all())
+        ->toBe([$completedTask->id]);
+});
+
 it('authenticates a user with valid credentials', function () {
     $user = User::factory()->create(['password' => 'correct-horse']);
 
