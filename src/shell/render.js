@@ -150,7 +150,7 @@ export function render() {
     /* not supported here; safe to skip */
   }
   const keep = $$('[data-keep]').map(el => [el.dataset.keep, el.scrollTop, el.scrollLeft]);
-  $('#app').innerHTML = S.ui.auth ? renderAuth() : renderShell();
+  $('#legacy-app').innerHTML = S.ui.auth ? renderAuth() : renderShell();
   $('#layer').innerHTML = renderLayer();
   makeFocusable();
   keep.forEach(([k, t, l]) => {

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { wayfinder } from "@laravel/vite-plugin-wayfinder";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
 import laravel from "laravel-vite-plugin";
 import { icons as lucide } from "lucide";
 import { defineConfig } from "vite";
@@ -65,9 +66,10 @@ function lucideSubset() {
 export default defineConfig({
 	plugins: [
 		wayfinder({ skipDatabase: true }),
+		svelte(),
 		lucideSubset(),
 		laravel({
-			input: ["src/main.js"],
+			input: ["resources/js/app.js"],
 			refresh: true,
 		}),
 	],

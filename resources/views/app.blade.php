@@ -10,7 +10,7 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap">
         <title>Gr8r Studio</title>
-        @vite('src/main.js')
+        @vite('resources/js/app.js')
         @inertiaHead
     </head>
     <body>
