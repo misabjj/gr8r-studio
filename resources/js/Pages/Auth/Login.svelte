@@ -1,7 +1,7 @@
 <script>
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
-  import PasswordInput from "../../Components/PasswordInput.svelte";
+  import InputPassword from "../../Components/InputPassword.svelte";
   import { useForm } from '@inertiajs/svelte';
   import { register } from '../../routes';
   import { store as loginRoute } from '../../routes/login';
@@ -45,7 +45,7 @@
       </div>
       <div class="field">
         <div class="row"><Label for="l-pw">Password</Label><span class="sp"></span><a class="link" href={passwordRequest.url()}>Forgot password?</a></div>
-        <PasswordInput size="large" error={!!form.errors.password} id="l-pw" bind:value={form.password} autocomplete="current-password" revealable />
+        <InputPassword size="large" error={!!form.errors.password} id="l-pw" bind:value={form.password} autocomplete="current-password" revealable />
         {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{/if}
       </div>
       <label class="row" style="font-size:13px;gap:8px;cursor:pointer"><input type="checkbox" class="check" bind:checked={form.remember} />Remember me for 30 days</label>
