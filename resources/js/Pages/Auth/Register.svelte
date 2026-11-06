@@ -1,4 +1,5 @@
 <script>
+  import Label from "../../Components/Label.svelte";
   import { useForm } from '@inertiajs/svelte';
   import { store as registerRoute } from '../../routes/register';
   import { login } from '../../routes';
@@ -36,17 +37,17 @@
       <AuthSocialButtons />
       <div class="or">or sign up with email</div>
       <div class="field">
-        <label class="label" for="r-name">Full name</label>
+        <Label for="r-name">Full name</Label>
         <input class="input input-lg" class:is-error={!!form.errors.name} id="r-name" type="text" bind:value={form.name} autocomplete="name" maxlength="255" required aria-invalid={!!form.errors.name} />
         {#if form.errors.name}<span class="err">{@html ic('circle-alert', 12)}{form.errors.name}</span>{/if}
       </div>
       <div class="field">
-        <label class="label" for="r-email">Work email</label>
+        <Label for="r-email">Work email</Label>
         <input class="input input-lg" class:is-error={!!form.errors.email} id="r-email" type="email" bind:value={form.email} autocomplete="email" required aria-invalid={!!form.errors.email} />
         {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
       </div>
       <div class="field">
-        <label class="label" for="s-pw">Password</label>
+        <Label for="s-pw">Password</Label>
         <input class="input input-lg" class:is-error={!!form.errors.password} id="s-pw" type="password" bind:value={form.password} autocomplete="new-password" required aria-invalid={!!form.errors.password} />
         {@html strengthMeter(form.password)}
         {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{:else}<span class="hint">At least 10 characters with a number or symbol.</span>{/if}

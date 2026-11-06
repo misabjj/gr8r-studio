@@ -1,4 +1,5 @@
 <script>
+  import Label from "../../Components/Label.svelte";
   import { onMount, tick } from 'svelte';
   import { fade, scale } from 'svelte/transition';
   import { Link, router, usePage } from '@inertiajs/svelte';
@@ -1485,7 +1486,7 @@
     <div class="modal-wrap" transition:fade={{ duration: 180 }} role="presentation" onclick={event => event.target === event.currentTarget && (fileRenameTarget = null)}>
       <div class="modal sm" transition:scale={{ duration: 240, start: 0.97 }} role="dialog" aria-modal="true" aria-labelledby="rename-file-title" tabindex="-1">
         <div class="modal-h"><h2 id="rename-file-title">Rename file</h2><button type="button" class="ibtn ibtn-sm" aria-label="Close" onclick={() => fileRenameTarget = null}>{@html ic('x', 16)}</button></div>
-        <form id="rename-file-form" class="modal-b" onsubmit={renameProjectFile}><div class="field"><label class="label" for="rename-file-name">File name</label><input class="input" id="rename-file-name" bind:value={fileRenameName} required /></div></form>
+        <form id="rename-file-form" class="modal-b" onsubmit={renameProjectFile}><div class="field"><Label for="rename-file-name">File name</Label><input class="input" id="rename-file-name" bind:value={fileRenameName} required /></div></form>
         <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => fileRenameTarget = null}>Cancel</button><button type="submit" form="rename-file-form" class="btn btn-primary">Save</button></div>
       </div>
     </div>
@@ -1505,10 +1506,10 @@
       <div class="modal" transition:scale={{ duration: 240, start: 0.97 }} role="dialog" aria-modal="true" aria-labelledby="project-settings-title" tabindex="-1">
         <div class="modal-h"><h2 id="project-settings-title">Project settings</h2><button type="button" class="ibtn ibtn-sm" aria-label="Close" onclick={() => editDialogOpen = false}>{@html ic('x', 16)}</button></div>
         <form class="modal-b" onsubmit={saveProjectSettings}>
-          <div class="field"><label class="label" for="project-settings-name">Name</label><input class="input" id="project-settings-name" bind:value={projectForm.name} maxlength="120" required /></div>
-          <div class="field"><label class="label" for="project-settings-description">Description</label><textarea class="textarea" id="project-settings-description" bind:value={projectForm.description} rows="3" maxlength="5000"></textarea></div>
-          <div class="field"><label class="label" for="project-settings-status">Status</label><select class="select" id="project-settings-status" bind:value={projectForm.status}>{#each Object.entries(PSTAT) as [status, details]}<option value={status}>{details.name}</option>{/each}</select></div>
-          <div class="row" style="gap:10px"><div class="field grow"><label class="label" for="project-settings-start">Start date</label><input class="input" id="project-settings-start" type="date" bind:value={projectForm.start_date} /></div><div class="field grow"><label class="label" for="project-settings-due">Due date</label><input class="input" id="project-settings-due" type="date" bind:value={projectForm.due_date} /></div></div>
+          <div class="field"><Label for="project-settings-name">Name</Label><input class="input" id="project-settings-name" bind:value={projectForm.name} maxlength="120" required /></div>
+          <div class="field"><Label for="project-settings-description">Description</Label><textarea class="textarea" id="project-settings-description" bind:value={projectForm.description} rows="3" maxlength="5000"></textarea></div>
+          <div class="field"><Label for="project-settings-status">Status</Label><select class="select" id="project-settings-status" bind:value={projectForm.status}>{#each Object.entries(PSTAT) as [status, details]}<option value={status}>{details.name}</option>{/each}</select></div>
+          <div class="row" style="gap:10px"><div class="field grow"><Label for="project-settings-start">Start date</Label><input class="input" id="project-settings-start" type="date" bind:value={projectForm.start_date} /></div><div class="field grow"><Label for="project-settings-due">Due date</Label><input class="input" id="project-settings-due" type="date" bind:value={projectForm.due_date} /></div></div>
           {#if projectDialogError}<span class="err" role="alert">{projectDialogError}</span>{/if}
         </form>
         <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => editDialogOpen = false}>Cancel</button><button type="button" class="btn btn-primary" disabled={projectDialogBusy} onclick={() => saveProjectSettings({ preventDefault() {} })}>{projectDialogBusy ? 'Saving…' : 'Save changes'}</button></div>
@@ -1520,7 +1521,7 @@
       <div class="modal" transition:scale={{ duration: 240, start: 0.97 }} role="dialog" aria-modal="true" aria-labelledby="project-share-title" tabindex="-1">
         <div class="modal-h"><h2 id="project-share-title">Share “{project.name}”</h2><button type="button" class="ibtn ibtn-sm" aria-label="Close" onclick={() => membersDialogOpen = false}>{@html ic('x', 16)}</button></div>
         <div class="modal-b">
-          <div class="field"><label class="label" for="project-member-search">Add people by name or email</label><input class="input" id="project-member-search" bind:value={memberQuery} placeholder="Search workspace members" /></div>
+          <div class="field"><Label for="project-member-search">Add people by name or email</Label><input class="input" id="project-member-search" bind:value={memberQuery} placeholder="Search workspace members" /></div>
           <div class="eyebrow" style="margin-bottom:4px">People with access</div>
           {#each projectMemberOptions as member (member.id)}
             {@const isProjectMember = selectedMemberIds.includes(member.id)}
@@ -1539,8 +1540,8 @@
       <div class="modal sm" transition:scale={{ duration: 240, start: 0.97 }} role="dialog" aria-modal="true" aria-labelledby="save-project-view-title" tabindex="-1">
         <div class="modal-h"><div><h2 id="save-project-view-title">Save view</h2><p class="faint" style="margin:3px 0 0;font-size:12px">Save the current filters as a tab on this project.</p></div><button type="button" class="ibtn ibtn-sm" aria-label="Close" onclick={() => saveViewOpen = false}>{@html ic('x', 16)}</button></div>
         <form id="save-project-view-form" class="modal-b" onsubmit={saveProjectView}>
-          <div class="field"><label class="label" for="save-project-view-name">View name</label><input class="input" id="save-project-view-name" bind:this={saveViewNameInput} bind:value={saveViewName} placeholder="e.g. Design review queue" maxlength="80" /></div>
-          <div class="field"><label class="label" for="save-project-view-type">Layout</label><select class="select" id="save-project-view-type" bind:value={saveViewType}><option value="list">List</option><option value="board">Board</option><option value="table">Table</option></select></div>
+          <div class="field"><Label for="save-project-view-name">View name</Label><input class="input" id="save-project-view-name" bind:this={saveViewNameInput} bind:value={saveViewName} placeholder="e.g. Design review queue" maxlength="80" /></div>
+          <div class="field"><Label for="save-project-view-type">Layout</Label><select class="select" id="save-project-view-type" bind:value={saveViewType}><option value="list">List</option><option value="board">Board</option><option value="table">Table</option></select></div>
           {#if projectViewFilters.length}<div class="hint">{projectViewFilters.length} filter{projectViewFilters.length === 1 ? '' : 's'} will be saved with this view.</div>{:else}<div class="alert info">{@html ic('info', 14)}<span>No filters are active — the view will show all tasks. You can add filters after saving.</span></div>{/if}
         </form>
         <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => saveViewOpen = false}>Cancel</button><button type="submit" class="btn btn-primary" form="save-project-view-form">Save view</button></div>

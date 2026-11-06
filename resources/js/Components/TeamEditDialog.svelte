@@ -1,4 +1,5 @@
 <script>
+  import Label from "./Label.svelte";
   import { fade } from 'svelte/transition';
   import { tick } from 'svelte';
   import { useHttpRequest } from '../lib/http.js';
@@ -105,9 +106,9 @@
     <form id="team-edit-form" class="modal-b" onsubmit={submit}>
       <div class="row" style="gap:10px;align-items:flex-start">
         <span class="picon lg" style={`--c:${PCOLORS[color]};margin-top:22px`} aria-hidden="true">{@html ic(icon, 18)}</span>
-        <div class="field grow"><label class="label" for="team-edit-name">Team name</label><input class={`input ${errorMessage ? 'is-error' : ''}`} id="team-edit-name" bind:this={nameInput} bind:value={name} placeholder="e.g. Growth" aria-invalid={!!errorMessage} aria-describedby={errorMessage ? 'team-edit-name-error' : undefined} maxlength="120" />{#if errorMessage}<span id="team-edit-name-error" class="err" role="alert">{@html ic('circle-alert', 12)}{errorMessage}</span>{/if}</div>
+        <div class="field grow"><Label for="team-edit-name">Team name</Label><input class={`input ${errorMessage ? 'is-error' : ''}`} id="team-edit-name" bind:this={nameInput} bind:value={name} placeholder="e.g. Growth" aria-invalid={!!errorMessage} aria-describedby={errorMessage ? 'team-edit-name-error' : undefined} maxlength="120" />{#if errorMessage}<span id="team-edit-name-error" class="err" role="alert">{@html ic('circle-alert', 12)}{errorMessage}</span>{/if}</div>
       </div>
-      <div class="field"><label class="label" for="team-edit-description">What does this team own?</label><input class="input" id="team-edit-description" bind:value={description} placeholder="e.g. Acquisition experiments and lifecycle email" maxlength="500" /></div>
+      <div class="field"><Label for="team-edit-description">What does this team own?</Label><input class="input" id="team-edit-description" bind:value={description} placeholder="e.g. Acquisition experiments and lifecycle email" maxlength="500" /></div>
       <div class="row" style="gap:16px;align-items:flex-start;flex-wrap:wrap">
         <div class="field" style="flex:1;min-width:220px"><span class="label" id="team-edit-icon-label">Icon</span><div class="iconpick" role="radiogroup" aria-labelledby="team-edit-icon-label">{#each PICONS as item (item)}<button type="button" role="radio" aria-checked={icon === item} class:on={icon === item} aria-label={item} onclick={() => icon = item}>{@html ic(item, 15)}</button>{/each}</div></div>
         <div class="field"><span class="label" id="team-edit-color-label">Color</span><div class="swatches" role="radiogroup" aria-labelledby="team-edit-color-label" style="max-width:140px">{#each Object.entries(PCOLORS) as [key, hex] (key)}<button type="button" role="radio" aria-checked={color === key} class={`sw ${color === key ? 'on' : ''}`} style={`--c:${hex};width:22px;height:22px`} aria-label={key} onclick={() => color = key}>{#if color === key}{@html ic('check', 12)}{/if}</button>{/each}</div></div>

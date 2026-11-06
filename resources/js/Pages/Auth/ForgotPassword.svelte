@@ -1,4 +1,5 @@
 <script>
+  import Label from "../../Components/Label.svelte";
   import { useForm } from '@inertiajs/svelte';
   import { login } from '../../routes';
   import { email as sendResetLink } from '../../routes/password';
@@ -30,7 +31,7 @@
       <p class="sub">Enter your account email and we'll send you a reset link.</p>
       {#if status}<div class="alert ok" role="status">{@html ic('circle-check', 15)}<span>{status}</span></div>{/if}
       <div class="field">
-        <label class="label" for="f-email">Email</label>
+        <Label for="f-email">Email</Label>
         <input class="input input-lg" class:is-error={!!form.errors.email} id="f-email" type="email" bind:value={form.email} autocomplete="email" required aria-invalid={!!form.errors.email} />
         {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
       </div>

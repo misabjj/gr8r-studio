@@ -1,4 +1,5 @@
 <script>
+  import Label from "../../Components/Label.svelte";
   import { fade, scale } from 'svelte/transition';
   import { router } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
@@ -139,7 +140,7 @@
       <div class="modal sm" transition:scale={{ duration: 260, start: 0.97 }} role="alertdialog" aria-modal="true" aria-labelledby="archive-confirm-title" aria-describedby="archive-confirm-description">
         <div class="modal-b" style="padding-top:18px;gap:10px">
           <div class="row" style="gap:12px;align-items:flex-start"><span class="ftype" style="--c:var(--red);width:34px;height:34px;border-radius:9px">{@html ic('trash-2', 17)}</span><div class="grow"><h2 id="archive-confirm-title" style="font-size:15px;font-weight:600;margin:4px 0 6px">{confirmation.type === 'task' ? 'Delete task permanently?' : `Delete ${confirmation.item.name}?`}</h2><p id="archive-confirm-description" class="muted" style="margin:0;font-size:13px;line-height:1.55">{#if confirmation.type === 'task'}<b>{confirmation.item.title}</b>, its subtasks, comments, and attachments will be deleted for everyone. This can't be undone.{:else}This permanently deletes the project and its {confirmation.item.tasks_count || 0} tasks, files, and comments for everyone. This can't be undone.{/if}</p></div></div>
-          {#if confirmation.type === 'project'}<div class="field" style="margin-top:6px"><label class="label" for="archive-delete-confirm">Type <b>{confirmation.item.name}</b> to confirm</label><input class="input" id="archive-delete-confirm" bind:value={confirmationName} autocomplete="off" /></div>{/if}
+          {#if confirmation.type === 'project'}<div class="field" style="margin-top:6px"><Label for="archive-delete-confirm">Type <b>{confirmation.item.name}</b> to confirm</Label><input class="input" id="archive-delete-confirm" bind:value={confirmationName} autocomplete="off" /></div>{/if}
           {#if errorMessage}<div class="err" role="alert">{@html ic('circle-alert', 12)}{errorMessage}</div>{/if}
         </div>
         <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => confirmation = null}>Cancel</button><button type="button" class="btn btn-danger" disabled={busy || (confirmation.type === 'project' && confirmationName !== confirmation.item.name)} onclick={deleteArchivedWork}>{busy ? 'Working…' : 'Delete permanently'}</button></div>

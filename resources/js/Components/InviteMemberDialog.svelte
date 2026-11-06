@@ -1,4 +1,5 @@
 <script>
+  import Label from "./Label.svelte";
   import { onMount, tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import { D, save, teamsList } from '@/src/core/store.js';
@@ -97,7 +98,7 @@
     </div>
     <form id="invite-dialog-form" class="modal-b" onsubmit={submitInvites}>
       <div class="field">
-        <label class="label" for="invite-dialog-emails">Email addresses</label>
+        <Label for="invite-dialog-emails">Email addresses</Label>
         <textarea bind:this={emailInput} bind:value={inviteDraft} class={`textarea ${inviteError ? 'is-error' : ''}`} id="invite-dialog-emails" placeholder="name@company.com, another@company.com" rows="3" aria-invalid={!!inviteError} aria-describedby={inviteError ? 'invite-dialog-error' : 'invite-dialog-hint'}></textarea>
         {#if inviteError}
           <span class="err" id="invite-dialog-error" role="alert">{@html ic('circle-alert', 12)}{inviteError}</span>
@@ -107,11 +108,11 @@
       </div>
       <div class="row" style="gap:12px">
         <div class="field grow">
-          <label class="label" for="invite-dialog-role">Role</label>
+          <Label for="invite-dialog-role">Role</Label>
           <select class="select" id="invite-dialog-role" bind:value={inviteRole}><option>Member</option><option>Admin</option><option>Guest</option></select>
         </div>
         <div class="field grow">
-          <label class="label" for="invite-dialog-team">Team</label>
+          <Label for="invite-dialog-team">Team</Label>
           <select class="select" id="invite-dialog-team" bind:value={inviteTeam}>{#each teamsList() as team (team.id)}<option value={team.id}>{team.name}</option>{/each}</select>
         </div>
       </div>
