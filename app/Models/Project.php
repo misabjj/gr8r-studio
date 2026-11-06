@@ -57,6 +57,16 @@ class Project extends Model
         return $query->where('status', '!=', ProjectStatus::Archived->value);
     }
 
+    public function scopeNotCompleted(Builder $query): Builder
+    {
+        return $query->where('status', '!=', ProjectStatus::Completed->value);
+    }
+
+    public function scopeNotComplete(Builder $query): Builder
+    {
+        return $query->where('status', '!=', ProjectStatus::Complete->value);
+    }
+
     public function scopeFavorited(Builder $query): Builder
     {
         return $query->where('is_favorite', true);
@@ -65,5 +75,15 @@ class Project extends Model
     public function scopeOwnedBy(Builder $query, User $owner): Builder
     {
         return $query->whereBelongsTo($owner, 'owner');
+    }
+
+    public function scopeAccessibleTo(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $projectQuery) use ($user): void {
+            $projectQuery->where('is_private', false)
+                ->orWhereHas('members', function (Builder $members) use ($user): void {
+                    $members->whereKey($user->getKey());
+                });
+        });
     }
 }

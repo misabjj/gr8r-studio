@@ -18,6 +18,10 @@ class CreateTask
         ?string $dueDate,
         ?int $assigneeId,
         ?string $startDate,
+        array $labels,
+        array $subtasks,
+        array $attachments,
+        ?string $recurrence,
     ): Task {
         $task = $project->tasks()->make();
         $task->title = $title;
@@ -27,6 +31,10 @@ class CreateTask
         $task->due_date = $dueDate;
         $task->start_date = $startDate;
         $task->assignee_id = $assigneeId;
+        $task->labels = $labels;
+        $task->subtasks = $subtasks;
+        $task->attachments = $attachments;
+        $task->recurrence = $recurrence;
         $task->save();
 
         return $task;

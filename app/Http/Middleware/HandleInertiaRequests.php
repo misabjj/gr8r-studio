@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Enums\ProjectStatus;
 use App\Models\Project;
+use App\Models\Team;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -47,6 +48,9 @@ class HandleInertiaRequests extends Middleware
                     ->withCount('tasks')
                     ->orderBy('name')
                     ->get()
+                : collect(),
+            'teams' => $request->user()
+                ? Team::query()->orderBy('name')->get(['id', 'name', 'icon', 'color', 'description'])
                 : collect(),
             'auth' => [
                 'user' => $request->user(),

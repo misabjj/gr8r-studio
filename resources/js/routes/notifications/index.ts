@@ -1,7 +1,7 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\WorkspaceNotificationsController::index
-* @see app/Http/Controllers/WorkspaceNotificationsController.php:12
+* @see app/Http/Controllers/WorkspaceNotificationsController.php:13
 * @route '/notifications'
 */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\WorkspaceNotificationsController::index
-* @see app/Http/Controllers/WorkspaceNotificationsController.php:12
+* @see app/Http/Controllers/WorkspaceNotificationsController.php:13
 * @route '/notifications'
 */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\WorkspaceNotificationsController::index
-* @see app/Http/Controllers/WorkspaceNotificationsController.php:12
+* @see app/Http/Controllers/WorkspaceNotificationsController.php:13
 * @route '/notifications'
 */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -35,7 +35,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\WorkspaceNotificationsController::index
-* @see app/Http/Controllers/WorkspaceNotificationsController.php:12
+* @see app/Http/Controllers/WorkspaceNotificationsController.php:13
 * @route '/notifications'
 */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -43,8 +43,96 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+/**
+* @see \App\Http\Controllers\WorkspaceNotificationReadStateController::readAll
+* @see app/Http/Controllers/WorkspaceNotificationReadStateController.php:28
+* @route '/notifications/read-all'
+*/
+export const readAll = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: readAll.url(options),
+    method: 'patch',
+})
+
+readAll.definition = {
+    methods: ["patch"],
+    url: '/notifications/read-all',
+} satisfies RouteDefinition<["patch"]>
+
+/**
+* @see \App\Http\Controllers\WorkspaceNotificationReadStateController::readAll
+* @see app/Http/Controllers/WorkspaceNotificationReadStateController.php:28
+* @route '/notifications/read-all'
+*/
+readAll.url = (options?: RouteQueryOptions) => {
+    return readAll.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\WorkspaceNotificationReadStateController::readAll
+* @see app/Http/Controllers/WorkspaceNotificationReadStateController.php:28
+* @route '/notifications/read-all'
+*/
+readAll.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: readAll.url(options),
+    method: 'patch',
+})
+
+/**
+* @see \App\Http\Controllers\WorkspaceNotificationReadStateController::read
+* @see app/Http/Controllers/WorkspaceNotificationReadStateController.php:13
+* @route '/notifications/{notification}/read'
+*/
+export const read = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: read.url(args, options),
+    method: 'patch',
+})
+
+read.definition = {
+    methods: ["patch"],
+    url: '/notifications/{notification}/read',
+} satisfies RouteDefinition<["patch"]>
+
+/**
+* @see \App\Http\Controllers\WorkspaceNotificationReadStateController::read
+* @see app/Http/Controllers/WorkspaceNotificationReadStateController.php:13
+* @route '/notifications/{notification}/read'
+*/
+read.url = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { notification: args }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            notification: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        notification: args.notification,
+    }
+
+    return read.definition.url
+            .replace('{notification}', parsedArgs.notification.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\WorkspaceNotificationReadStateController::read
+* @see app/Http/Controllers/WorkspaceNotificationReadStateController.php:13
+* @route '/notifications/{notification}/read'
+*/
+read.patch = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: read.url(args, options),
+    method: 'patch',
+})
+
 const notifications = {
     index: Object.assign(index, index),
+    readAll: Object.assign(readAll, readAll),
+    read: Object.assign(read, read),
 }
 
 export default notifications

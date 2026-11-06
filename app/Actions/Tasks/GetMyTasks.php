@@ -13,6 +13,7 @@ class GetMyTasks
     public function handle(User $user): Collection
     {
         return Task::ownedBy($user)
+            ->notArchived()
             ->assignedTo($user)
             ->whereHas('project', fn (Builder $query) => $query->notArchived())
             ->with(['project:id,name,key,color', 'assignee:id,name'])

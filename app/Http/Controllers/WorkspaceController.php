@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Workspace\GetWorkspaceDemoData;
-use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,17 +18,19 @@ class WorkspaceController extends Controller
 
         return Inertia::render('Home/Index', [
             'projects' => Project::ownedBy($user)
-                ->whereNotIn('status', [ProjectStatus::Completed->value, ProjectStatus::Archived->value])
-                ->withCount('tasks')
-                ->withCount(['tasks as completed_tasks_count' => fn (Builder $query) => $query->completed()])
+                ->notArchived()
+                ->notCompleted()
+                ->with('members:id,name,color')
+                ->withCount(['tasks' => fn (Builder $query) => $query->notArchived()])
+                ->withCount(['tasks as completed_tasks_count' => fn (Builder $query) => $query->notArchived()->completed()])
                 ->orderBy('name')
                 ->get(),
-            'tasks' => Task::ownedBy($user)->with('project:id,name,key,color')->latest()->get(),
-            'myTasks' => Task::ownedBy($user)->assignedTo($user)->with('project:id,name,key,color')->latest()->get(),
+            'tasks' => Task::ownedBy($user)->notArchived()->with(['project:id,name,key,color', 'assignee:id,name,color'])->latest()->get(),
+            'myTasks' => Task::ownedBy($user)->notArchived()->assignedTo($user)->with(['project:id,name,key,color', 'assignee:id,name,color'])->latest()->get(),
             'stats' => [
-                'openTasks' => Task::ownedBy($user)->open()->count(),
-                'completedTasks' => Task::ownedBy($user)->completed()->count(),
-                'completedThisWeek' => Task::ownedBy($user)->completed()->where('completed_at', '>=', now()->startOfWeek())->count(),
+                'openTasks' => Task::ownedBy($user)->notArchived()->open()->count(),
+                'completedTasks' => Task::ownedBy($user)->notArchived()->completed()->count(),
+                'completedThisWeek' => Task::ownedBy($user)->notArchived()->completed()->where('completed_at', '>=', now()->startOfWeek())->count(),
                 'projects' => Project::ownedBy($user)->count(),
             ],
             'workspaceData' => $getWorkspaceDemoData->handle($user),

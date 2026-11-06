@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\WorkspaceSearchController::index
-* @see app/Http/Controllers/WorkspaceSearchController.php:14
+* @see app/Http/Controllers/WorkspaceSearchController.php:15
 * @route '/search'
 */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\WorkspaceSearchController::index
-* @see app/Http/Controllers/WorkspaceSearchController.php:14
+* @see app/Http/Controllers/WorkspaceSearchController.php:15
 * @route '/search'
 */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\WorkspaceSearchController::index
-* @see app/Http/Controllers/WorkspaceSearchController.php:14
+* @see app/Http/Controllers/WorkspaceSearchController.php:15
 * @route '/search'
 */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -35,7 +35,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\WorkspaceSearchController::index
-* @see app/Http/Controllers/WorkspaceSearchController.php:14
+* @see app/Http/Controllers/WorkspaceSearchController.php:15
 * @route '/search'
 */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

@@ -22,14 +22,13 @@ class Gr8rStudioSeeder extends Seeder
         );
         $sourceData = $fixture['data'];
         $sourceGeneratedAt = CarbonImmutable::createFromTimestampMs($fixture['generatedAt']);
-        $sourceToday = $sourceGeneratedAt->startOfDay();
         $this->seedTeams($fixture['teams']);
         $members = $this->seedMembers($sourceData['members'], $sourceGeneratedAt);
         $owner = $members[$sourceData['me']];
-        $projects = $this->seedProjects($sourceData['projects'], $owner, $members, $sourceToday, $sourceGeneratedAt);
+        $projects = $this->seedProjects($sourceData['projects'], $owner, $members, $sourceGeneratedAt);
 
         $this->removeLegacySampleTasks(array_keys($projects));
-        $this->seedTasks($sourceData['tasks'], $projects, $members, $sourceGeneratedAt, $sourceToday);
+        $this->seedTasks($sourceData['tasks'], $projects, $members, $sourceGeneratedAt);
 
         DB::table('workspace_demo_snapshots')->updateOrInsert(
             ['name' => $sourceData['ws']['name']],
@@ -117,7 +116,6 @@ class Gr8rStudioSeeder extends Seeder
         array $sourceProjects,
         User $owner,
         array $members,
-        CarbonImmutable $sourceToday,
         CarbonImmutable $sourceGeneratedAt,
     ): array {
         $projects = [];
@@ -141,12 +139,12 @@ class Gr8rStudioSeeder extends Seeder
                 'lead_id' => $members[$sourceProject['lead']]->id,
                 'is_private' => $sourceProject['private'] ?? false,
                 'is_favorite' => $sourceProject['fav'],
-                'start_date' => $this->sourceDate($sourceProject['start'], $sourceToday),
-                'due_date' => $this->sourceDate($sourceProject['due'], $sourceToday),
+                'start_date' => $this->sourceDate($sourceProject['start']),
+                'due_date' => $this->sourceDate($sourceProject['due']),
             ]);
             $project->save();
             DB::table('projects')->where('id', $project->id)->update([
-                'updated_at' => $sourceGeneratedAt->subMinutes($sourceProject['last']),
+                'updated_at' => CarbonImmutable::now()->subMinutes($sourceProject['last']),
             ]);
             $project->members()->sync(array_map(
                 fn (string $sourceMemberId): int => $members[$sourceMemberId]->id,
@@ -168,7 +166,6 @@ class Gr8rStudioSeeder extends Seeder
         array $projects,
         array $members,
         CarbonImmutable $sourceGeneratedAt,
-        CarbonImmutable $sourceToday,
     ): void {
         foreach ($sourceTasks as $sourceTask) {
             $task = Task::query()->where('source_key', $sourceTask['id'])->first()
@@ -185,8 +182,8 @@ class Gr8rStudioSeeder extends Seeder
                 'status' => $sourceTask['status'],
                 'priority' => $sourceTask['priority'],
                 'is_favorite' => $sourceTask['fav'],
-                'start_date' => $this->sourceDate($sourceTask['start'], $sourceToday),
-                'due_date' => $this->sourceDate($sourceTask['due'], $sourceToday),
+                'start_date' => $this->sourceDate($sourceTask['start']),
+                'due_date' => $this->sourceDate($sourceTask['due']),
                 'completed_at' => $this->sourceTimestamp($sourceTask['completedAt'] ?? null, $sourceGeneratedAt),
                 'labels' => $sourceTask['labels'],
                 'subtasks' => $sourceTask['subtasks'],
@@ -206,15 +203,9 @@ class Gr8rStudioSeeder extends Seeder
         }
     }
 
-    private function sourceDate(?string $sourceDate, CarbonImmutable $sourceToday): ?string
+    private function sourceDate(?string $sourceDate): ?string
     {
-        if ($sourceDate === null) {
-            return null;
-        }
-
-        $offset = (int) $sourceToday->diffInDays(CarbonImmutable::parse($sourceDate)->startOfDay(), false);
-
-        return today()->addDays($offset)->toDateString();
+        return $sourceDate;
     }
 
     private function sourceTimestamp(?int $sourceTimestamp, CarbonImmutable $sourceGeneratedAt): ?CarbonImmutable

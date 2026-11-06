@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Tasks\ArchiveTask;
 use App\Actions\Tasks\CreateTask;
-use App\Actions\Tasks\UpdateTask;
+use App\Actions\Tasks\DeleteTask;
 use App\Actions\Tasks\ToggleTaskFavorite;
+use App\Actions\Tasks\UpdateTask;
 use App\Data\Tasks\UpdateTaskData;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Http\Requests\ArchiveTaskRequest;
+use App\Http\Requests\DeleteTaskRequest;
 use App\Http\Requests\StoreTaskRequest;
-use App\Http\Requests\UpdateTaskRequest;
 use App\Http\Requests\ToggleTaskFavoriteRequest;
+use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +22,18 @@ use Illuminate\Http\RedirectResponse;
 
 class TaskController extends Controller
 {
+    public function archive(Task $task, ArchiveTaskRequest $request, ArchiveTask $archiveTask): JsonResponse
+    {
+        return response()->json($archiveTask->handle($task));
+    }
+
+    public function destroy(Task $task, DeleteTaskRequest $request, DeleteTask $deleteTask): JsonResponse
+    {
+        $deleteTask->handle($task);
+
+        return response()->json(status: 204);
+    }
+
     public function toggleFavorite(Task $task, ToggleTaskFavoriteRequest $request, ToggleTaskFavorite $toggleTaskFavorite): JsonResponse
     {
         return response()->json($toggleTaskFavorite->handle($task));
@@ -34,6 +50,10 @@ class TaskController extends Controller
             dueDate: $request->validated('due_date'),
             assigneeId: $request->validated('assignee_id'),
             startDate: $request->validated('start_date'),
+            labels: $request->validated('labels', []),
+            subtasks: $request->validated('subtasks', []),
+            attachments: $request->validated('attachments', []),
+            recurrence: $request->validated('recurrence'),
         );
 
         if ($request->expectsJson()) {
@@ -54,6 +74,8 @@ class TaskController extends Controller
                 title: $validated['title'] ?? null,
                 updatesDescription: array_key_exists('description', $validated),
                 description: $validated['description'] ?? null,
+                updatesProjectId: array_key_exists('project_id', $validated),
+                projectId: $validated['project_id'] ?? null,
                 updatesStatus: array_key_exists('status', $validated),
                 status: isset($validated['status']) ? TaskStatus::from($validated['status']) : null,
                 updatesPriority: array_key_exists('priority', $validated),
@@ -64,6 +86,16 @@ class TaskController extends Controller
                 assigneeId: $validated['assignee_id'] ?? null,
                 updatesStartDate: array_key_exists('start_date', $validated),
                 startDate: $validated['start_date'] ?? null,
+                updatesLabels: array_key_exists('labels', $validated),
+                labels: $validated['labels'] ?? null,
+                updatesRecurrence: array_key_exists('recurrence', $validated),
+                recurrence: $validated['recurrence'] ?? null,
+                updatesEstimate: array_key_exists('estimate', $validated),
+                estimate: $validated['estimate'] ?? null,
+                updatesDependencies: array_key_exists('dependencies', $validated),
+                dependencies: $validated['dependencies'] ?? null,
+                updatesSubtasks: array_key_exists('subtasks', $validated),
+                subtasks: $validated['subtasks'] ?? null,
             ),
         );
 

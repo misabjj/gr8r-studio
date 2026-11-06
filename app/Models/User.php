@@ -34,6 +34,11 @@ class User extends Authenticatable
         return $this->belongsToMany(Project::class);
     }
 
+    public function notificationReadStates(): HasMany
+    {
+        return $this->hasMany(NotificationReadState::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *

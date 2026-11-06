@@ -295,6 +295,9 @@
 .inwrap > .input {
   padding-left: 30px;
 }
+.auth-card .inwrap > .auth-password-input {
+  padding-left: 10px;
+}
 .inwrap > .kbd {
   position: absolute;
   right: 7px;

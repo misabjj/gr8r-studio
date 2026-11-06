@@ -13,7 +13,7 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['source_key', 'project_id', 'assignee_id', 'title', 'description', 'status', 'priority', 'is_favorite', 'start_date', 'due_date', 'completed_at', 'labels', 'subtasks', 'attachments', 'dependencies', 'estimate', 'sort_order', 'recurrence'];
+    protected $fillable = ['source_key', 'project_id', 'assignee_id', 'title', 'description', 'status', 'priority', 'is_favorite', 'is_archived', 'archived_at', 'start_date', 'due_date', 'completed_at', 'labels', 'subtasks', 'attachments', 'dependencies', 'estimate', 'sort_order', 'recurrence'];
 
     protected function casts(): array
     {
@@ -22,6 +22,8 @@ class Task extends Model
             'start_date' => 'date',
             'completed_at' => 'datetime',
             'is_favorite' => 'boolean',
+            'is_archived' => 'boolean',
+            'archived_at' => 'datetime',
             'status' => TaskStatus::class,
             'priority' => TaskPriority::class,
             'labels' => 'array',
@@ -64,5 +66,10 @@ class Task extends Model
     public function scopeFavorited(Builder $query): Builder
     {
         return $query->where('is_favorite', true);
+    }
+
+    public function scopeNotArchived(Builder $query): Builder
+    {
+        return $query->where('is_archived', false);
     }
 }

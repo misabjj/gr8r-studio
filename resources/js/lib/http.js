@@ -1,4 +1,8 @@
 export async function jsonRequest(url, method, data) {
+  if (localStorage.getItem('gr8r.offline') === 'true') {
+    throw new Error("Your changes couldn't be saved. You're offline.");
+  }
+
   const response = await fetch(url, {
     method,
     credentials: 'same-origin',

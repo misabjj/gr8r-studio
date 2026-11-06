@@ -123,7 +123,7 @@ logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\WorkspaceController::home
-* @see app/Http/Controllers/WorkspaceController.php:16
+* @see app/Http/Controllers/WorkspaceController.php:15
 * @route '/'
 */
 export const home = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -138,7 +138,7 @@ home.definition = {
 
 /**
 * @see \App\Http\Controllers\WorkspaceController::home
-* @see app/Http/Controllers/WorkspaceController.php:16
+* @see app/Http/Controllers/WorkspaceController.php:15
 * @route '/'
 */
 home.url = (options?: RouteQueryOptions) => {
@@ -147,7 +147,7 @@ home.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\WorkspaceController::home
-* @see app/Http/Controllers/WorkspaceController.php:16
+* @see app/Http/Controllers/WorkspaceController.php:15
 * @route '/'
 */
 home.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -157,7 +157,7 @@ home.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\WorkspaceController::home
-* @see app/Http/Controllers/WorkspaceController.php:16
+* @see app/Http/Controllers/WorkspaceController.php:15
 * @route '/'
 */
 home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -167,7 +167,7 @@ home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\WorkspaceOverviewController::overview
-* @see app/Http/Controllers/WorkspaceOverviewController.php:16
+* @see app/Http/Controllers/WorkspaceOverviewController.php:17
 * @route '/overview'
 */
 export const overview = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -182,7 +182,7 @@ overview.definition = {
 
 /**
 * @see \App\Http\Controllers\WorkspaceOverviewController::overview
-* @see app/Http/Controllers/WorkspaceOverviewController.php:16
+* @see app/Http/Controllers/WorkspaceOverviewController.php:17
 * @route '/overview'
 */
 overview.url = (options?: RouteQueryOptions) => {
@@ -191,7 +191,7 @@ overview.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\WorkspaceOverviewController::overview
-* @see app/Http/Controllers/WorkspaceOverviewController.php:16
+* @see app/Http/Controllers/WorkspaceOverviewController.php:17
 * @route '/overview'
 */
 overview.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -201,7 +201,7 @@ overview.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\WorkspaceOverviewController::overview
-* @see app/Http/Controllers/WorkspaceOverviewController.php:16
+* @see app/Http/Controllers/WorkspaceOverviewController.php:17
 * @route '/overview'
 */
 overview.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

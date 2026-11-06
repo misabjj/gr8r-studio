@@ -297,7 +297,8 @@ svg.logo {
   color: var(--text-2);
 }
 /* No padding or hover fill: the first crumb starts exactly on the content gutter; hover is shown with colour only. */
-.crumbs button {
+.crumbs button,
+.crumbs .parent {
   padding: 3px 0;
   white-space: nowrap;
   display: inline-flex;
@@ -305,7 +306,8 @@ svg.logo {
   gap: 6px;
   transition: color var(--dur);
 }
-.crumbs button:hover {
+.crumbs button:hover,
+.crumbs .parent:hover {
   color: var(--text);
 }
 .crumbs .cur {

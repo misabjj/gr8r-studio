@@ -80,7 +80,7 @@
       <div class="field">
         <div class="row"><label class="label" for="l-pw">Password</label><span class="sp"></span><a class="link" href={passwordRequest.url()}>Forgot password?</a></div>
         <div class="inwrap">
-          <input class="input input-lg" id="l-pw" type={showPassword ? 'text' : 'password'} bind:value={password} autocomplete="current-password" style="padding-right:38px" aria-invalid={!!errors.password} />
+          <input class="input input-lg auth-password-input" id="l-pw" type={showPassword ? 'text' : 'password'} bind:value={password} autocomplete="current-password" style="padding-right:38px" aria-invalid={!!errors.password} />
           <button type="button" class="ibtn ibtn-sm" style="position:absolute;right:5px" onclick={togglePasswordVisibility} aria-label={showPassword ? 'Hide password' : 'Show password'}>{@html ic(showPassword ? 'eye-off' : 'eye', 15)}</button>
         </div>
         {#if errors.password}<span class="err">{@html ic('circle-alert', 12)}{errors.password[0]}</span>{/if}

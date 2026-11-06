@@ -13,7 +13,8 @@ class GetWorkspaceTasks
     public function handle(User $owner): Collection
     {
         return Task::ownedBy($owner)
-            ->whereHas('project', fn (Builder $query) => $query->notArchived())
+            ->notArchived()
+            ->whereHas('project', fn (Builder $query) => $query->notArchived()->accessibleTo($owner))
             ->with(['project:id,name,key,color', 'assignee:id,name'])
             ->latest()
             ->get();

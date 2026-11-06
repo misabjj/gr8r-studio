@@ -1,13 +1,23 @@
 <script>
   import { Link } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
+  import TaskDrawer from '../../Components/TaskDrawer.svelte';
   import { show as projectShow } from '../../routes/projects';
   import { ago, dayBucket } from '@/src/core/utils.js';
   import { ic } from '@/src/core/icons.js';
+  import { S } from '@/src/core/store.js';
 
-  let { workspaceData = {} } = $props();
-  let filter = $state('all');
-  let person = $state('all');
+  let { workspaceData = {}, tasks: initialTasks = [] } = $props();
+  let filter = $state(S.ui.actFilter || 'all');
+  let person = $state(S.ui.actWho || 'all');
+  let databaseTasks = $state([]);
+  let drawerTaskId = $state(null);
+
+  $effect(() => { databaseTasks = [...initialTasks]; });
+  $effect(() => {
+    S.ui.actFilter = filter;
+    S.ui.actWho = person;
+  });
 
   let members = $derived(workspaceData.members || []);
   let projects = $derived(workspaceData.projects || []);
@@ -15,6 +25,17 @@
   let memberById = $derived(new Map(members.map(member => [member.id, member])));
   let projectById = $derived(new Map(projects.map(project => [project.id, project])));
   let taskById = $derived(new Map(tasks.map(task => [task.id, task])));
+  let drawerTaskBySourceKey = $derived(new Map(databaseTasks.map(task => [task.source_key, task])));
+  let drawerTask = $derived(databaseTasks.find(task => task.id === drawerTaskId) || null);
+
+  function openTask(sourceKey) {
+    const task = drawerTaskBySourceKey.get(sourceKey);
+    if (task) drawerTaskId = task.id;
+  }
+
+  function updateTask(updatedTask) {
+    databaseTasks = databaseTasks.map(task => task.id === updatedTask.id ? { ...task, ...updatedTask } : task);
+  }
 
   let visibleActivity = $derived((workspaceData.activity || [])
     .filter(activity => {
@@ -64,13 +85,16 @@
           {#each entries as entry (entry.id)}
             {@const member = memberById.get(entry.by)}
             {@const task = taskById.get(entry.task)}
+            {@const drawerTask = drawerTaskBySourceKey.get(entry.task)}
             {@const project = projectById.get(entry.project)}
             <div class="fitem">
               <span class="av sm" style={`--c:${member?.c || '#8A867E'}`} aria-label={member?.name || 'Someone'}>{member?.name?.split(' ').map(part => part[0]).join('').slice(0, 2) || '?'}</span>
               <div class="grow">
                 <b>{entry.by === workspaceData.me ? 'You' : member?.name || 'Someone'}</b>
                 <span class="muted"> {entry.verb} </span>
-                {#if task && project?.database_id}
+                {#if task && drawerTask}
+                  <span class="obj" role="button" tabindex="0" onclick={() => openTask(task.id)} onkeydown={event => event.key === 'Enter' && openTask(task.id)}>{task.title}</span>
+                {:else if task && project?.database_id}
                   <Link class="obj" href={projectShow(project.database_id).url}>{task.title}</Link>
                 {:else if task}
                   <span class="obj">{task.title}</span>
@@ -91,4 +115,5 @@
       <div class="empty"><span class="empty-ic">{@html ic('activity', 20)}</span><h2>No activity yet</h2><p>Changes to tasks and projects will appear here.</p></div>
     {/if}
   </div>
+  {#if drawerTask}<TaskDrawer task={drawerTask} {workspaceData} onClose={() => drawerTaskId = null} onUpdated={updateTask} />{/if}
 </AppLayout>

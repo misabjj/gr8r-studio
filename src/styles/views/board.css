@@ -113,6 +113,7 @@
   flex: 1;
   min-width: 0;
   word-wrap: break-word;
+  text-align: left;
 }
 .kcard.done .title {
   color: var(--text-3);

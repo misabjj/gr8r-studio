@@ -22,4 +22,14 @@ class TaskPolicy
     {
         return $task->project->owner_id === $user->id;
     }
+
+    public function archive(User $user, Task $task): bool
+    {
+        return $this->update($user, $task);
+    }
+
+    public function delete(User $user, Task $task): bool
+    {
+        return $this->update($user, $task);
+    }
 }
