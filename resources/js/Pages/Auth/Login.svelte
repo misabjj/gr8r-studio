@@ -1,6 +1,7 @@
 <script>
   import Button from "../../Components/Button.svelte";
   import ErrorMessage from "../../Components/ErrorMessage.svelte";
+  import Alert from "../../Components/Alert.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import InputPassword from "../../Components/InputPassword.svelte";
@@ -8,7 +9,7 @@
   import { register } from '../../routes';
   import { store as loginRoute } from '../../routes/login';
   import { request as passwordRequest } from '../../routes/password';
-  import { ic, LOGO } from '@/src/core/icons.js';
+  import { LOGO } from '@/src/core/icons.js';
   import AuthSocialButtons from '../../Components/AuthSocialButtons.svelte';
   import AuthLayout from '../../Components/AuthLayout.svelte';
 
@@ -30,8 +31,8 @@
       <div style="display:flex;justify-content:center">{@html LOGO(30)}</div>
       <h1>Welcome back</h1>
       <p class="sub">Sign in to Gr8r Studio</p>
-      {#if status}<div class="alert ok" role="status">{@html ic('circle-check', 15)}<span>{status}</span></div>{/if}
-      {#if form.errors.login}<div class="alert danger" role="alert">{@html ic('circle-alert', 15)}<span>{form.errors.login}</span></div>{/if}
+      {#if status}<Alert variant="ok" icon="circle-check">{status}</Alert>{/if}
+      {#if form.errors.login}<Alert variant="danger" icon="circle-alert">{form.errors.login}</Alert>{/if}
       <div class="field">
         <Label for="l-email">Email</Label>
         <Input size="large" error={!!form.errors.email} id="l-email" type="email" bind:value={form.email} autocomplete="email" />
