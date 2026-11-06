@@ -420,19 +420,33 @@
       <div class="help-control">
         <button class="sitem" type="button" aria-haspopup="menu" aria-expanded={helpOpen} onclick={toggleHelp}>{@html ic('circle-help', 16)}<span>Help & resources</span></button>
         {#if helpOpen}
-          <Dropdown class="pop floating enter" id="help-resources-menu" role="menu" style={`left:${helpPosition.left}px;top:${helpPosition.top}px;width:260px`}>
-            <div class="mh">Help &amp; resources</div>
-            <Link class="mi" role="menuitem" href={settingsRoutes.index({ query: { sec: 'shortcuts' } }).url} onclick={() => helpOpen = false}>{@html ic('keyboard', 15)}Keyboard shortcuts<span class="r"><kbd>?</kbd></span></Link>
-            <button class="mi" type="button" role="menuitem" onclick={openCommandMenu}>{@html ic('command', 15)}Command menu<span class="r"><kbd>⌘K</kbd></span></button>
-            <Link class="mi" role="menuitem" href={systemRoutes.design().url} onclick={() => helpOpen = false}>{@html ic('component', 15)}Design system</Link>
-            <Link class="mi" role="menuitem" href={systemRoutes.states().url} onclick={() => helpOpen = false}>{@html ic('layers', 15)}System states</Link>
-            <div class="msep"></div>
-            <div class="mh">Prototype</div>
-            <Link class="mi" role="menuitem" href={onboardingRoute.index().url} onclick={() => helpOpen = false}>{@html ic('sparkles', 15)}Replay onboarding</Link>
-            <button class="mi" type="button" role="menuitem" onclick={toggleOffline}>{@html ic(offline ? 'wifi' : 'wifi-off', 15)}{offline ? 'Go back online' : 'Simulate offline'}</button>
-            <Link class="mi" role="menuitem" href="/help/broken-link" onclick={() => helpOpen = false}>{@html ic('file-question', 15)}Open a broken link</Link>
-            <button class="mi" type="button" role="menuitem" onclick={resetLocalDemo}>{@html ic('rotate-ccw', 15)}Reset demo data</button>
-          </Dropdown>
+          <Dropdown
+            config={{
+              className: 'pop floating enter',
+              id: 'help-resources-menu',
+              role: 'menu',
+              style: `left:${helpPosition.left}px;top:${helpPosition.top}px;width:260px`,
+              items: [
+                { id: 'help-heading', type: 'heading', label: 'Help & resources' },
+                { id: 'shortcuts', type: 'link', label: 'Keyboard shortcuts', href: settingsRoutes.index({ query: { sec: 'shortcuts' } }).url, icon: 'keyboard', shortcut: '?', action: 'close' },
+                { id: 'command-menu', type: 'action', label: 'Command menu', action: 'command', icon: 'command', shortcut: '⌘K' },
+                { id: 'design-system', type: 'link', label: 'Design system', href: systemRoutes.design().url, icon: 'component', action: 'close' },
+                { id: 'system-states', type: 'link', label: 'System states', href: systemRoutes.states().url, icon: 'layers', action: 'close' },
+                { id: 'help-separator', type: 'separator' },
+                { id: 'prototype-heading', type: 'heading', label: 'Prototype' },
+                { id: 'replay-onboarding', type: 'link', label: 'Replay onboarding', href: onboardingRoute.index().url, icon: 'sparkles', action: 'close' },
+                { id: 'offline', type: 'action', label: offline ? 'Go back online' : 'Simulate offline', action: 'offline', icon: offline ? 'wifi' : 'wifi-off' },
+                { id: 'broken-link', type: 'link', label: 'Open a broken link', href: '/help/broken-link', icon: 'file-question', action: 'close' },
+                { id: 'reset-demo', type: 'action', label: 'Reset demo data', action: 'reset', icon: 'rotate-ccw' },
+              ],
+            }}
+            onAction={action => {
+              if (action === 'close') helpOpen = false;
+              if (action === 'command') void openCommandMenu();
+              if (action === 'offline') toggleOffline();
+              if (action === 'reset') resetLocalDemo();
+            }}
+          />
         {/if}
       </div>
       <Link class="sitem" href={settingsRoutes.index().url}>{@html ic('settings', 16)}<span>Settings</span></Link>
@@ -472,13 +486,29 @@
       <div class="create-control">
         <Button variant="secondary" size="sm" type="button" aria-haspopup="menu" aria-expanded={createOpen} aria-label="Create new" onclick={toggleCreateMenu}>{@html ic('plus', 14)}<span class="hide-m">New</span>{@html ic('chevron-down', 12, 'hide-m')}</Button>
         {#if createOpen}
-          <Dropdown class="pop floating enter create-menu" id="create-menu" role="menu" aria-label="Create" style={`left:${createPosition.left}px;top:${createPosition.top}px;width:220px`}>
-            <div class="mh">Create</div>
-            <button class="mi" type="button" role="menuitem" onclick={createTask}>{@html ic('circle-check', 15)}Task<span class="r"><kbd>N</kbd></span></button>
-            <button class="mi" type="button" role="menuitem" onclick={createProject}>{@html ic('folder-plus', 15)}Project<span class="r"><kbd>P</kbd></span></button>
-            <button class="mi" type="button" role="menuitem" onclick={createTeam}>{@html ic('users', 15)}Team</button>
-            <div class="msep"></div><button class="mi" type="button" role="menuitem" onclick={inviteMember}>{@html ic('user-plus', 15)}Invite member</button>
-          </Dropdown>
+          <Dropdown
+            config={{
+              className: 'pop floating enter create-menu',
+              id: 'create-menu',
+              role: 'menu',
+              label: 'Create',
+              style: `left:${createPosition.left}px;top:${createPosition.top}px;width:220px`,
+              items: [
+                { id: 'create-heading', type: 'heading', label: 'Create' },
+                { id: 'create-task', type: 'action', label: 'Task', action: 'task', icon: 'circle-check', shortcut: 'N' },
+                { id: 'create-project', type: 'action', label: 'Project', action: 'project', icon: 'folder-plus', shortcut: 'P' },
+                { id: 'create-team', type: 'action', label: 'Team', action: 'team', icon: 'users' },
+                { id: 'create-separator', type: 'separator' },
+                { id: 'invite-member', type: 'action', label: 'Invite member', action: 'invite', icon: 'user-plus' },
+              ],
+            }}
+            onAction={action => {
+              if (action === 'task') createTask();
+              if (action === 'project') createProject();
+              if (action === 'team') createTeam();
+              if (action === 'invite') inviteMember();
+            }}
+          />
         {/if}
       </div>
       <div class="user-control"><button class="ibtn hide-m" type="button" aria-label="Account menu" aria-haspopup="menu" aria-expanded={userOpen} onclick={toggleUserMenu}><span class="av md">{initials}</span></button></div>
