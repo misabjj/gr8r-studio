@@ -22,7 +22,9 @@
   let memberTeams = $state(new Map());
   let tasks = $state([]);
   let members = $derived((workspaceData.members || []).filter(member => memberTeams.get(member.id) === team.id));
-  let projects = $derived((workspaceData.projects || []).filter(project => project.team === team.id && !project.archived));
+  let projects = $derived((workspaceData.projects || []).filter(project => project.team === team.id
+    && !project.archived
+    && (!project.private || project.members?.includes(workspaceData.me))));
   let memberIds = $derived(new Set(members.map(member => member.id)));
   let openTasks = $derived(tasks
     .filter(task => memberIds.has(task.assignee) && task.status !== 'done' && !task.archived)
