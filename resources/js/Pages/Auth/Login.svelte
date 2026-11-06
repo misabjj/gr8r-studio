@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import Button from "../../Components/Button.svelte";
   import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Alert from "../../Components/Alert.svelte";
@@ -11,14 +11,14 @@
   import { register } from '../../routes';
   import { store as loginRoute } from '../../routes/login';
   import { request as passwordRequest } from '../../routes/password';
-  import { LOGO } from '@/src/core/icons.js';
+  import { LOGO } from '../../../../src/core/icons.js';
   import AuthSocialButtons from '../../Components/AuthSocialButtons.svelte';
   import AuthLayout from '../../Components/AuthLayout.svelte';
 
-  let { status = null } = $props();
+  let { status = null }: { status?: string | null } = $props();
   const form = useForm({ email: 'hello@gr8rstudio.com', password: '', remember: true });
 
-  async function submit(event) {
+  function submit(event: SubmitEvent): void {
     event.preventDefault();
     form.transform(data => ({ ...data, email: data.email.trim() })).post(loginRoute().url);
   }
@@ -34,7 +34,6 @@
       <h1>Welcome back</h1>
       <p class="sub">Sign in to Gr8r Studio</p>
       {#if status}<Alert variant="ok" icon="circle-check">{status}</Alert>{/if}
-      {#if form.errors.login}<Alert variant="danger" icon="circle-alert">{form.errors.login}</Alert>{/if}
       <div class="field">
         <Label for="l-email">Email</Label>
         <Input size="large" error={!!form.errors.email} id="l-email" type="email" bind:value={form.email} autocomplete="email" />

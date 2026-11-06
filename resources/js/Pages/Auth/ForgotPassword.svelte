@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import Button from "../../Components/Button.svelte";
   import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Alert from "../../Components/Alert.svelte";
@@ -7,13 +7,13 @@
   import { useForm } from '@inertiajs/svelte';
   import { login } from '../../routes';
   import { email as sendResetLink } from '../../routes/password';
-  import { ic } from '@/src/core/icons.js';
+  import { ic } from '../../../../src/core/icons.js';
   import AuthLayout from '../../Components/AuthLayout.svelte';
 
-  let { status = null } = $props();
+  let { status = null }: { status?: string | null } = $props();
   const form = useForm({ email: '' });
 
-  async function submit(event) {
+  function submit(event: SubmitEvent): void {
     event.preventDefault();
     form.transform(data => ({ ...data, email: data.email.trim() })).post(sendResetLink().url);
   }

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import Button from "../../Components/Button.svelte";
   import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Label from "../../Components/Label.svelte";
@@ -7,14 +7,14 @@
   import { useForm } from '@inertiajs/svelte';
   import { store as registerRoute } from '../../routes/register';
   import { login } from '../../routes';
-  import { LOGO } from '@/src/core/icons.js';
+  import { LOGO } from '../../../../src/core/icons.js';
   import AuthSocialButtons from '../../Components/AuthSocialButtons.svelte';
   import AuthLayout from '../../Components/AuthLayout.svelte';
   import OrDivider from "../../Components/OrDivider.svelte";
 
   const form = useForm({ name: '', email: '', password: '', password_confirmation: '' });
 
-  async function submit(event) {
+  function submit(event: SubmitEvent): void {
     event.preventDefault();
     form.transform(data => ({ ...data, name: data.name.trim(), email: data.email.trim(), password_confirmation: data.password })).post(registerRoute().url);
   }
@@ -33,7 +33,7 @@
       <OrDivider>or sign up with email</OrDivider>
       <div class="field">
         <Label for="r-name">Full name</Label>
-        <Input size="large" error={!!form.errors.name} id="r-name" type="text" bind:value={form.name} autocomplete="name" maxlength="255" required />
+        <Input size="large" error={!!form.errors.name} id="r-name" type="text" bind:value={form.name} autocomplete="name" maxlength={255} required />
         {#if form.errors.name}<ErrorMessage message={form.errors.name} />{/if}
       </div>
       <div class="field">

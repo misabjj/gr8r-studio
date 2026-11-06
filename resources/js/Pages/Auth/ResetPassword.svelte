@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import Button from "../../Components/Button.svelte";
   import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Label from "../../Components/Label.svelte";
@@ -6,13 +6,13 @@
   import InputPassword from "../../Components/InputPassword.svelte";
   import { useForm } from '@inertiajs/svelte';
   import { update as resetPassword } from '../../routes/password';
-  import { ic, LOGO } from '@/src/core/icons.js';
+  import { ic, LOGO } from '../../../../src/core/icons.js';
   import AuthLayout from '../../Components/AuthLayout.svelte';
 
-  let { email: initialEmail = '', token } = $props();
+  let { email: initialEmail = '', token }: { email?: string; token: string } = $props();
   const form = useForm(() => ({ token, email: initialEmail, password: '', password_confirmation: '' }));
 
-  async function submit(event) {
+  function submit(event: SubmitEvent): void {
     event.preventDefault();
     form.transform(data => ({ ...data, email: data.email.trim() })).post(resetPassword().url);
   }
