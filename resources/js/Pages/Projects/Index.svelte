@@ -8,6 +8,7 @@ import { destroy as projectDestroy, duplicate as projectDuplicate, favorite as p
   import { useHttpRequest } from '../../lib/http.js';
   import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
 import { setNavigationIntent } from '../../lib/navigation-intents.js';
+  import { toast } from '@/src/ui/toast.js';
 import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
   import { ic } from '@/src/core/icons.js';
   import { PCOLORS, PICONS, PSTAT, TEAMS_SEED } from '@/src/core/constants.js';

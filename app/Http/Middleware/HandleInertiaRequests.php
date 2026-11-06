@@ -4,7 +4,9 @@ namespace App\Http\Middleware;
 
 use App\Enums\ProjectStatus;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\Team;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -52,6 +54,13 @@ class HandleInertiaRequests extends Middleware
             'teams' => $request->user()
                 ? Team::query()->orderBy('name')->get(['id', 'name', 'icon', 'color', 'description'])
                 : collect(),
+            'archiveCount' => $request->user()
+                ? Project::ownedBy($request->user())->where('status', ProjectStatus::Archived)->count()
+                    + Task::ownedBy($request->user())
+                        ->where('is_archived', true)
+                        ->whereHas('project', fn (Builder $query): Builder => $query->notArchived()->accessibleTo($request->user()))
+                        ->count()
+                : 0,
             'auth' => [
                 'user' => $request->user(),
             ],

@@ -22,6 +22,14 @@ class UpdateProject
         ?string $startDate,
         ?string $dueDate,
     ): Project {
+        if ($status === ProjectStatus::Archived && $project->status !== ProjectStatus::Archived) {
+            $project->archived_status = $project->status->value;
+            $project->archived_at = now();
+        } elseif ($status !== ProjectStatus::Archived && $project->status === ProjectStatus::Archived) {
+            $project->archived_status = null;
+            $project->archived_at = null;
+        }
+
         $project->name = $name;
         $project->description = $description;
         $project->status = $status;

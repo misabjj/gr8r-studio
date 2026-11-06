@@ -6,6 +6,7 @@
   import { index as tasksIndex } from '../routes/tasks';
   import { index as myTasksIndex } from '../routes/my-tasks';
   import { index as activityIndex } from '../routes/activity';
+  import { index as archiveIndex } from '../routes/archive';
   import { index as favoritesIndex } from '../routes/favorites';
   import { index as inboxIndex } from '../routes/inbox';
   import { index as membersIndex } from '../routes/members';
@@ -404,7 +405,7 @@
             </div>
           </div>
         {/each}
-        <Link class="sitem" href={projectsIndex().url}>{@html ic('archive', 16)}<span>Archive</span></Link>
+        <Link class={`sitem ${currentPath === '/archive' ? 'on' : ''}`} href={archiveIndex().url} aria-current={currentPath === '/archive' ? 'page' : undefined}>{@html ic('archive', 16)}<span>Archive</span>{#if page.props.archiveCount}<span class="ct">{page.props.archiveCount}</span>{/if}</Link>
       </div>
       <div class="sgroup">
         <div class="sgroup-h"><span>Teams</span><span class="sp"></span><button class="ibtn ibtn-xs" type="button" onclick={createTeam} aria-label="New team">{@html ic('plus', 14)}</button></div>

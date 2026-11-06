@@ -295,6 +295,61 @@ it('restores an archived task to active task queries', function () {
     expect(Task::ownedBy($owner)->notArchived()->pluck('id')->all())->toBe([$task->id]);
 });
 
+it('shows the archive from its own route with the current user’s archived work', function () {
+    $this->withoutVite();
+    $owner = User::factory()->create();
+    $project = Project::factory()->for($owner, 'owner')->create();
+    $task = Task::factory()->for($project)->create(['is_archived' => true]);
+    $archivedProject = Project::factory()->for($owner, 'owner')->create([
+        'name' => 'Archived project',
+        'status' => ProjectStatus::Archived,
+    ]);
+
+    $this->actingAs($owner)->get(route('archive.index'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Workspace/Archive')
+            ->has('archivedTasks', 1)
+            ->where('archivedTasks.0.id', $task->id)
+            ->has('archivedProjects', 1)
+            ->where('archivedProjects.0.id', $archivedProject->id));
+});
+
+it('restores an archived project with its original status', function () {
+    $owner = User::factory()->create();
+    $project = Project::factory()->for($owner, 'owner')->create([
+        'status' => ProjectStatus::Risk,
+    ]);
+
+    $this->actingAs($owner)->patchJson(route('projects.update', $project), [
+        'status' => ProjectStatus::Archived->value,
+    ])->assertOk();
+
+    expect($project->refresh()->archived_status)->toBe(ProjectStatus::Risk->value);
+
+    $this->actingAs($owner)->patchJson(route('projects.restore', $project))
+        ->assertOk()
+        ->assertJsonPath('status', ProjectStatus::Risk->value)
+        ->assertJsonPath('archived_at', null);
+
+    expect(Project::ownedBy($owner)->notArchived()->pluck('id')->all())->toBe([$project->id]);
+});
+
+it('prevents another user from restoring archived work', function () {
+    $owner = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $project = Project::factory()->for($owner, 'owner')->create([
+        'status' => ProjectStatus::Archived,
+    ]);
+    $task = Task::factory()->for($project)->create(['is_archived' => true]);
+
+    $this->actingAs($otherUser)->patchJson(route('projects.restore', $project))->assertForbidden();
+    $this->actingAs($otherUser)->patchJson(route('tasks.restore', $task))->assertForbidden();
+
+    expect($project->refresh()->status)->toBe(ProjectStatus::Archived)
+        ->and($task->refresh()->is_archived)->toBeTrue();
+});
+
 it('duplicates a task without copying its favorite state', function () {
     $owner = User::factory()->create();
     $project = Project::factory()->for($owner, 'owner')->create();
