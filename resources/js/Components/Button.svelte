@@ -14,9 +14,9 @@
     variant: Variant;
   };
 
-  let { block = false, class: className = '', children, loading = false, size, variant, ...attributes }: Props = $props();
+  let { block = false, class: className = '', children, disabled = false, loading = false, size, variant, ...attributes }: Props = $props();
 </script>
 
-<button {...attributes} class={`btn ${variant === 'base' ? '' : `btn-${variant}`} ${size === 'md' ? '' : `btn-${size}`} ${block ? 'btn-block' : ''} ${loading ? 'is-loading' : ''} ${className}`}>
+<button {...attributes} disabled={disabled || loading} class={`btn ${variant === 'base' ? '' : `btn-${variant}`} ${size === 'md' ? '' : `btn-${size}`} ${block ? 'btn-block' : ''} ${loading ? 'is-loading' : ''} ${className}`}>
   {@render children()}
 </button>
