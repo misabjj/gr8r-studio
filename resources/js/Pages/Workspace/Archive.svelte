@@ -10,7 +10,7 @@
   import { ago } from '@/src/core/utils.js';
   import { ic } from '@/src/core/icons.js';
   import { S } from '@/src/core/store.js';
-  import { pIcon, stIcon } from '@/src/ui/helpers.js';
+  import { empty, pIcon, stIcon } from '@/src/ui/helpers.js';
   import { toast } from '@/src/ui/toast.js';
 
   const httpRequest = useHttpRequest();
@@ -115,7 +115,7 @@
           {/each}
         </div>
       {:else}
-        <div class="panel"><div class="empty"><span class="empty-ic">{@html ic('archive', 20)}</span><h2>No archived tasks</h2><p>Archive finished or abandoned tasks to keep boards focused. They wait here until you restore them.</p></div></div>
+        <div class="panel">{@html empty('archive', 'No archived tasks', 'Archive finished or abandoned tasks to keep boards focused. They wait here until you restore them.')}</div>
       {/if}
     {:else if archivedProjects.length}
       <div class="panel" style="overflow:hidden">
@@ -130,7 +130,7 @@
         {/each}
       </div>
     {:else}
-      <div class="panel"><div class="empty"><span class="empty-ic">{@html ic('archive', 20)}</span><h2>No archived projects</h2><p>Archived projects disappear from the sidebar and project lists but keep every task, file, and comment.</p></div></div>
+      <div class="panel">{@html empty('archive', 'No archived projects', 'Archived projects disappear from the sidebar and project lists but keep every task, file, and comment.')}</div>
     {/if}
   </div>
 
