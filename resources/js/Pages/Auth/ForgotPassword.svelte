@@ -33,7 +33,7 @@
       {#if status}<div class="alert ok" role="status">{@html ic('circle-check', 15)}<span>{status}</span></div>{/if}
       <div class="field">
         <Label for="f-email">Email</Label>
-        <Input variant="large" error={!!form.errors.email} id="f-email" type="email" bind:value={form.email} autocomplete="email" required aria-invalid={!!form.errors.email} />
+        <Input variant="large" error={!!form.errors.email} id="f-email" type="email" bind:value={form.email} autocomplete="email" required />
         {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
       </div>
       <button class="btn btn-primary btn-lg btn-block" class:is-loading={form.processing} disabled={form.processing}>{form.processing ? 'Sending…' : 'Send reset link'}</button>

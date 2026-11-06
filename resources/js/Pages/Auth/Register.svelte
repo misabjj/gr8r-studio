@@ -39,17 +39,17 @@
       <div class="or">or sign up with email</div>
       <div class="field">
         <Label for="r-name">Full name</Label>
-        <Input variant="large" error={!!form.errors.name} id="r-name" type="text" bind:value={form.name} autocomplete="name" maxlength="255" required aria-invalid={!!form.errors.name} />
+        <Input variant="large" error={!!form.errors.name} id="r-name" type="text" bind:value={form.name} autocomplete="name" maxlength="255" required />
         {#if form.errors.name}<span class="err">{@html ic('circle-alert', 12)}{form.errors.name}</span>{/if}
       </div>
       <div class="field">
         <Label for="r-email">Work email</Label>
-        <Input variant="large" error={!!form.errors.email} id="r-email" type="email" bind:value={form.email} autocomplete="email" required aria-invalid={!!form.errors.email} />
+        <Input variant="large" error={!!form.errors.email} id="r-email" type="email" bind:value={form.email} autocomplete="email" required />
         {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
       </div>
       <div class="field">
         <Label for="s-pw">Password</Label>
-        <Input variant="large" error={!!form.errors.password} id="s-pw" type="password" bind:value={form.password} autocomplete="new-password" required aria-invalid={!!form.errors.password} />
+        <Input variant="large" error={!!form.errors.password} id="s-pw" type="password" bind:value={form.password} autocomplete="new-password" required />
         {@html strengthMeter(form.password)}
         {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{:else}<span class="hint">At least 10 characters with a number or symbol.</span>{/if}
       </div>
