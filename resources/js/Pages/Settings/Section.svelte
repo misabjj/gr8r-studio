@@ -1,4 +1,6 @@
 <script>
+  import Select from "../../Components/Select.svelte";
+  import Dropdown from "../../Components/Dropdown.svelte";
   import Button from "../../Components/Button.svelte";
   import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Label from "../../Components/Label.svelte";
@@ -449,7 +451,7 @@
   {#if memberPopup}
     {@const member = S.data.members.find(item => item.id === memberPopup.memberId)}
     {#if member}
-      <div class="pop settings-popup enter" role="menu" tabindex="-1" style={`left:${memberPopup.left}px;top:${memberPopup.top}px;width:200px`} onpointerdown={event => event.stopPropagation()}>
+      <Dropdown class="pop settings-popup enter" role="menu" tabindex="-1" style={`left:${memberPopup.left}px;top:${memberPopup.top}px;width:200px`} onpointerdown={event => event.stopPropagation()}>
         {#if memberPopup.kind === 'role'}
           {#each ['Admin', 'Member', 'Guest'] as role}
             <button class="mi" type="button" role="menuitemradio" aria-checked={member.role === role} onclick={() => changeMemberRole(role)}>{@html ic('shield', 14)}<span>{role}</span>{#if member.role === role}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>
@@ -465,7 +467,7 @@
             <button class="mi danger" type="button" role="menuitem" onclick={() => runMemberAction('remove')}>{@html ic('user-minus', 15)}Remove from workspace</button>
           {/if}
         {/if}
-      </div>
+      </Dropdown>
     {/if}
   {/if}
   {#if inviteOpen}
@@ -474,7 +476,7 @@
         <div class="modal-h"><div><h2 id="settings-invite-title">Invite to {S.data.ws.name}</h2><div class="muted" style="font-size:12.5px;margin-top:2px">Invited people get an email with a link to join.</div></div><button type="button" class="ibtn ibtn-sm" aria-label="Close" onclick={closeInviteDialog}>{@html ic('x', 16)}</button></div>
         <form id="settings-invite-form" class="modal-b" data-submit="submitInvite" onsubmit={submitInvites}>
           <div class="field"><Label for="settings-invite-emails">Email addresses</Label><Textarea error={!!inviteError} id="settings-invite-emails" bind:this={inviteEmailInput} bind:value={inviteDraft} placeholder="name@company.com, another@company.com" rows="3" aria-describedby={inviteError ? 'settings-invite-error' : 'settings-invite-hint'} />{#if inviteError}<ErrorMessage id="settings-invite-error" role="alert" message={inviteError} />{:else}<span class="hint" id="settings-invite-hint">Separate multiple addresses with commas.</span>{/if}</div>
-          <div class="row" style="gap:12px"><div class="field grow"><Label for="settings-invite-role">Role</Label><select class="select" id="settings-invite-role" bind:value={inviteRole}><option>Member</option><option>Admin</option><option>Guest</option></select></div><div class="field grow"><Label for="settings-invite-team">Team</Label><select class="select" id="settings-invite-team" bind:value={inviteTeam}>{#each teamsList() as team (team.id)}<option value={team.id}>{team.name}</option>{/each}</select></div></div>
+          <div class="row" style="gap:12px"><div class="field grow"><Label for="settings-invite-role">Role</Label><Select class="select" id="settings-invite-role" bind:value={inviteRole}><option>Member</option><option>Admin</option><option>Guest</option></Select></div><div class="field grow"><Label for="settings-invite-team">Team</Label><Select class="select" id="settings-invite-team" bind:value={inviteTeam}>{#each teamsList() as team (team.id)}<option value={team.id}>{team.name}</option>{/each}</Select></div></div>
           <div class="alert info">{@html ic('info', 14)}<span><b>Guests</b> can only see projects they're added to and can't create projects.</span></div>
         </form>
         <div class="modal-f"><Button type="button" variant="ghost" size="md" onclick={copyInviteLink}>{@html ic('link', 14)}Copy invite link</Button><span class="sp"></span><Button type="button" variant="secondary" size="md" onclick={closeInviteDialog}>Cancel</Button><Button type="submit" variant="primary" size="md" form="settings-invite-form" disabled={inviteBusy}>{inviteBusy ? 'Sending…' : 'Send invites'}</Button></div>

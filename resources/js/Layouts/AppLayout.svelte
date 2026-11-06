@@ -1,4 +1,5 @@
 <script>
+  import Dropdown from "../Components/Dropdown.svelte";
   import Button from "../Components/Button.svelte";
   import { onMount, tick } from 'svelte';
   import { Link, router, usePage } from '@inertiajs/svelte';
@@ -349,7 +350,7 @@
             <span class="chev-d faint">{@html ic('chevrons-up-down', 13)}</span>
           </button>
           {#if workspaceOpen}
-            <div class="pop floating enter" id="workspace-switcher-menu" role="menu" aria-label="Workspaces" style={`left:${workspacePosition.left}px;top:${workspacePosition.top}px;width:260px`}>
+            <Dropdown class="pop floating enter" id="workspace-switcher-menu" role="menu" aria-label="Workspaces" style={`left:${workspacePosition.left}px;top:${workspacePosition.top}px;width:260px`}>
               <div class="mh">Workspaces</div>
               {#each workspaces as item (item.id)}
                 <button class="mi" type="button" role="menuitemradio" aria-checked={item.name === workspace.name} onclick={() => switchWorkspace(item)}>
@@ -362,7 +363,7 @@
               <button class="mi" type="button" role="menuitem" onclick={() => { workspaceOpen = false; router.visit(`${onboardingRoute.index().url}?step=4`); }}>{@html ic('user-plus', 15)}Invite members</button>
               <div class="msep"></div>
               <button class="mi" type="button" role="menuitem" onclick={signOut}>{@html ic('log-out', 15)}Sign out</button>
-            </div>
+            </Dropdown>
           {/if}
         </div>
         {#if !collapsed}<button class="ibtn ibtn-sm hide-m" onclick={() => collapsed = true} aria-label="Collapse sidebar">{@html ic('panel-left', 15)}</button>{/if}
@@ -419,7 +420,7 @@
       <div class="help-control">
         <button class="sitem" type="button" aria-haspopup="menu" aria-expanded={helpOpen} onclick={toggleHelp}>{@html ic('circle-help', 16)}<span>Help & resources</span></button>
         {#if helpOpen}
-          <div class="pop floating enter" id="help-resources-menu" role="menu" style={`left:${helpPosition.left}px;top:${helpPosition.top}px;width:260px`}>
+          <Dropdown class="pop floating enter" id="help-resources-menu" role="menu" style={`left:${helpPosition.left}px;top:${helpPosition.top}px;width:260px`}>
             <div class="mh">Help &amp; resources</div>
             <Link class="mi" role="menuitem" href={settingsRoutes.index({ query: { sec: 'shortcuts' } }).url} onclick={() => helpOpen = false}>{@html ic('keyboard', 15)}Keyboard shortcuts<span class="r"><kbd>?</kbd></span></Link>
             <button class="mi" type="button" role="menuitem" onclick={openCommandMenu}>{@html ic('command', 15)}Command menu<span class="r"><kbd>⌘K</kbd></span></button>
@@ -431,7 +432,7 @@
             <button class="mi" type="button" role="menuitem" onclick={toggleOffline}>{@html ic(offline ? 'wifi' : 'wifi-off', 15)}{offline ? 'Go back online' : 'Simulate offline'}</button>
             <Link class="mi" role="menuitem" href="/help/broken-link" onclick={() => helpOpen = false}>{@html ic('file-question', 15)}Open a broken link</Link>
             <button class="mi" type="button" role="menuitem" onclick={resetLocalDemo}>{@html ic('rotate-ccw', 15)}Reset demo data</button>
-          </div>
+          </Dropdown>
         {/if}
       </div>
       <Link class="sitem" href={settingsRoutes.index().url}>{@html ic('settings', 16)}<span>Settings</span></Link>
@@ -439,14 +440,14 @@
         <button class="sitem" style="height:36px" type="button" aria-haspopup="menu" aria-expanded={userOpen} aria-label="Account menu" onclick={toggleUserMenu}><span class="av presence">{initials}</span><span class="trunc" style="color:var(--text);font-weight:500">{page.props.auth?.user?.name}</span><span class="ct">{@html ic('chevrons-up-down', 13)}</span></button>
         {#if userOpen}
           {@const currentSourceMember = D().members.find(member => member.id === (page.props.workspaceData?.me || D().me))}
-          <div class="pop floating enter account-menu" id="account-menu" role="menu" aria-label="Account" style={`left:${userPosition.left}px;top:${userPosition.top}px;width:260px`}>
+          <Dropdown class="pop floating enter account-menu" id="account-menu" role="menu" aria-label="Account" style={`left:${userPosition.left}px;top:${userPosition.top}px;width:260px`}>
             <div class="row" style="padding:8px 8px 10px;gap:10px"><span class="av lg presence">{initials}</span><div style="min-width:0"><div style="font-weight:600">{page.props.auth?.user?.name}</div><div class="faint trunc" style="font-size:12px">{page.props.auth?.user?.email}</div></div></div>
             <div class="msep"></div>
             {#if currentSourceMember}<Link class="mi" role="menuitem" href={memberShow(currentSourceMember.id).url} onclick={() => userOpen = false}>{@html ic('user', 15)}View profile</Link>{/if}
             <Link class="mi" role="menuitem" href={settingsRoutes.index({ query: { sec: 'profile' } }).url} onclick={() => userOpen = false}>{@html ic('settings', 15)}Account settings</Link>
             <div class="msep"></div><div class="mh">Theme</div><div style="padding:2px 6px 6px"><div class="seg" style="width:100%">{#each [['light', 'sun', 'Light'], ['dark', 'moon', 'Dark'], ['system', 'monitor', 'System']] as [theme, icon, label]}<button type="button" class:on={S.prefs.theme === theme} style="flex:1;justify-content:center" onclick={() => chooseTheme(theme)}>{@html ic(icon, 13)}{label}</button>{/each}</div></div>
             <div class="msep"></div><Link class="mi" role="menuitem" href={settingsRoutes.index({ query: { sec: 'shortcuts' } }).url} onclick={() => userOpen = false}>{@html ic('keyboard', 15)}Keyboard shortcuts<span class="r"><kbd>?</kbd></span></Link><button class="mi" type="button" role="menuitem" onclick={signOut}>{@html ic('log-out', 15)}Sign out</button>
-          </div>
+          </Dropdown>
         {/if}
       </div>
     </div>
@@ -471,13 +472,13 @@
       <div class="create-control">
         <Button variant="secondary" size="sm" type="button" aria-haspopup="menu" aria-expanded={createOpen} aria-label="Create new" onclick={toggleCreateMenu}>{@html ic('plus', 14)}<span class="hide-m">New</span>{@html ic('chevron-down', 12, 'hide-m')}</Button>
         {#if createOpen}
-          <div class="pop floating enter create-menu" id="create-menu" role="menu" aria-label="Create" style={`left:${createPosition.left}px;top:${createPosition.top}px;width:220px`}>
+          <Dropdown class="pop floating enter create-menu" id="create-menu" role="menu" aria-label="Create" style={`left:${createPosition.left}px;top:${createPosition.top}px;width:220px`}>
             <div class="mh">Create</div>
             <button class="mi" type="button" role="menuitem" onclick={createTask}>{@html ic('circle-check', 15)}Task<span class="r"><kbd>N</kbd></span></button>
             <button class="mi" type="button" role="menuitem" onclick={createProject}>{@html ic('folder-plus', 15)}Project<span class="r"><kbd>P</kbd></span></button>
             <button class="mi" type="button" role="menuitem" onclick={createTeam}>{@html ic('users', 15)}Team</button>
             <div class="msep"></div><button class="mi" type="button" role="menuitem" onclick={inviteMember}>{@html ic('user-plus', 15)}Invite member</button>
-          </div>
+          </Dropdown>
         {/if}
       </div>
       <div class="user-control"><button class="ibtn hide-m" type="button" aria-label="Account menu" aria-haspopup="menu" aria-expanded={userOpen} onclick={toggleUserMenu}><span class="av md">{initials}</span></button></div>

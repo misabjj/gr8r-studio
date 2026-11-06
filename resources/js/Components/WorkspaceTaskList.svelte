@@ -1,4 +1,5 @@
 <script>
+  import Dropdown from "./Dropdown.svelte";
   import Button from "./Button.svelte";
   import { tick } from 'svelte';
   import { ic } from '@/src/core/icons.js';
@@ -265,7 +266,7 @@
 {/if}
 
 {#if activeMenu}
-  <div class="pop enter" data-task-list-menu role="menu" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:250px`}>
+  <Dropdown class="pop enter" data-task-list-menu role="menu" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:250px`}>
     {#if activeMenu.field === 'status' || activeMenu.field === 'bulk-status'}
       {#each statuses as item (item.id)}<button type="button" class="mi" role="menuitemradio" aria-checked={activeMenu.task?.status === item.id} onclick={() => activeMenu.task ? updateOne(activeMenu.task, { status: item.id }) : applyBulk({ status: item.id })}>{@html stIcon(item.id, 14)}<span>{item.name}</span>{#if activeMenu.task?.status === item.id}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
     {:else if activeMenu.field === 'priority' || activeMenu.field === 'bulk-priority'}
@@ -289,5 +290,5 @@
     {:else if activeMenu.field === 'more'}
       <button type="button" class="mi" onclick={() => { const task = activeMenu.task; activeMenu = null; onOpen(task); }}>{@html ic('panel-right', 14)}<span>Open task</span></button>
     {/if}
-  </div>
+  </Dropdown>
 {/if}

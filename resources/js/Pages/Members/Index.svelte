@@ -1,4 +1,6 @@
 <script>
+  import Select from "../../Components/Select.svelte";
+  import Dropdown from "../../Components/Dropdown.svelte";
   import Button from "../../Components/Button.svelte";
   import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Label from "../../Components/Label.svelte";
@@ -330,12 +332,12 @@
                       <div class="member-role-control">
                         <button class="pillbtn bordered" type="button" aria-haspopup="menu" aria-expanded={roleMenuMemberId === member.id} onclick={event => toggleRoleMenu(event, member)}>{memberRole(member)}{@html ic('chevron-down', 12)}</button>
                         {#if roleMenuMemberId === member.id}
-                          <div class="pop floating enter" id="member-role-menu" role="menu" aria-label={`Role for ${member.name}`} style={`left:${roleMenuPosition.left}px;top:${roleMenuPosition.top}px;width:300px`}>
+                          <Dropdown class="pop floating enter" id="member-role-menu" role="menu" aria-label={`Role for ${member.name}`} style={`left:${roleMenuPosition.left}px;top:${roleMenuPosition.top}px;width:300px`}>
                             <div class="mh">Role for {member.name}</div>
                             {#each ['Admin', 'Member', 'Guest'] as option}
                               <button class="mi" type="button" role="menuitemradio" aria-checked={memberRole(member) === option} style="height:auto;padding:7px 8px;align-items:flex-start" onclick={() => chooseRole(member, option)}><span class="grow" style="white-space:normal"><span style="font-weight:500">{option}</span><span class="faint" style="font-size:11.5px;display:block">{option === 'Admin' ? 'Manage members, settings, and all projects' : option === 'Member' ? 'Create projects and work on tasks' : 'Only sees projects they are invited to'}</span></span>{#if memberRole(member) === option}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>
                             {/each}
-                          </div>
+                          </Dropdown>
                         {/if}
                       </div>
                     {:else}
@@ -348,7 +350,7 @@
                   <td style="text-align:left">{#if member.status === 'invited'}<span class="badge amber"><span class="dot"></span>Invited</span>{:else if member.status === 'deactivated'}<span class="badge gray">Deactivated</span>{:else}<span class="badge green"><span class="dot"></span>Active</span>{/if}</td>
                   <td><div class="member-options-control"><button class="ibtn ibtn-sm" type="button" aria-label={`Options for ${member.name}`} aria-haspopup="menu" aria-expanded={memberMenuId === member.id} onclick={event => toggleMemberMenu(event, member)}>{@html ic('ellipsis', 14)}</button>
                     {#if memberMenuId === member.id}
-                      <div class="pop floating enter" id="member-options-menu" role="menu" aria-label={`Options for ${member.name}`} style={`left:${memberMenuPosition.left}px;top:${memberMenuPosition.top}px;width:220px`}>
+                      <Dropdown class="pop floating enter" id="member-options-menu" role="menu" aria-label={`Options for ${member.name}`} style={`left:${memberMenuPosition.left}px;top:${memberMenuPosition.top}px;width:220px`}>
                         <Link class="mi" role="menuitem" href={memberShow(member.id).url} onclick={() => memberMenuId = null}>{@html ic('user', 15)}View profile</Link>
                         <button class="mi" type="button" role="menuitem" onclick={() => assignTaskToMember(member.id)}>{@html ic('plus', 15)}Assign a task</button>
                         <button class="mi" type="button" role="menuitem" onclick={() => copyEmail(member)}>{@html ic('mail', 15)}Copy email</button>
@@ -359,7 +361,7 @@
                           <div class="msep"></div>
                           <button class="mi danger" type="button" role="menuitem" onclick={() => requestRemove(member)}>{@html ic('user-minus', 15)}Remove from workspace</button>
                         {/if}
-                      </div>
+                      </Dropdown>
                     {/if}
                   </div></td>
                 </tr>
@@ -412,7 +414,7 @@
       <div class="modal-h"><div><h2 id="members-invite-title">Invite to {workspaceData.ws?.name || 'your workspace'}</h2><div class="muted" style="font-size:12.5px;margin-top:2px">Invited people get an email with a link to join.</div></div><button class="ibtn ibtn-sm" type="button" aria-label="Close" onclick={closeInviteDialog}>{@html ic('x', 16)}</button></div>
       <form class="modal-b" onsubmit={submitInvites}>
         <div class="field"><Label for="members-invite-emails">Email addresses</Label><Textarea error={!!inviteError} id="members-invite-emails" bind:this={inviteEmailInput} bind:value={inviteDraft} placeholder="name@company.com, another@company.com" rows="3" aria-describedby="members-invite-hint" />{#if inviteError}<ErrorMessage role="alert" message={inviteError} />{:else}<span class="hint" id="members-invite-hint">Separate multiple addresses with commas.</span>{/if}</div>
-        <div class="row" style="gap:12px"><div class="field grow"><Label for="members-invite-role">Role</Label><select class="select" id="members-invite-role" bind:value={inviteRole}><option>Member</option><option>Admin</option><option>Guest</option></select></div><div class="field grow"><Label for="members-invite-team">Team</Label><select class="select" id="members-invite-team" bind:value={inviteTeam}>{#each teams as team (team.id)}<option value={String(team.id)}>{team.name}</option>{/each}</select></div></div>
+        <div class="row" style="gap:12px"><div class="field grow"><Label for="members-invite-role">Role</Label><Select class="select" id="members-invite-role" bind:value={inviteRole}><option>Member</option><option>Admin</option><option>Guest</option></Select></div><div class="field grow"><Label for="members-invite-team">Team</Label><Select class="select" id="members-invite-team" bind:value={inviteTeam}>{#each teams as team (team.id)}<option value={String(team.id)}>{team.name}</option>{/each}</Select></div></div>
         <div class="alert info">{@html ic('info', 14)}<span><b>Guests</b> can only see projects they're added to and can't create projects.</span></div>
       </form>
       <div class="modal-f"><Button variant="ghost" size="md" type="button" onclick={copyInviteLink}>{@html ic('link', 14)}Copy invite link</Button><span class="sp"></span><Button variant="secondary" size="md" type="button" onclick={closeInviteDialog}>Cancel</Button><Button variant="primary" size="md" type="button" disabled={inviteBusy} onclick={submitInvites}>{inviteBusy ? 'Sending…' : 'Send invites'}</Button></div>

@@ -1,4 +1,6 @@
 <script>
+  import Dropdown from "./Dropdown.svelte";
+  import Select from "./Select.svelte";
   import Button from "./Button.svelte";
   import Input from "./Input.svelte";
   import Textarea from "./Textarea.svelte";
@@ -694,7 +696,7 @@
         </div>
         <div class="faint" style="font-size:12px;margin:4px 0 0 26px">Subtask {subtaskIndex + 1} of {subtasks.length} · {selectedSubtask.done ? 'Done' : 'Open'}</div>
         <dl class="kv" style="margin-top:16px">
-          <dt>{@html ic('user', 14)}Assignee</dt><dd><select class="select" aria-label="Subtask assignee" value={selectedSubtask.assignee || ''} disabled={busy} onchange={event => updateSubtask(selectedSubtask.id, { assignee: event.currentTarget.value || null })}><option value="">Unassigned</option>{#each workspaceData.members || [] as member (member.id)}<option value={member.id}>{member.name}</option>{/each}</select></dd>
+          <dt>{@html ic('user', 14)}Assignee</dt><dd><Select class="select" aria-label="Subtask assignee" value={selectedSubtask.assignee || ''} disabled={busy} onchange={event => updateSubtask(selectedSubtask.id, { assignee: event.currentTarget.value || null })}><option value="">Unassigned</option>{#each workspaceData.members || [] as member (member.id)}<option value={member.id}>{member.name}</option>{/each}</Select></dd>
           <dt>{@html ic('calendar', 14)}Due date</dt><dd><Input class="" type="date" aria-label="Subtask due date" value={selectedSubtask.due || ''} disabled={busy} onchange={event => updateSubtask(selectedSubtask.id, { due: event.currentTarget.value || null })} /></dd>
           <dt>{@html ic('folder', 14)}Parent</dt><dd><button type="button" class="pillbtn" onclick={() => selectedSubtaskId = null}><span class="mono faint" style="font-size:11px">{task.key}</span>{task.title}</button></dd>
         </dl>
@@ -759,7 +761,7 @@
     <section class="dsec"><div class="tabs" style="margin-bottom:6px" role="tablist" aria-label="Task conversation"><button class="tab" class:on={activeTab === 'comments'} role="tab" aria-selected={activeTab === 'comments'} onclick={() => activeTab = 'comments'}>Comments <span class="cnt">{taskComments.length}</span></button><button class="tab" class:on={activeTab === 'activity'} role="tab" aria-selected={activeTab === 'activity'} onclick={() => activeTab = 'activity'}>Activity <span class="cnt">{taskActivity.length}</span></button></div>
       {#if activeTab === 'comments'}
         {#if taskComments.length}{#each taskComments as comment (comment.id)}{@const member = membersBySourceKey.get(comment.by)}<article class="cmt"><span class="av md" style={`--c:${member?.c || '#8A867E'}`}>{member?.name?.split(' ').map(part => part[0]).join('').slice(0, 2) || '?'}</span><div class="body"><div class="who"><b>{member?.name || 'Someone'}</b><time>{formatTime(comment.at)}</time>{#if comment.by === workspaceData.me}<span class="sp"></span><button type="button" class="ibtn ibtn-xs" aria-label="Delete comment" title="Delete" onclick={() => deleteComment(comment)}>{@html ic('trash-2', 12)}</button>{/if}</div><div class="txt">{@html fmtComment(comment.text)}</div><div class="reacts">{#each Object.entries(comment.re || {}).filter(([, reactions]) => reactions.length) as [emoji, reactions]}<button type="button" class={`react ${reactions.includes(workspaceData.me) ? 'mine' : ''}`} aria-label={`${emoji} ${reactions.length}`} title={reactions.map(memberId => membersBySourceKey.get(memberId)?.name || memberId).join(', ')} onclick={() => toggleReaction(comment, emoji)}>{emoji}<span class="num">{reactions.length}</span></button>{/each}<button type="button" class="react" data-comment-reaction-trigger aria-label="Add reaction" aria-expanded={reactionMenuCommentId === comment.id} style="color:var(--text-3)" onclick={event => toggleReactionMenu(event, comment)}>{@html ic('smile-plus', 13)}</button></div></div></article>{/each}{:else}<p class="faint" style="font-size:13px;margin:10px 0">No comments yet. Start the conversation.</p>{/if}
-        <div class="row" style="align-items:flex-start;gap:10px;margin-top:8px"><span class="av md" style={`--c:${workspaceData.members?.find(member => member.id === workspaceData.me)?.c || '#8A867E'}`}>{workspaceData.members?.find(member => member.id === workspaceData.me)?.name?.split(' ').map(part => part[0]).join('').slice(0, 2) || '?'}</span><div class="grow" style="position:relative"><form class="cbox" onsubmit={postComment}><textarea bind:this={commentInput} bind:value={commentDraft} oninput={updateCommentDraft} onkeydown={handleCommentKeydown} placeholder="Leave a comment… type @ to mention" aria-label="Comment" rows="2"></textarea><div class="row"><button type="button" class="ibtn ibtn-xs" aria-label="Mention" title="Mention someone" onclick={startMention}>{@html ic('at-sign', 14)}</button><span class="sp"></span><span class="faint hide-m" style="font-size:11px">⌘+Enter</span><Button type="submit" variant="primary" size="sm">Comment</Button></div></form>{#if mentionQuery != null && mentionCandidates.length}<div class="pop enter" role="menu" aria-label="Mention someone" style="position:absolute;bottom:calc(100% + 4px);left:0">{#each mentionCandidates as member (member.id)}<button type="button" class="mi" role="menuitem" onclick={() => insertMention(member)}><span class="av sm" style={`--c:${member.c || '#8A867E'}`}>{member.name.split(' ').map(part => part[0]).join('').slice(0, 2)}</span>{member.name}<span class="r">{member.title}</span></button>{/each}</div>{/if}</div></div>
+        <div class="row" style="align-items:flex-start;gap:10px;margin-top:8px"><span class="av md" style={`--c:${workspaceData.members?.find(member => member.id === workspaceData.me)?.c || '#8A867E'}`}>{workspaceData.members?.find(member => member.id === workspaceData.me)?.name?.split(' ').map(part => part[0]).join('').slice(0, 2) || '?'}</span><div class="grow" style="position:relative"><form class="cbox" onsubmit={postComment}><textarea bind:this={commentInput} bind:value={commentDraft} oninput={updateCommentDraft} onkeydown={handleCommentKeydown} placeholder="Leave a comment… type @ to mention" aria-label="Comment" rows="2"></textarea><div class="row"><button type="button" class="ibtn ibtn-xs" aria-label="Mention" title="Mention someone" onclick={startMention}>{@html ic('at-sign', 14)}</button><span class="sp"></span><span class="faint hide-m" style="font-size:11px">⌘+Enter</span><Button type="submit" variant="primary" size="sm">Comment</Button></div></form>{#if mentionQuery != null && mentionCandidates.length}<Dropdown class="pop enter" role="menu" aria-label="Mention someone" style="position:absolute;bottom:calc(100% + 4px);left:0">{#each mentionCandidates as member (member.id)}<button type="button" class="mi" role="menuitem" onclick={() => insertMention(member)}><span class="av sm" style={`--c:${member.c || '#8A867E'}`}>{member.name.split(' ').map(part => part[0]).join('').slice(0, 2)}</span>{member.name}<span class="r">{member.title}</span></button>{/each}</Dropdown>{/if}</div></div>
       {:else}
         {#if taskActivity.length}{#each taskActivity as activity (activity.id)}{@const member = membersBySourceKey.get(activity.by)}<div class="act-line"><span class="ico"><span class="av sm" style={`--c:${member?.c || '#8A867E'}`}>{member?.name?.split(' ').map(part => part[0]).join('').slice(0, 2) || '?'}</span></span><span class="grow"><b>{activity.by === workspaceData.me ? 'You' : member?.name || 'Someone'}</b> {activity.verb.replace(/ of$/, '')} {activity.extra}</span><time class="faint" style="font-size:11.5px">{formatTime(activity.at)}</time></div>{/each}{/if}<div class="act-line"><span class="ico">{@html ic('plus', 13)}</span><span class="grow">Task created</span><time class="faint" style="font-size:11.5px">{formatTime(sourceTaskById.get(task.source_key)?.created)}</time></div>
       {/if}
@@ -767,7 +769,7 @@
     {/if}
   </div>
   {#if taskMenuOpen}
-    <div class="pop enter" data-drawer-task-menu role="menu" aria-label="Task actions" style={`left:${taskMenuPosition.left}px;top:${taskMenuPosition.top}px;width:220px`}>
+    <Dropdown class="pop enter" data-drawer-task-menu role="menu" aria-label="Task actions" style={`left:${taskMenuPosition.left}px;top:${taskMenuPosition.top}px;width:220px`}>
       <button class="mi" type="button" role="menuitem" onclick={event => chooseTaskMenuAction(event, 'open')}>{@html ic('panel-right-open', 15)}Open</button>
       <button class="mi" type="button" role="menuitem" onclick={event => chooseTaskMenuAction(event, 'edit')}>{@html ic('pencil', 15)}Edit<span class="r"><kbd>E</kbd></span></button>
       <button class="mi" type="button" role="menuitem" onclick={event => chooseTaskMenuAction(event, 'complete')}>{@html ic(task.status === 'done' ? 'rotate-ccw' : 'circle-check', 15)}{task.status === 'done' ? 'Reopen' : 'Mark complete'}</button>
@@ -783,12 +785,12 @@
       <button class="mi" type="button" role="menuitem" disabled={busy} onclick={event => chooseTaskMenuAction(event, 'archive')}>{@html ic('archive', 15)}Archive</button>
       <div class="msep"></div>
       <button class="mi danger" type="button" role="menuitem" disabled={busy} onclick={event => chooseTaskMenuAction(event, 'delete')}>{@html ic('trash-2', 15)}Delete<span class="r"><kbd>Del</kbd></span></button>
-    </div>
+    </Dropdown>
   {/if}
   {#if reactionMenuCommentId}
-    <div class="pop enter" data-comment-reaction-menu role="menu" aria-label="Add a reaction" style={`left:${reactionMenuPosition.left}px;top:${reactionMenuPosition.top}px;min-width:0`}>
+    <Dropdown class="pop enter" data-comment-reaction-menu role="menu" aria-label="Add a reaction" style={`left:${reactionMenuPosition.left}px;top:${reactionMenuPosition.top}px;min-width:0`}>
       <div class="row" style="gap:2px;padding:2px">{#each ['👍', '🎉', '❤️', '👀', '🚀', '✅'] as emoji (emoji)}<button type="button" class="ibtn" role="menuitem" aria-label={`React ${emoji}`} style="font-size:16px" onclick={() => { const comment = taskComments.find(item => item.id === reactionMenuCommentId); if (comment) toggleReaction(comment, emoji); }}>{emoji}</button>{/each}</div>
-    </div>
+    </Dropdown>
   {/if}
   {#if selectedAttachment}
     {@const typeDetails = FT[selectedAttachment.type] || FT.other}
@@ -802,7 +804,7 @@
     </div>
   {/if}
   {#if propertyMenu}
-    <div class="pop enter" data-drawer-property-popup role="menu" style={`left:${propertyMenuPosition.left}px;top:${propertyMenuPosition.top}px;${propertyMenu === 'due' || propertyMenu === 'start' ? 'min-width:0' : `width:${propertyMenu === 'project' ? 220 : 200}px`}`}>
+    <Dropdown class="pop enter" data-drawer-property-popup role="menu" style={`left:${propertyMenuPosition.left}px;top:${propertyMenuPosition.top}px;${propertyMenu === 'due' || propertyMenu === 'start' ? 'min-width:0' : `width:${propertyMenu === 'project' ? 220 : 200}px`}`}>
       {#if propertyMenu === 'project'}
         <div class="pin"><input bind:value={projectQuery} placeholder="Move to project…" aria-label="Move to project…" /></div>
         {#each assignableProjects as project (project.database_id)}
@@ -853,7 +855,7 @@
           </div>
         </div>
       {/if}
-    </div>
+    </Dropdown>
   {/if}
 </div>
 {#if editOpen}

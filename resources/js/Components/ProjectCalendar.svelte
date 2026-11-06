@@ -1,4 +1,6 @@
 <script>
+  import Select from "./Select.svelte";
+  import Dropdown from "./Dropdown.svelte";
   import Button from "./Button.svelte";
   import Input from "./Input.svelte";
   import { Link } from '@inertiajs/svelte';
@@ -424,12 +426,12 @@
 </div>
 
 {#if openMenu === 'filter'}
-  <div class="pop fbuild enter" data-calendar-menu role="dialog" aria-label="Filter by" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;max-width:560px`}>
+  <Dropdown class="pop fbuild enter" data-calendar-menu role="dialog" aria-label="Filter by" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;max-width:560px`}>
     <div class="mh fb-h">Filter by{#if filters.length}<Button variant="ghost" size="sm" onclick={() => filters = []}>Clear all</Button>{/if}</div>
     {#if filters.length}
       <div class="fb-rows">
         {#each filters as filter, index (index)}
-          <div class="frow"><span class="conj">{index ? 'and' : 'Where'}</span><select class="select" value={filter.field} aria-label="Field" onchange={event => { changeFilter(index, { field: event.currentTarget.value, values: [] }); editingFilter = index; }}><option value="status">Status</option><option value="assignee">Assignee</option><option value="priority">Priority</option><option value="due">Due date</option><option value="project">Project</option></select><select class="select" value={filter.operator} aria-label="Operator" onchange={event => changeFilter(index, { operator: event.currentTarget.value })}><option value="is">is</option><option value="not">is not</option></select><button class="valbtn" onclick={() => editingFilter = editingFilter === index ? -1 : index}><span class="trunc grow">{filter.values.length ? filterSummary(filter).split(' ').slice(2).join(' ') : 'Select…'}</span>{@html ic('chevron-down', 12)}</button><button class="ibtn ibtn-xs" aria-label="Remove filter" onclick={() => filters = filters.filter((_, filterIndex) => filterIndex !== index)}>{@html ic('trash-2', 13)}</button></div>
+          <div class="frow"><span class="conj">{index ? 'and' : 'Where'}</span><Select class="select" value={filter.field} aria-label="Field" onchange={event => { changeFilter(index, { field: event.currentTarget.value, values: [] }); editingFilter = index; }}><option value="status">Status</option><option value="assignee">Assignee</option><option value="priority">Priority</option><option value="due">Due date</option><option value="project">Project</option></Select><Select class="select" value={filter.operator} aria-label="Operator" onchange={event => changeFilter(index, { operator: event.currentTarget.value })}><option value="is">is</option><option value="not">is not</option></Select><button class="valbtn" onclick={() => editingFilter = editingFilter === index ? -1 : index}><span class="trunc grow">{filter.values.length ? filterSummary(filter).split(' ').slice(2).join(' ') : 'Select…'}</span>{@html ic('chevron-down', 12)}</button><button class="ibtn ibtn-xs" aria-label="Remove filter" onclick={() => filters = filters.filter((_, filterIndex) => filterIndex !== index)}>{@html ic('trash-2', 13)}</button></div>
           {#if editingFilter === index}<div style="margin-left:50px;border:1px solid var(--border);border-radius:var(--r);padding:4px;max-height:200px;overflow:auto">{#each filterOptions(filter.field) as option (option.id)}<label class="mi" style="cursor:pointer;min-height:28px"><input type="checkbox" class="check" checked={filter.values.includes(String(option.id))} onchange={() => toggleFilterValue(index, option.id)} />{option.name}</label>{/each}</div>{/if}
         {/each}
       </div>
@@ -437,25 +439,25 @@
       <p class="fb-empty">No filters applied. Combine filters to narrow the task list, e.g. Status is In Progress and Assignee is Sarah.</p>
     {/if}
     <div class="msep"></div><div class="fb-add"><span class="faint">Add filter:</span>{#each filterFields as field (field.id)}<button class="badge" style="cursor:pointer" onclick={() => addFilter(field.id)}>{@html ic(field.icon, 11)}{field.name}</button>{/each}</div>
-  </div>
+  </Dropdown>
 {:else if openMenu === 'sort'}
-  <div class="pop enter" data-calendar-menu role="menu" aria-label="Sort tasks" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:220px`}>
+  <Dropdown class="pop enter" data-calendar-menu role="menu" aria-label="Sort tasks" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:220px`}>
     <div class="mh">Sort by</div>{#each sortable as option (option.id)}<button class="mi" role="menuitemradio" aria-checked={sort === option.id} onclick={() => changeSort(option.id)}>{@html ic(sort === option.id ? 'check' : 'arrow-up-down', 13)}{option.name}{#if sort === option.id}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
     <div class="msep"></div><button class="mi" onclick={() => descending = !descending}>{@html ic(descending ? 'arrow-down-wide-narrow' : 'arrow-up-narrow-wide', 14)}{descending ? 'Descending' : 'Ascending'}</button>
-  </div>
+  </Dropdown>
 {/if}
 
 {#if selectedEvent}
-  <div class="pop enter" data-calendar-menu role="dialog" aria-label={selectedEvent.title} style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:270px`}>
+  <Dropdown class="pop enter" data-calendar-menu role="dialog" aria-label={selectedEvent.title} style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:270px`}>
     <div style="padding:10px 10px 6px"><div class="row" style="gap:8px;margin-bottom:6px"><span class="pdot" style={`--c:${projectColor(selectedEvent.project)};border-radius:50%`}></span><b style="font-size:14px;font-weight:600">{selectedEvent.title}</b></div><div class="muted" style="font-size:12.5px;display:flex;flex-direction:column;gap:4px"><span class="row" style="gap:6px">{@html ic('calendar', 13)}{formatLongDate(new Date(`${selectedEvent.date}T00:00:00`))} · {selectedEvent.time}</span><span class="row" style="gap:6px">{@html ic('folder', 13)}{selectedEvent.project.name}</span></div></div><div class="msep"></div><Link class="mi" href={projectShow(selectedEvent.project.id).url}>{@html ic('arrow-up-right', 14)}Open project</Link>
-  </div>
+  </Dropdown>
 {:else if selectedDay}
   {@const moreItems = itemsOn(selectedDay)}
-  <div class="pop enter" data-calendar-menu role="dialog" aria-label={formatLongDate(selectedDay)} style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:280px`}>
+  <Dropdown class="pop enter" data-calendar-menu role="dialog" aria-label={formatLongDate(selectedDay)} style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:280px`}>
     <div class="mh">{formatLongDate(selectedDay)}</div>
     {#each moreItems as item (`${item.type}-${item.value.id}`)}
       {#if item.type === 'event'}<button class="mi" onclick={() => showEvent(item.value, menuTrigger)}>{@html ic('clock', 14)}<span class="trunc">{item.value.title}</span><span class="r">{item.value.time}</span></button>
       {:else}<button class="mi" onclick={() => { selectedDay = null; onTask?.(item.value); }}>{@html stIcon(item.value.status)}<span class="trunc">{item.value.title}</span><span class="r">{@html prIcon(item.value.priority, 13)}</span></button>{/if}
     {/each}
-  </div>
+  </Dropdown>
 {/if}

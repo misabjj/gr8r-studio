@@ -1,4 +1,5 @@
 <script>
+  import Dropdown from "../../Components/Dropdown.svelte";
   import Button from "../../Components/Button.svelte";
   import { onMount } from 'svelte';
   import { Link, router, usePage } from '@inertiajs/svelte';
@@ -219,7 +220,7 @@
           <div class="muted" style="margin-top:3px">{member.title} · {teams.find(team => team.id === member.team)?.name || member.team}</div>
           <div class="row faint" style="margin-top:8px;gap:14px;font-size:12.5px;flex-wrap:wrap"><span class="row" style="gap:5px">{@html ic('mail', 13)}<span style="user-select:all">{member.email}</span></span><span class="row" style="gap:5px">{@html ic('map-pin', 13)}{member.tz}</span><span class="row" style="gap:5px">{@html ic('clock', 13)}{lastActive()}</span></div></div>
         <div class="row"><Button type="button" variant="secondary" size="md" onclick={() => navigator.clipboard.writeText(member.email)}>{@html ic('copy', 14)}Copy email</Button><Button type="button" variant="primary" size="md" onclick={assignTaskToMember}>{@html ic('plus', 14)}Assign task</Button><div class="member-options-control"><button type="button" class="ibtn" aria-label="More options" aria-haspopup="menu" aria-expanded={menuOpen || roleMenuOpen} onclick={toggleOptionsMenu}>{@html ic('ellipsis', 16)}</button>
-          {#if menuOpen}<div class="pop floating enter" role="menu" aria-label={`More options for ${member.name}`} style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:220px`}>
+          {#if menuOpen}<Dropdown class="pop floating enter" role="menu" aria-label={`More options for ${member.name}`} style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:220px`}>
             <Link class="mi" role="menuitem" href={memberShow(memberId).url} onclick={() => menuOpen = false}>{@html ic('user', 15)}View profile</Link>
             <button class="mi" type="button" role="menuitem" onclick={assignTaskFromMenu}>{@html ic('plus', 15)}Assign a task</button>
             <button class="mi" type="button" role="menuitem" onclick={copyMemberEmail}>{@html ic('mail', 15)}Copy email</button>
@@ -228,11 +229,11 @@
               {#if member.status === 'invited'}<button class="mi" type="button" role="menuitem" onclick={resendMemberInvite}>{@html ic('send', 15)}Resend invite</button>{/if}
               <div class="msep"></div><button class="mi danger" type="button" role="menuitem" onclick={() => { menuOpen = false; removeDialogOpen = true; }}>{@html ic('user-minus', 15)}Remove from workspace</button>
             {/if}
-          </div>{/if}
-          {#if roleMenuOpen}<div class="pop floating enter" role="menu" aria-label={`Role for ${member.name}`} style={`left:${roleMenuPosition.left}px;top:${roleMenuPosition.top}px;width:300px`}>
+          </Dropdown>{/if}
+          {#if roleMenuOpen}<Dropdown class="pop floating enter" role="menu" aria-label={`Role for ${member.name}`} style={`left:${roleMenuPosition.left}px;top:${roleMenuPosition.top}px;width:300px`}>
             <div class="mh">Role for {member.name}</div>
             {#each ['Admin', 'Member', 'Guest'] as role}<button class="mi" type="button" role="menuitemradio" aria-checked={displayedRole === role} style="height:auto;padding:7px 8px;align-items:flex-start" onclick={() => changeMemberRole(role)}><span class="grow" style="white-space:normal"><span style="font-weight:500">{role}</span><span class="faint" style="font-size:11.5px;display:block">{role === 'Admin' ? 'Manage members, settings, and all projects' : role === 'Member' ? 'Create projects and work on tasks' : 'Only sees projects they are invited to'}</span></span>{#if displayedRole === role}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
-          </div>{/if}
+          </Dropdown>{/if}
         </div></div>
       </div>
       <div class="stats" style="margin-bottom:18px"><div class="stat"><span class="k">Active projects</span><span class="v">{visibleProjects.length}</span></div><div class="stat"><span class="k">Assigned tasks</span><span class="v">{openTasks.length}</span></div><div class="stat"><span class="k">Completed tasks</span><span class="v">{completedTasks.length}</span></div><div class="stat"><span class="k">Overdue</span><span class="v" style={openTasks.some(isOver) ? 'color:var(--red)' : ''}>{openTasks.filter(isOver).length}</span></div></div>

@@ -1,4 +1,6 @@
 <script>
+  import Dropdown from "../../Components/Dropdown.svelte";
+  import Select from "../../Components/Select.svelte";
   import Button from "../../Components/Button.svelte";
   import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Label from "../../Components/Label.svelte";
@@ -322,12 +324,12 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
     </div>
     <div class="row" style="margin-bottom:16px;flex-wrap:wrap;gap:8px">
       <div class="inwrap">{@html ic('search', 13)}<Input class="search-sm" bind:value={query} placeholder="Search projects" aria-label="Search projects" /></div>
-      <select class="select" style="height:26px;width:auto;font-size:12px" bind:value={statusFilter} aria-label="Filter by status">
+      <Select class="select" style="height:26px;width:auto;font-size:12px" bind:value={statusFilter} aria-label="Filter by status">
         <option value="all">All statuses</option><option value="planning">Planning</option><option value="active">In Progress</option><option value="risk">At Risk</option><option value="hold">On Hold</option><option value="complete">Completed</option>
-      </select>
-      <select class="select" style="height:26px;width:auto;font-size:12px" bind:value={sortBy} aria-label="Sort projects">
+      </Select>
+      <Select class="select" style="height:26px;width:auto;font-size:12px" bind:value={sortBy} aria-label="Sort projects">
         <option value="recent">Sort: Recently active</option><option value="name">Sort: Name</option><option value="due">Sort: Due date</option><option value="progress">Sort: Progress</option>
-      </select>
+      </Select>
       <span class="sp"></span>
       <div class="seg" role="tablist" aria-label="Project layout">
         <button class:on={view === 'grid'} aria-label="Grid" aria-pressed={view === 'grid'} onclick={() => view = 'grid'}>{@html ic('layout-grid', 13)}<span class="hide-m">Grid</span></button>
@@ -388,7 +390,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
   {#if projectMenu}
     {@const selectedProject = projects.find(project => project.id === projectMenu.projectId)}
     {#if selectedProject}
-      <div class="pop enter" data-project-menu role="menu" tabindex="-1" aria-label={`${selectedProject.name} options`} style={`left:${projectMenu.left}px;top:${projectMenu.top}px;width:220px`}>
+      <Dropdown class="pop enter" data-project-menu role="menu" tabindex="-1" aria-label={`${selectedProject.name} options`} style={`left:${projectMenu.left}px;top:${projectMenu.top}px;width:220px`}>
         <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'open')}>{@html ic('arrow-up-right', 15)}Open</button>
         <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'favorite')}>{@html ic('star', 15)}{selectedProject.is_favorite ? 'Remove from favorites' : 'Add to favorites'}</button>
         <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'edit')}>{@html ic('pencil', 15)}Rename &amp; edit</button>
@@ -401,7 +403,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
         <div class="msep"></div>
         <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'archive')}>{@html ic('archive', 15)}{selectedProject.status === 'complete' ? 'Archive' : 'Archive project'}</button>
         <button class="mi danger" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'delete')}>{@html ic('trash-2', 15)}Delete project</button>
-      </div>
+      </Dropdown>
     {/if}
   {/if}
 
@@ -434,8 +436,8 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
             <div class="field"><span class="label">Color</span><div class="swatches" role="radiogroup" aria-label="Color" style="max-width:140px">{#each Object.entries(PCOLORS) as [projectColor, hex] (projectColor)}<button type="button" role="radio" aria-checked={color === projectColor} class={`sw ${color === projectColor ? 'on' : ''}`} style={`--c:${hex};width:22px;height:22px`} aria-label={projectColor} onclick={() => color = projectColor}>{#if color === projectColor}{@html ic('check', 12)}{/if}</button>{/each}</div></div>
           </div>
           <div class="row" style="gap:12px;flex-wrap:wrap">
-            <div class="field" style="flex:1;min-width:150px"><Label for="project-team">Team</Label><select class="select" id="project-team" bind:value={teamId}>{#each teams.length ? teams : TEAMS_SEED as team (team.id)}<option value={team.id}>{team.name}</option>{/each}</select></div>
-            <div class="field" style="flex:1;min-width:150px"><Label for="project-lead">Lead</Label><select class="select" id="project-lead" bind:value={leadId}>{#each activeMembers as member (member.id)}<option value={String(member.id)}>{member.name}</option>{/each}</select></div>
+            <div class="field" style="flex:1;min-width:150px"><Label for="project-team">Team</Label><Select class="select" id="project-team" bind:value={teamId}>{#each teams.length ? teams : TEAMS_SEED as team (team.id)}<option value={team.id}>{team.name}</option>{/each}</Select></div>
+            <div class="field" style="flex:1;min-width:150px"><Label for="project-lead">Lead</Label><Select class="select" id="project-lead" bind:value={leadId}>{#each activeMembers as member (member.id)}<option value={String(member.id)}>{member.name}</option>{/each}</Select></div>
             <div class="field" style="flex:1;min-width:150px"><Label for="project-target-date">Target date</Label><Input class="" id="project-target-date" type="date" bind:value={dueDate} /></div>
           </div>
           <div class="field"><span class="label">Template</span><div class="tmpls" role="radiogroup" aria-label="Template">{#each templates as projectTemplate (projectTemplate.id)}<button type="button" role="radio" aria-checked={template === projectTemplate.id} class={`opt ${template === projectTemplate.id ? 'on' : ''}`} style="padding:10px" onclick={() => selectProjectTemplate(projectTemplate.id)}>{@html ic(projectTemplate.icon, 16)}<b style="font-size:12.5px">{projectTemplate.name}</b><span>{projectTemplate.tasks.length ? `${projectTemplate.tasks.length} starter tasks` : projectTemplate.desc}</span></button>{/each}</div></div>

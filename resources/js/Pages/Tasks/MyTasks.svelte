@@ -1,4 +1,5 @@
 <script>
+  import Dropdown from "../../Components/Dropdown.svelte";
   import Button from "../../Components/Button.svelte";
   import Input from "../../Components/Input.svelte";
   import { usePage } from '@inertiajs/svelte';
@@ -314,7 +315,7 @@
   {#if selectedTask}<TaskDrawer task={selectedTask} {workspaceData} onClose={() => drawerTaskId = null} onUpdated={taskUpdated} />{/if}
 </AppLayout>
 {#if toolbarMenu === 'filter'}
-  <div class="pop enter" data-mytasks-pop role="menu" aria-label="Filter tasks" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:300px`}>
+  <Dropdown class="pop enter" data-mytasks-pop role="menu" aria-label="Filter tasks" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:300px`}>
     {#if filterField}
       {@const activeFilter = filters.find(filter => filter.id === filterIndex)}
       <div class="row" style="padding:6px 8px"><button type="button" class="ibtn ibtn-xs" aria-label="Back to filters" onclick={() => { filterField = ''; filterIndex = null; }}>{@html ic('arrow-left', 13)}</button><b style="font-size:12px;font-weight:600">{filterNames[filterField]}</b><span class="sp"></span><Button type="button" variant="ghost" size="sm" onclick={() => toggleFilterOperator(filterIndex)}>{activeFilter?.operator === 'not' ? 'is not' : 'is'}{@html ic('chevron-down', 12)}</Button><Button type="button" variant="ghost" size="sm" onclick={() => { toolbarMenu = ''; filterField = ''; filterIndex = null; }}>Done</Button></div>
@@ -325,13 +326,13 @@
       <div class="msep"></div>
       {#each Object.entries(filterNames) as [field, name] (field)}<button type="button" class="mi" role="menuitem" onclick={() => addFilter(field)}>{@html ic(({ status: 'circle-dot', assignee: 'user', priority: 'signal-high', due: 'calendar', project: 'folder', labels: 'tag', created: 'calendar-plus', updated: 'history' })[field], 14)}<span>{name}</span></button>{/each}
     {/if}
-  </div>
+  </Dropdown>
 {:else if toolbarMenu === 'sort'}
-  <div class="pop enter" data-mytasks-pop role="menu" aria-label="Sort tasks" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:220px`}>
+  <Dropdown class="pop enter" data-mytasks-pop role="menu" aria-label="Sort tasks" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:220px`}>
     <div class="eyebrow" style="padding:6px 8px">SORT BY</div>
     {#each Object.entries(sortNames) as [field, name] (field)}<button type="button" class="mi" role="menuitemradio" aria-checked={sortBy === field} onclick={() => { sortBy = field; toolbarMenu = ''; }}>{name}{#if sortBy === field}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
     <div class="msep"></div>
     <button type="button" class="mi" role="menuitemradio" aria-checked={sortDirection > 0} onclick={() => sortDirection = 1}>Ascending{#if sortDirection > 0}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>
     <button type="button" class="mi" role="menuitemradio" aria-checked={sortDirection < 0} onclick={() => sortDirection = -1}>Descending{#if sortDirection < 0}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>
-  </div>
+  </Dropdown>
 {/if}

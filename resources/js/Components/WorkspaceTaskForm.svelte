@@ -1,4 +1,5 @@
 <script>
+  import Dropdown from "./Dropdown.svelte";
   import Button from "./Button.svelte";
   import ErrorMessage from "./ErrorMessage.svelte";
   import Input from "./Input.svelte";
@@ -522,7 +523,7 @@
           <Button variant="primary" size="md" type="submit" form="workspace-task-form" disabled={busy || !projects.length}>{busy ? (editingTask ? 'Saving…' : 'Creating…') : (editingTask ? 'Save changes' : 'Create task')}</Button>
       </div>
       {#if openMenu}
-        <div class="pop enter" data-task-form-popup role="menu" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;${openMenu === 'due' || openMenu === 'start' ? 'min-width:0' : `width:${popupWidth(openMenu)}px`}`}>
+        <Dropdown class="pop enter" data-task-form-popup role="menu" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;${openMenu === 'due' || openMenu === 'start' ? 'min-width:0' : `width:${popupWidth(openMenu)}px`}`}>
           {#if openMenu === 'project'}
             <div class="pin"><input bind:value={projectQuery} placeholder="Move to project…" aria-label="Move to project…" /></div>
             {#each filteredProjects as project (project.id)}<button class="mi" role="menuitemradio" aria-checked={projectDatabaseId(project) === projectId} onclick={() => chooseProject(project)}><span class="pdot" style={`--c:${PCOLORS[project.color] || 'var(--gray)'};border-radius:50%;width:8px;height:8px`}></span><span class="trunc">{project.name}</span>{#if projectDatabaseId(project) === projectId}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
@@ -563,7 +564,7 @@
           {:else if openMenu === 'recurrence'}
             {#each recurrenceOptions as option (option)}<button class="mi" role="menuitemradio" aria-checked={(recurrence || 'Does not repeat') === option} onclick={() => { recurrence = option === 'Does not repeat' ? '' : option; closeMenu(); }}>{@html ic('repeat', 14)}<span>{option}</span>{#if (recurrence || 'Does not repeat') === option}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
           {/if}
-        </div>
+        </Dropdown>
       {/if}
     </div>
   </div>

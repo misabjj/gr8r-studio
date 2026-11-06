@@ -1,4 +1,5 @@
 <script>
+  import Select from "./Select.svelte";
   import Button from "./Button.svelte";
   import ErrorMessage from "./ErrorMessage.svelte";
   import Label from "./Label.svelte";
@@ -112,11 +113,11 @@
       <div class="row" style="gap:12px">
         <div class="field grow">
           <Label for="invite-dialog-role">Role</Label>
-          <select class="select" id="invite-dialog-role" bind:value={inviteRole}><option>Member</option><option>Admin</option><option>Guest</option></select>
+          <Select class="select" id="invite-dialog-role" bind:value={inviteRole}><option>Member</option><option>Admin</option><option>Guest</option></Select>
         </div>
         <div class="field grow">
           <Label for="invite-dialog-team">Team</Label>
-          <select class="select" id="invite-dialog-team" bind:value={inviteTeam}>{#each teamsList() as team (team.id)}<option value={team.id}>{team.name}</option>{/each}</select>
+          <Select class="select" id="invite-dialog-team" bind:value={inviteTeam}>{#each teamsList() as team (team.id)}<option value={team.id}>{team.name}</option>{/each}</Select>
         </div>
       </div>
       <div class="alert info">{@html ic('info', 14)}<span><b>Guests</b> can only see projects they're added to and can't create projects.</span></div>

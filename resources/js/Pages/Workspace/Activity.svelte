@@ -1,4 +1,5 @@
 <script>
+  import Select from "../../Components/Select.svelte";
   import { Link } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import TaskDrawer from '../../Components/TaskDrawer.svelte';
@@ -73,10 +74,10 @@
           <button class:on={filter === key} onclick={() => filter = key}>{label}</button>
         {/each}
       </div>
-      <select class="select" style="height:26px;width:auto;font-size:12px" bind:value={person} aria-label="Filter by person">
+      <Select class="select" style="height:26px;width:auto;font-size:12px" bind:value={person} aria-label="Filter by person">
         <option value="all">Everyone</option>
         {#each members as member (member.id)}<option value={member.id}>{member.name}</option>{/each}
-      </select>
+      </Select>
     </div>
     {#if activityGroups.length}
       {#each activityGroups as [bucket, entries] (bucket)}

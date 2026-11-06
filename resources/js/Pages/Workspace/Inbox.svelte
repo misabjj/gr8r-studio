@@ -1,4 +1,5 @@
 <script>
+  import Dropdown from "../../Components/Dropdown.svelte";
   import Button from "../../Components/Button.svelte";
   import { tick } from 'svelte';
   import { router } from '@inertiajs/svelte';
@@ -379,7 +380,7 @@
     </div>
   </div>
   {#if propertyMenu}
-    <div class="pop enter" data-inbox-property-popup role="menu" style={`left:${propertyMenuPosition.left}px;top:${propertyMenuPosition.top}px;${propertyMenu === 'due' ? 'min-width:0' : 'width:200px'}`}>
+    <Dropdown class="pop enter" data-inbox-property-popup role="menu" style={`left:${propertyMenuPosition.left}px;top:${propertyMenuPosition.top}px;${propertyMenu === 'due' ? 'min-width:0' : 'width:200px'}`}>
       {#if propertyMenu === 'status'}
         {#each STATUSES as item, index (item.id)}<button type="button" class="mi" role="menuitemradio" aria-checked={selectedTask?.status === item.id} onclick={() => void saveTaskProperty('status', item.id)}>{@html stIcon(item.id, 14)}<span>{item.name}</span><span class="r"><kbd>{index + 1}</kbd></span>{#if selectedTask?.status === item.id}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
       {:else if propertyMenu === 'priority'}
@@ -408,7 +409,7 @@
           </div>
         </div>
       {/if}
-    </div>
+    </Dropdown>
   {/if}
   {#if drawerTask}<TaskDrawer task={drawerTask} {workspaceData} onClose={() => drawerTaskId = null} onUpdated={updateTask} />{/if}
 </AppLayout>

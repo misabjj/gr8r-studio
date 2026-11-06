@@ -1,4 +1,6 @@
 <script>
+  import Select from "../../Components/Select.svelte";
+  import Dropdown from "../../Components/Dropdown.svelte";
   import Button from "../../Components/Button.svelte";
   import Input from "../../Components/Input.svelte";
   import { onMount } from 'svelte';
@@ -653,7 +655,7 @@
       </div>
     {/if}
     {#if toolbarMenu === 'filter'}
-      <div class="pop floating fbuild enter" data-task-menu role="dialog" aria-label="Filter by" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;max-width:560px`}>
+      <Dropdown class="pop floating fbuild enter" data-task-menu role="dialog" aria-label="Filter by" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;max-width:560px`}>
         <div class="mh fb-h">Filter by{#if filters.length}<Button variant="ghost" size="sm" onclick={clearFilters}>Clear all</Button>{/if}</div>
         {#if filters.length}
           <div class="fb-rows">
@@ -662,10 +664,10 @@
               {@const selectedNames = filter.values.map(value => filterOptions(filter.field).find(option => String(option.id) === String(value))?.name || value)}
               <div class="frow">
                 <span class="conj">{index ? 'and' : 'Where'}</span>
-                <select class="select" aria-label="Field" value={filter.field} onchange={event => { updateFilter(index, { field: event.currentTarget.value, values: [] }); valuesOpen = index; }}>
+                <Select class="select" aria-label="Field" value={filter.field} onchange={event => { updateFilter(index, { field: event.currentTarget.value, values: [] }); valuesOpen = index; }}>
                   {#each filterFields as field (field.id)}<option value={field.id}>{field.name}</option>{/each}
-                </select>
-                <select class="select" aria-label="Operator" value={filter.operator || 'is'} onchange={event => updateFilter(index, { operator: event.currentTarget.value })}><option value="is">is</option><option value="not">is not</option></select>
+                </Select>
+                <Select class="select" aria-label="Operator" value={filter.operator || 'is'} onchange={event => updateFilter(index, { operator: event.currentTarget.value })}><option value="is">is</option><option value="not">is not</option></Select>
                 <button class="valbtn" aria-expanded={valuesOpen === index} onclick={() => { valuesOpen = valuesOpen === index ? -1 : index; }}><span class="trunc grow">{#if selectedNames.length}{selectedNames.join(', ')}{:else}<span class="faint">Select…</span>{/if}</span>{@html ic('chevron-down', 12)}</button>
                 <button class="ibtn ibtn-xs" aria-label="Remove filter" onclick={() => removeFilter(index)}>{@html ic('trash-2', 13)}</button>
               </div>
@@ -682,28 +684,28 @@
           <p class="fb-empty">No filters applied. Combine filters to narrow the task list, e.g. Status is In Progress and Assignee is Sarah.</p>
         {/if}
         <div class="msep"></div><div class="fb-add"><span class="faint">Add filter:</span>{#each filterFields as field (field.id)}<button class="badge" onclick={() => addFilter(field.id)}>{@html ic(field.icon, 11)}{field.name}</button>{/each}</div>
-      </div>
+      </Dropdown>
     {:else if toolbarMenu === 'sort'}
-      <div class="pop floating enter" data-task-menu role="menu" aria-label="Sort tasks" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:240px`}>
+      <Dropdown class="pop floating enter" data-task-menu role="menu" aria-label="Sort tasks" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:240px`}>
         <div class="mh">Sort by</div>
         {#each Object.entries(sortNames) as [field, name] (field)}<button class="mi" role="menuitem" onclick={() => { sortBy = field; toolbarMenu = ''; }}>{name}{#if sortBy === field}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
         <div class="msep"></div><div style="padding:4px 6px"><div class="seg" style="width:100%"><button class:on={sortDirection > 0} style="flex:1;justify-content:center" onclick={() => sortDirection = 1}>{@html ic('arrow-up', 12)}Ascending</button><button class:on={sortDirection < 0} style="flex:1;justify-content:center" onclick={() => sortDirection = -1}>{@html ic('arrow-down', 12)}Descending</button></div></div>
-      </div>
+      </Dropdown>
     {:else if toolbarMenu === 'group'}
-      <div class="pop floating enter" data-task-menu role="menu" aria-label="Group tasks" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:220px`}>
+      <Dropdown class="pop floating enter" data-task-menu role="menu" aria-label="Group tasks" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:220px`}>
         <div class="mh">Group by</div>
         {#each groupOptions as option (option.id)}<button class="mi" role="menuitem" onclick={() => { groupBy = option.id; toolbarMenu = ''; }}>{@html ic(option.icon, 15)}{option.name}{#if groupBy === option.id}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
-      </div>
+      </Dropdown>
     {:else if toolbarMenu === 'columns'}
-      <div class="pop floating enter" data-task-menu role="menu" aria-label="Visible columns" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:220px`}>
+      <Dropdown class="pop floating enter" data-task-menu role="menu" aria-label="Visible columns" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:220px`}>
         <div class="mh">Visible columns</div>
         {#each tableColumns.filter(column => column.id !== 'title') as column (column.id)}
           <button class="mi" role="menuitemcheckbox" aria-checked={!tableColumnHidden.includes(column.id)} onclick={() => toggleTableColumn(column.id)}><input class="check" type="checkbox" checked={!tableColumnHidden.includes(column.id)} tabindex="-1" />{column.name}</button>
         {/each}
         <div class="msep"></div><button class="mi" onclick={() => { tableColumnWidths = {}; savedTaskView.colW = {}; save(); }}>Reset column widths</button>
-      </div>
+      </Dropdown>
     {/if}
-    {#if boardCardMenu}{@const task = tasks.find(item => item.id === boardCardMenu.taskId)}{#if task}<div class="pop floating enter" data-board-card-menu role="menu" aria-label={boardCardMenu.field === 'priority' ? 'Priority' : boardCardMenu.field === 'due' ? 'Due date' : 'Assignee'} style={`left:${boardCardMenuPosition.left}px;top:${boardCardMenuPosition.top}px;${boardCardMenu.field === 'due' ? 'min-width:0' : 'width:220px'}`}>
+    {#if boardCardMenu}{@const task = tasks.find(item => item.id === boardCardMenu.taskId)}{#if task}<Dropdown class="pop floating enter" data-board-card-menu role="menu" aria-label={boardCardMenu.field === 'priority' ? 'Priority' : boardCardMenu.field === 'due' ? 'Due date' : 'Assignee'} style={`left:${boardCardMenuPosition.left}px;top:${boardCardMenuPosition.top}px;${boardCardMenu.field === 'due' ? 'min-width:0' : 'width:220px'}`}>
       {#if boardCardMenu.field === 'priority'}<div class="mh">Priority</div>{#each priorities as priority (priority)}<button type="button" class="mi" role="menuitemradio" aria-checked={task.priority === priority} onclick={() => updateBoardCard(task, { priority })}>{@html prIcon(priority, 14)}<span>{priority === 'none' ? 'No priority' : priority[0].toUpperCase() + priority.slice(1)}</span>{#if task.priority === priority}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
       {:else if boardCardMenu.field === 'due'}
         {@const currentDate = String(task.due_date || '').slice(0, 10)}
@@ -713,7 +715,7 @@
           <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:11px">{#each tableCalendarWeekdays as weekday}<span class="faint" style="padding:3px 0">{weekday}</span>{/each}{#each tableCalendarDays as day (iso(day))}{@const dateValue = iso(day)}{@const isSelected = dateValue === currentDate}{@const isToday = diffD(day, TODAY) === 0}<button type="button" class="num" aria-label={fmtDate(dateValue, true)} style={`height:30px;border-radius:6px;font-size:12px;${isSelected ? 'background:var(--accent);color:var(--on-accent);font-weight:600' : isToday ? 'color:var(--accent);font-weight:600;box-shadow:inset 0 0 0 1px var(--accent-line)' : day.getMonth() !== tableCalendarMonth.getMonth() ? 'color:var(--text-3)' : ''}`} onclick={() => updateBoardCardDue(task, dateValue)}>{day.getDate()}</button>{/each}</div>
         </div>
       {:else}<div class="mh">Assign to</div><button type="button" class="mi" role="menuitemradio" aria-checked={!task.assignee_id} onclick={() => updateBoardCard(task, { assignee_id: null })}>{@html ic('user-round', 14)}Unassigned{#if !task.assignee_id}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{#each members as member (member.id)}<button type="button" class="mi" role="menuitemradio" aria-checked={String(task.assignee_id) === String(member.id)} onclick={() => updateBoardCard(task, { assignee_id: member.id })}><span class="av sm" style={`--c:${member.color || 'var(--gray)'}`}>{initials(member.name)}</span><span class="trunc">{member.name}</span>{#if String(task.assignee_id) === String(member.id)}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}{/if}
-    </div>{/if}{/if}
+    </Dropdown>{/if}{/if}
     {#if view === 'board'}
       <div class="board">{#each statuses as item (item.id)}{@const columnTasks = visibleTasks.filter(task => task.status === item.id)}<section class="bcol" aria-label={item.name} ondragover={event => event.preventDefault()} ondrop={event => handleBoardDrop(event, item.id)}><div class="bcol-h">{@html stIcon(item.id, 14)}<span>{item.name}</span><span class="cnt">{columnTasks.length}</span><span class="sp"></span><button class="ibtn ibtn-xs" aria-label={`Add task to ${item.name}`} onclick={() => startBoardComposer(item.id)}>{@html ic('plus', 13)}</button></div><div class="bcol-b">{#each columnTasks as task (task.id)}{@const progress = taskSubtaskProgress(task)}{@const assignee = task.assignee || members.find(member => String(member.id) === String(task.assignee_id))}{@const sourceMember = (workspaceData.members || []).find(member => String(member.database_id) === String(task.assignee_id))}
         <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
@@ -784,7 +786,7 @@
           </table>
         </div>
         {#if tableCellMenu}{@const menuTask = tasks.find(item => String(item.id) === String(tableCellMenu.taskId))}{#if menuTask}
-          <div class="pop floating enter" data-table-cell-menu role="menu" style={`left:${tableCellMenu.left}px;top:${tableCellMenu.top}px;width:${['labels', 'deps', 'project'].includes(tableCellMenu.field) ? 240 : 200}px`}>
+          <Dropdown class="pop floating enter" data-table-cell-menu role="menu" style={`left:${tableCellMenu.left}px;top:${tableCellMenu.top}px;width:${['labels', 'deps', 'project'].includes(tableCellMenu.field) ? 240 : 200}px`}>
             {#if tableCellMenu.field === 'status'}<div class="mh">Status</div>{#each statuses as option (option.id)}<button type="button" class="mi" role="menuitemradio" aria-checked={menuTask.status === option.id} onclick={() => updateTableCell(menuTask, 'status', option.id)}>{@html stIcon(option.id, 14)}<span>{option.name}</span>{#if menuTask.status === option.id}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
             {:else if tableCellMenu.field === 'priority'}<div class="mh">Priority</div>{#each priorities as option (option)}<button type="button" class="mi" role="menuitemradio" aria-checked={menuTask.priority === option} onclick={() => updateTableCell(menuTask, 'priority', option)}>{@html prIcon(option, 14)}<span>{option === 'none' ? 'No priority' : option[0].toUpperCase() + option.slice(1)}</span>{#if menuTask.priority === option}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
             {:else if tableCellMenu.field === 'assignee'}<div class="mh">Assignee</div><div class="pin"><input bind:value={tableCellQuery} placeholder="Assign to…" aria-label="Assign to…" /></div><button type="button" class="mi" role="menuitemradio" aria-checked={!menuTask.assignee_id} onclick={() => updateTableCell(menuTask, 'assignee_id', null)}>{@html ic('user-round', 14)}<span>Unassigned</span>{#if !menuTask.assignee_id}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{#each members.filter(member => member.name.toLowerCase().includes(tableCellQuery.trim().toLowerCase())) as member (member.id)}<button type="button" class="mi" role="menuitemradio" aria-checked={String(menuTask.assignee_id) === String(member.id)} onclick={() => updateTableCell(menuTask, 'assignee_id', member.id)}><span class="av sm" style={`--c:${member.color || 'var(--gray)'}`}>{initials(member.name)}</span><span class="trunc">{member.name}{String(member.id) === String(page.props.auth?.user?.id) ? ' (you)' : ''}</span>{#if String(menuTask.assignee_id) === String(member.id)}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
@@ -800,7 +802,7 @@
             {:else if tableCellMenu.field === 'estimate'}<div class="mh">Estimate</div>{#each ['30m', '1h', '2h', '4h', '1d', '2d', '3d', '5d', '8d'] as estimate (estimate)}<button type="button" class="mi" role="menuitemradio" aria-checked={menuTask.estimate === estimate} onclick={() => updateTableCell(menuTask, 'estimate', estimate)}>{@html ic('timer', 14)}<span>{estimate}</span>{#if menuTask.estimate === estimate}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}{#if menuTask.estimate}<div class="msep"></div><button type="button" class="mi" onclick={() => updateTableCell(menuTask, 'estimate', null)}>{@html ic('x', 14)}<span>Clear estimate</span></button>{/if}
             {:else if tableCellMenu.field === 'project'}<div class="mh">Project</div>{#each projects.filter(project => !project.is_private && !['complete', 'completed', 'archived'].includes(project.status)) as project (project.id)}<button type="button" class="mi" role="menuitemradio" aria-checked={String(menuTask.project_id) === String(project.id)} onclick={() => updateTableCell(menuTask, 'project', project.id)}><span class="pdot" style={`--c:var(--${project.color || 'indigo'})`}></span><span class="trunc">{project.name}</span>{#if String(menuTask.project_id) === String(project.id)}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
             {/if}
-          </div>
+          </Dropdown>
         {/if}{/if}
       {/if}
     {:else if !visibleTasks.length}

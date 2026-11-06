@@ -1,4 +1,5 @@
 <script>
+  import Select from "./Select.svelte";
   import Button from "./Button.svelte";
   import { ic } from '@/src/core/icons.js';
   import { PCOLORS } from '@/src/core/constants.js';
@@ -199,7 +200,7 @@
 
 <div class="toolbar">
   <div class="seg" style="margin-left:4px"><button class:on={zoom === 'week'} onclick={() => zoom = 'week'}>Weeks</button><button class:on={zoom === 'month'} onclick={() => zoom = 'month'}>Months</button></div>
-  <select class="select" style="height:26px;width:auto;font-size:12px;margin-left:4px" bind:value={group} aria-label="Group by"><option value="status">Group: Status</option><option value="assignee">Group: Assignee</option><option value="project">Group: Project</option><option value="none">No grouping</option></select>
+  <Select class="select" style="height:26px;width:auto;font-size:12px;margin-left:4px" bind:value={group} aria-label="Group by"><option value="status">Group: Status</option><option value="assignee">Group: Assignee</option><option value="project">Group: Project</option><option value="none">No grouping</option></Select>
   <Button variant="ghost" size="md" onclick={() => anchor = new Date()}>{@html ic('crosshair', 14)}Today</Button>
 </div>
 {#if !datedTasks.length}
