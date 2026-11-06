@@ -33,7 +33,7 @@
       <div style="display:flex;justify-content:center">{@html LOGO(30)}</div>
       <h1>Welcome back</h1>
       <p class="sub">Sign in to Gr8r Studio</p>
-      {#if status}<Alert variant="ok" icon="circle-check">{status}</Alert>{/if}
+      {#if status}<Alert variant="ok">{status}</Alert>{/if}
       <div class="field">
         <Label for="l-email">Email</Label>
         <Input size="large" error={!!form.errors.email} id="l-email" type="email" bind:value={form.email} autocomplete="email" />

@@ -6,8 +6,6 @@
   type Props = {
     children: Snippet;
     class?: string;
-    icon: string;
-    iconSize?: number;
     role?: 'alert' | 'status';
     variant: Variant;
   };
@@ -15,15 +13,18 @@
   let {
     children,
     class: className = '',
-    icon,
-    iconSize = 15,
     role,
     variant,
   }: Props = $props();
 
+  const icons: Record<Variant, string> = {
+    danger: 'circle-alert',
+    info: 'info',
+    ok: 'circle-check',
+  };
   const defaultRole = $derived(role ?? (variant === 'danger' ? 'alert' : variant === 'ok' ? 'status' : undefined));
 </script>
 
 <div class={`alert ${variant} ${className}`} role={defaultRole}>
-  {@html ic(icon, iconSize)}<span>{@render children()}</span>
+  {@html ic(icons[variant], variant === 'info' ? 14 : 15)}<span>{@render children()}</span>
 </div>

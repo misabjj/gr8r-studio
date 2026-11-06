@@ -28,7 +28,7 @@
       <div style="display:flex;justify-content:center"><span class="ftype" style="--c:var(--accent);width:44px;height:44px;border-radius:11px">{@html ic('key-round', 20)}</span></div>
       <h1>Reset your password</h1>
       <p class="sub">Enter your account email and we'll send you a reset link.</p>
-      {#if status}<Alert variant="ok" icon="circle-check">{status}</Alert>{/if}
+      {#if status}<Alert variant="ok">{status}</Alert>{/if}
       <div class="field">
         <Label for="f-email">Email</Label>
         <Input size="large" error={!!form.errors.email} id="f-email" type="email" bind:value={form.email} autocomplete="email" required />
