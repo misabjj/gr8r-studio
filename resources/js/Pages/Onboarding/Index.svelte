@@ -153,7 +153,7 @@
   }
 </script>
 
-<svelte:head><title>Set up your workspace · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Set up your workspace</title></svelte:head>
 
 <div id="onboarding-root" aria-busy={busy}>
   {#if errorMessage}<div class="alert danger" role="alert">{errorMessage}</div>{/if}

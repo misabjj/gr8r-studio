@@ -30,7 +30,7 @@
   }
 </script>
 
-<svelte:head><title>Timeline · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Timeline</title></svelte:head>
 
 <AppLayout>
   <div class="page flush"><div class="ph"><div><h1>Timeline</h1><p>Schedules, dependencies, and milestones across projects.</p></div></div><ProjectTimeline {tasks} initialGroup="project" sourceProjects={workspaceData.projects || []} sourceTaskOrder={(workspaceData.tasks || []).map(task => task.database_id)} onCreate={() => taskFormOpen = true} onTask={task => drawerTaskId = task.id} onUpdateTask={updateTimelineTask} /></div>

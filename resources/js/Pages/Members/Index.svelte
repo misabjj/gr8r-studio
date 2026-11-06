@@ -293,7 +293,7 @@
   }
 </script>
 
-<svelte:head><title>Members · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Members</title></svelte:head>
 
 <AppLayout>
   <div class="page wide" style="max-width:1200px">

@@ -6,8 +6,8 @@
         "build": "vite build",
         "dev": "vite",
         "check": "svelte-check --workspace resources/js --no-tsconfig",
-        "lint": "biome check resources/js/app.js src/core/laravel.js vite.config.js",
-        "format": "biome format --write resources/js/app.js src/core/laravel.js vite.config.js"
+        "lint": "biome check resources/js/app.ts src/core/laravel.js vite.config.js",
+        "format": "biome format --write resources/js/app.ts src/core/laravel.js vite.config.js"
     },
     "devDependencies": {
         "@biomejs/biome": "^2.6.5",

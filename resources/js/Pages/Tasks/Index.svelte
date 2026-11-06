@@ -626,7 +626,7 @@
 
 <svelte:window onpointerdown={handleWindowPointerdown} onkeydown={handleWindowKeydown} onpointermove={resizeTableColumn} onpointerup={finishTableColumnResize} />
 
-<svelte:head><title>Tasks · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Tasks</title></svelte:head>
 
 <AppLayout>
   <div class="page flush">

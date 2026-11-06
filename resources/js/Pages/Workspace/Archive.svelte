@@ -95,7 +95,7 @@
   }
 </script>
 
-<svelte:head><title>Archive · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Archive</title></svelte:head>
 
 <AppLayout>
   <div class="page" style="max-width:900px">

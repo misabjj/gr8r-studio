@@ -208,7 +208,7 @@
   }
 </script>
 
-<svelte:head><title>{member?.name || 'Member'} · Members · Gr8r Studio</title></svelte:head>
+<svelte:head><title>{member?.name || 'Member'} · Members</title></svelte:head>
 
 {#if member}
   <AppLayout>

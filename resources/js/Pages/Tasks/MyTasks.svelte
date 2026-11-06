@@ -281,7 +281,7 @@
   }
 </script>
 
-<svelte:head><title>My Tasks · Gr8r Studio</title></svelte:head>
+<svelte:head><title>My Tasks</title></svelte:head>
 <svelte:window onpointerdown={handleWindowPointerdown} onkeydown={handleWindowKeydown} />
 
 <AppLayout>

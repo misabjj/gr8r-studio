@@ -21,7 +21,7 @@
 </script>
 
 <svelte:head>
-  <title>Create account · Gr8r Studio</title>
+  <title>Create account</title>
 </svelte:head>
 
 <AuthLayout actionLabel="Log in" actionHref={login.url()}>

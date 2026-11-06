@@ -10,7 +10,7 @@
   });
 </script>
 
-<svelte:head><title>{page === 'states' ? 'System states' : 'Design system'} · Gr8r Studio</title></svelte:head>
+<svelte:head><title>{page === 'states' ? 'System states' : 'Design system'}</title></svelte:head>
 
 <AppLayout>
   {@html content}

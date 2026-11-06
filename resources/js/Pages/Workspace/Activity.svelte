@@ -62,7 +62,7 @@
   const filters = [['all', 'All'], ['status', 'Status changes'], ['comments', 'Comments'], ['projects', 'Projects']];
 </script>
 
-<svelte:head><title>Activity · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Activity</title></svelte:head>
 
 <AppLayout>
   <div class="page" style="max-width:820px">

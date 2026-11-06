@@ -74,7 +74,7 @@ export default defineConfig({
 		svelte(),
 		lucideSubset(),
 		laravel({
-			input: ["resources/js/app.js"],
+			input: ["resources/js/app.ts"],
 			refresh: true,
 		}),
 	],

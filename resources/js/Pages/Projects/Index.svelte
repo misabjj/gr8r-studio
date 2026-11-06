@@ -310,7 +310,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
   }
 </script>
 
-<svelte:head><title>Projects · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Projects</title></svelte:head>
 
 <svelte:window onclick={closeProjectMenuOnWindowClick} onkeydown={handleProjectMenuKeydown} />
 

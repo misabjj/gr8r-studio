@@ -100,7 +100,7 @@
   }
 </script>
 
-<svelte:head><title>Workspace overview · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Workspace overview</title></svelte:head>
 
 <AppLayout>
   <div class="page">

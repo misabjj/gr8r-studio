@@ -147,7 +147,7 @@
   }
 </script>
 
-<svelte:head><title>{teamName} · Teams · Gr8r Studio</title></svelte:head>
+<svelte:head><title>{teamName} · Teams</title></svelte:head>
 
 <AppLayout>
   <div class="page">

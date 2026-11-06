@@ -20,7 +20,7 @@
 </script>
 
 <svelte:head>
-  <title>Forgot password · Gr8r Studio</title>
+  <title>Forgot password</title>
 </svelte:head>
 
 <AuthLayout>

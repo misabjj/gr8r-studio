@@ -106,7 +106,7 @@
   }
 </script>
 
-<svelte:head><title>Notifications · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Notifications</title></svelte:head>
 
 <AppLayout>
   <div class="page" style="max-width:820px">

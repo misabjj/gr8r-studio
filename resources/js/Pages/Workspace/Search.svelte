@@ -133,7 +133,7 @@
   }
 </script>
 
-<svelte:head><title>Search · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Search</title></svelte:head>
 
 <AppLayout>
   <div class="page" style="max-width:860px">

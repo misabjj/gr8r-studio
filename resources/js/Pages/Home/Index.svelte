@@ -233,7 +233,7 @@
   }
 </script>
 
-<svelte:head><title>Home · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Home</title></svelte:head>
 
 <AppLayout>
   <div class="page">

@@ -228,7 +228,7 @@
   }
 </script>
 
-<svelte:head><title>Favorites · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Favorites</title></svelte:head>
 <svelte:window onclick={closeProjectMenuOnWindowClick} onkeydown={handleProjectMenuKeydown} />
 
 <AppLayout>

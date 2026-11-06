@@ -38,7 +38,7 @@
   let drawerTask = $derived(tasks.find(task => task.id === drawerTaskId) || null);
 </script>
 
-<svelte:head><title>Calendar · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Calendar</title></svelte:head>
 
 <AppLayout>
   <div class="page flush">

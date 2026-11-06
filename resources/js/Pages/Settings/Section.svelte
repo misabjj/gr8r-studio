@@ -430,7 +430,7 @@
   }
 </script>
 
-<svelte:head><title>Settings · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Settings</title></svelte:head>
 
 <AppLayout>
   <div class="set">

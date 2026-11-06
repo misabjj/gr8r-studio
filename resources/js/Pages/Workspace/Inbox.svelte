@@ -302,7 +302,7 @@
 
 <svelte:window onkeydown={handlePropertyKeydown} onpointerdown={handleWindowPointerdown} />
 
-<svelte:head><title>Inbox · Gr8r Studio</title></svelte:head>
+<svelte:head><title>Inbox</title></svelte:head>
 
 <AppLayout>
   <div class="page flush">
