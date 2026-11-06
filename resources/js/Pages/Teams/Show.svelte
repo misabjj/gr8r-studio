@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import { Link, router, usePage } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import TaskDrawer from '../../Components/TaskDrawer.svelte';
@@ -150,7 +151,7 @@
 
 <AppLayout>
   <div class="page">
-    <div class="ph"><div class="row" style="gap:12px"><span class="picon lg" style={`--c:${teamColor}`}>{@html ic(teamIcon, 18)}</span><div><h1>{teamName}</h1><p style="margin:2px 0 0">{teamDescription}</p></div></div><div class="acts"><button type="button" class="btn btn-secondary" onclick={() => editTeamOpen = true}>{@html ic('pencil', 14)}Edit team</button><Link class="btn btn-secondary" href="/onboarding?step=4">{@html ic('user-plus', 14)}Invite to workspace</Link></div></div>
+    <div class="ph"><div class="row" style="gap:12px"><span class="picon lg" style={`--c:${teamColor}`}>{@html ic(teamIcon, 18)}</span><div><h1>{teamName}</h1><p style="margin:2px 0 0">{teamDescription}</p></div></div><div class="acts"><Button type="button" variant="secondary" size="md" onclick={() => editTeamOpen = true}>{@html ic('pencil', 14)}Edit team</Button><Link class="btn btn-secondary" href="/onboarding?step=4">{@html ic('user-plus', 14)}Invite to workspace</Link></div></div>
     <div class="grid2"><div class="stack">
       <section class="panel"><div class="panel-h"><h2>Projects</h2><span class="faint">{projects.length}</span></div>{#each projects as project (project.id)}<Link class="mini" href={project.database_id ? projectShow(project.database_id).url : '/projects'}><span class="picon" style={`--c:${projectColor(project)}`}>{@html ic(project.icon || 'folder', 14)}</span><span class="tt">{project.name}</span><span>{@html pStatus(project.status)}</span><span class="row" style="width:120px">{@html progBar(projectProgress(project.id))}</span></Link>{:else}<div class="panel-b faint">No projects</div>{/each}</section>
       {#if taskError}<div class="alert danger" role="alert">{@html ic('circle-alert', 14)}<span>{taskError}</span></div>{/if}

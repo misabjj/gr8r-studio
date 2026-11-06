@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import { Link, router } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import { show as projectShow, index as projectsIndex } from '../../routes/projects';
@@ -105,7 +106,7 @@
   <div class="page">
     <div class="ph">
       <div><h1>Workspace overview</h1><p>Health of every project in {workspaceData.ws?.name || 'Gr8r Studio'}.</p></div>
-      <div class="acts"><Link class="btn btn-secondary" href={timelineRoute().url}>{@html ic('chart-gantt', 14)}Timeline</Link><button class="btn btn-primary" type="button" onclick={startProjectCreation}>{@html ic('plus', 14)}New project</button></div>
+      <div class="acts"><Link class="btn btn-secondary" href={timelineRoute().url}>{@html ic('chart-gantt', 14)}Timeline</Link><Button variant="primary" size="md" type="button" onclick={startProjectCreation}>{@html ic('plus', 14)}New project</Button></div>
     </div>
     <div class="stats" style="margin-bottom:16px">
       <div class="stat"><span class="k">Projects</span><span class="v">{statsProjects}</span><span class="d">{statsCompletedProjects} completed</span></div>

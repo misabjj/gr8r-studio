@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import InputPassword from "../../Components/InputPassword.svelte";
@@ -49,7 +50,7 @@
         {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{/if}
       </div>
       <label class="row" style="font-size:13px;gap:8px;cursor:pointer"><input type="checkbox" class="check" bind:checked={form.remember} />Remember me for 30 days</label>
-      <button class="btn btn-primary btn-lg btn-block" class:is-loading={form.processing} disabled={form.processing}>{form.processing ? 'Signing in…' : 'Sign in'}</button>
+      <Button variant="primary" size="lg" block loading={form.processing} disabled={form.processing}>{form.processing ? 'Signing in…' : 'Sign in'}</Button>
       <div class="or">or</div>
       <AuthSocialButtons />
       <p class="auth-foot">Don't have an account? <a class="link" href={register.url()}>Sign up</a></p>

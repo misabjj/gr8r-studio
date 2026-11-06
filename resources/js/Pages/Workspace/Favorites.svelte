@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import { fade, scale } from 'svelte/transition';
@@ -301,7 +302,7 @@
           {#if projectConfirmation.action === 'delete'}<div class="field" style="margin-top:6px"><Label for="favorite-project-delete-confirm">Type <b>{projectConfirmation.project.name}</b> to confirm</Label><Input class="" id="favorite-project-delete-confirm" bind:value={confirmationText} autocomplete="off" /></div>{/if}
           {#if errorMessage}<div class="err" role="alert">{@html ic('circle-alert', 12)}{errorMessage}</div>{/if}
         </div>
-        <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => projectConfirmation = null}>Cancel</button><button type="button" class={projectConfirmation.action === 'delete' ? 'btn btn-danger' : 'btn btn-primary'} disabled={confirmationBusy || (projectConfirmation.action === 'delete' && confirmationText !== projectConfirmation.project.name)} onclick={confirmProjectAction}>{confirmationBusy ? 'Working…' : projectConfirmation.action === 'delete' ? 'Delete project' : 'Archive project'}</button></div>
+        <div class="modal-f"><span class="sp"></span><Button type="button" variant="secondary" size="md" onclick={() => projectConfirmation = null}>Cancel</Button><Button type="button" variant={projectConfirmation.action === 'delete' ? 'danger' : 'primary'} size="md" disabled={confirmationBusy || (projectConfirmation.action === 'delete' && confirmationText !== projectConfirmation.project.name)} onclick={confirmProjectAction}>{confirmationBusy ? 'Working…' : projectConfirmation.action === 'delete' ? 'Delete project' : 'Archive project'}</Button></div>
       </div>
     </div>
   {/if}

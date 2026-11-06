@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import InputPassword from "../../Components/InputPassword.svelte";
@@ -54,7 +55,7 @@
         {@html strengthMeter(form.password)}
         {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{:else}<span class="hint">At least 10 characters with a number or symbol.</span>{/if}
       </div>
-      <button class="btn btn-primary btn-lg btn-block" class:is-loading={form.processing} disabled={form.processing}>{form.processing ? 'Creating account…' : 'Create account'}</button>
+      <Button variant="primary" size="lg" block loading={form.processing} disabled={form.processing}>{form.processing ? 'Creating account…' : 'Create account'}</Button>
       <p class="hint" style="text-align:center">By creating an account you agree to the Terms and Privacy Policy.</p>
       <p class="auth-foot">Already have an account? <a class="link" href={login.url()}>Sign in</a></p>
     </form>

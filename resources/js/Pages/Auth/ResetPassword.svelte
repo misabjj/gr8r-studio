@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import InputPassword from "../../Components/InputPassword.svelte";
@@ -40,7 +41,7 @@
         {#if form.errors.password_confirmation}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password_confirmation}</span>{/if}
         {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
       </div>
-      <button class="btn btn-primary btn-lg btn-block" class:is-loading={form.processing} disabled={form.processing}>{form.processing ? 'Resetting…' : 'Reset password'}</button>
+      <Button variant="primary" size="lg" block loading={form.processing} disabled={form.processing}>{form.processing ? 'Resetting…' : 'Reset password'}</Button>
     </form>
   </div>
   <div class="auth-foot" style="padding:18px;font-size:12px"><span class="faint">© 2026 Gr8r Studio · Terms · Privacy</span></div>

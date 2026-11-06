@@ -1,4 +1,5 @@
 <script>
+  import Button from "./Button.svelte";
   import { tick } from 'svelte';
   import { ic } from '@/src/core/icons.js';
   import { relDate } from '@/src/core/utils.js';
@@ -256,9 +257,9 @@
 {#if selectedCount}
   <div class="bulkbar enter" role="toolbar" aria-label="Bulk actions">
     <b style="font-weight:600">{selectedCount} selected</b><span class="sep"></span>
-    <button type="button" class="btn btn-sm" data-task-list-trigger onclick={event => openMenuFor(event, 'bulk-status')}>{@html ic('circle-dot', 14)}Status</button>
-    <button type="button" class="btn btn-sm" data-task-list-trigger onclick={event => openMenuFor(event, 'bulk-assignee')}>{@html ic('user', 14)}Assignee</button>
-    <button type="button" class="btn btn-sm" data-task-list-trigger onclick={event => openMenuFor(event, 'bulk-priority')}>{@html ic('signal-high', 14)}Priority</button>
+    <Button type="button" variant="base" size="sm" data-task-list-trigger onclick={event => openMenuFor(event, 'bulk-status')}>{@html ic('circle-dot', 14)}Status</Button>
+    <Button type="button" variant="base" size="sm" data-task-list-trigger onclick={event => openMenuFor(event, 'bulk-assignee')}>{@html ic('user', 14)}Assignee</Button>
+    <Button type="button" variant="base" size="sm" data-task-list-trigger onclick={event => openMenuFor(event, 'bulk-priority')}>{@html ic('signal-high', 14)}Priority</Button>
     <span class="sep"></span><button type="button" class="ibtn ibtn-sm" aria-label="Clear selection" onclick={() => selectedIds = new Set()}>{@html ic('x', 14)}</button>
   </div>
 {/if}

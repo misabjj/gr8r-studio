@@ -1,4 +1,5 @@
 <script>
+  import Button from "./Button.svelte";
   import Input from "./Input.svelte";
   import { fade } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
@@ -515,8 +516,8 @@
       <div class="modal-f">
           {#if !editingTask}<label class="row" style="gap:8px;font-size:12.5px;color:var(--text-2);cursor:pointer"><input type="checkbox" class="toggle" bind:checked={createMore} onchange={() => S.ui.taskCreateMore = createMore} />Create more</label>{/if}
           <span class="sp"></span><span class="faint hide-m" style="font-size:11.5px"><kbd>⌘</kbd> <kbd>↵</kbd></span>
-          <button type="button" class="btn btn-secondary" onclick={onClose}>Cancel</button>
-          <button class="btn btn-primary" type="submit" form="workspace-task-form" disabled={busy || !projects.length}>{busy ? (editingTask ? 'Saving…' : 'Creating…') : (editingTask ? 'Save changes' : 'Create task')}</button>
+          <Button type="button" variant="secondary" size="md" onclick={onClose}>Cancel</Button>
+          <Button variant="primary" size="md" type="submit" form="workspace-task-form" disabled={busy || !projects.length}>{busy ? (editingTask ? 'Saving…' : 'Creating…') : (editingTask ? 'Save changes' : 'Create task')}</Button>
       </div>
       {#if openMenu}
         <div class="pop enter" data-task-form-popup role="menu" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;${openMenu === 'due' || openMenu === 'start' ? 'min-width:0' : `width:${popupWidth(openMenu)}px`}`}>

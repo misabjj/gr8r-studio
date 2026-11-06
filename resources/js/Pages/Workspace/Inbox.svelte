@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import { tick } from 'svelte';
   import { router } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
@@ -342,7 +343,7 @@
             <div class="row" style="height:46px;padding:0 16px;border-bottom:1px solid var(--border);gap:8px;flex-shrink:0">
               <button class="ibtn ibtn-sm" onclick={backToList} aria-label="Back">{@html ic('arrow-left', 15)}</button>
               <span class="pdot" style={`--c:${projectColor(selectedProject)}`}></span><span class="muted" style="font-size:12.5px">{selectedProject?.name}</span><span class="faint mono">{selectedTask.key}</span><span class="sp"></span>
-              <button class="btn btn-sm btn-secondary" onclick={openTask}>{@html ic('panel-right-open', 14)}Open task</button>
+              <Button variant="secondary" size="sm" onclick={openTask}>{@html ic('panel-right-open', 14)}Open task</Button>
             </div>
             <div style="padding:24px 28px;max-width:720px;width:100%">
               <h2 style="font-size:var(--fs-xl);margin:0 0 10px;font-weight:600;letter-spacing:-.015em">{selectedTask.title}</h2>
@@ -361,14 +362,14 @@
               {/each}
               <form class="cbox" style="margin-top:10px" onsubmit={postReply}>
                 <textarea bind:value={reply} onkeydown={handleReplyKeydown} placeholder="Reply… use @ to mention" aria-label="Reply"></textarea>
-                <div class="row"><span class="faint" style="font-size:11.5px">{MOD}+Enter to send</span><span class="sp"></span><button class="btn btn-primary btn-sm" disabled={!reply.trim()}>Reply</button></div>
+                <div class="row"><span class="faint" style="font-size:11.5px">{MOD}+Enter to send</span><span class="sp"></span><Button variant="primary" size="sm" disabled={!reply.trim()}>Reply</Button></div>
               </form>
             </div>
           {:else}
             <div style="padding:24px 28px">
-              <button class="btn btn-sm btn-ghost" onclick={backToList} style="margin:-4px 0 12px -8px">{@html ic('arrow-left', 14)}Back</button>
+              <Button variant="ghost" size="sm" onclick={backToList} style="margin:-4px 0 12px -8px">{@html ic('arrow-left', 14)}Back</Button>
               <div class="alert danger">{@html ic('triangle-alert', 16)}<div><b>{selectedNotification.text}</b><div class="muted" style="margin-top:2px">{selectedNotification.snippet}</div></div></div>
-              {#if selectedProject?.database_id}<div style="margin-top:14px"><button class="btn btn-secondary" onclick={openProject}>Open project</button></div>{/if}
+              {#if selectedProject?.database_id}<div style="margin-top:14px"><Button variant="secondary" size="md" onclick={openProject}>Open project</Button></div>{/if}
             </div>
           {/if}
         {:else}

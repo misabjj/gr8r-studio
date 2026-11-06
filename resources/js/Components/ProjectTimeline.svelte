@@ -1,4 +1,5 @@
 <script>
+  import Button from "./Button.svelte";
   import { ic } from '@/src/core/icons.js';
   import { PCOLORS } from '@/src/core/constants.js';
   import { S } from '@/src/core/store.js';
@@ -199,10 +200,10 @@
 <div class="toolbar">
   <div class="seg" style="margin-left:4px"><button class:on={zoom === 'week'} onclick={() => zoom = 'week'}>Weeks</button><button class:on={zoom === 'month'} onclick={() => zoom = 'month'}>Months</button></div>
   <select class="select" style="height:26px;width:auto;font-size:12px;margin-left:4px" bind:value={group} aria-label="Group by"><option value="status">Group: Status</option><option value="assignee">Group: Assignee</option><option value="project">Group: Project</option><option value="none">No grouping</option></select>
-  <button class="btn btn-ghost" onclick={() => anchor = new Date()}>{@html ic('crosshair', 14)}Today</button>
+  <Button variant="ghost" size="md" onclick={() => anchor = new Date()}>{@html ic('crosshair', 14)}Today</Button>
 </div>
 {#if !datedTasks.length}
-  <div class="page"><section class="panel"><div class="empty"><span class="empty-ic">{@html ic('chart-gantt', 20)}</span><h2>Nothing on the timeline</h2><p>Give tasks a start and due date to see them here.</p><button class="btn btn-primary btn-sm" onclick={() => onCreate()}>{@html ic('plus', 14)}New task</button></div></section></div>
+  <div class="page"><section class="panel"><div class="empty"><span class="empty-ic">{@html ic('chart-gantt', 20)}</span><h2>Nothing on the timeline</h2><p>Give tasks a start and due date to see them here.</p><Button variant="primary" size="sm" onclick={() => onCreate()}>{@html ic('plus', 14)}New task</Button></div></section></div>
 {:else}
   <div class="tl">
     <div class="tl-left"><div class="tl-head">Task</div><div class="tl-rows">

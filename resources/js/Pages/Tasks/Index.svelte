@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import Input from "../../Components/Input.svelte";
   import { onMount } from 'svelte';
   import { tick } from 'svelte';
@@ -629,14 +630,14 @@
 
 <AppLayout>
   <div class="page flush">
-    <div class="ph"><div><h1>Tasks</h1><p>Every task across {projects.length} projects.</p></div><div class="acts"><button class="btn btn-primary" onclick={() => openCreateTask()}>{@html ic('plus', 14)}New task</button></div></div>
+    <div class="ph"><div><h1>Tasks</h1><p>Every task across {projects.length} projects.</p></div><div class="acts"><Button variant="primary" size="md" onclick={() => openCreateTask()}>{@html ic('plus', 14)}New task</Button></div></div>
     {#if errorMessage}<div class="alert danger" role="alert">{@html ic('circle-alert', 15)}<span>{errorMessage}</span></div>{/if}
     <div class="toolbar" role="toolbar">
       <div class="inwrap">{@html ic('search', 13)}<Input class="search-sm" bind:value={query} placeholder="Search tasks" aria-label="Search tasks" /></div>
-      <button class="btn btn-ghost" data-task-trigger type="button" aria-label="Filter tasks" aria-expanded={toolbarMenu === 'filter'} onclick={event => toggleToolbarMenu('filter', event)}>{@html ic('list-filter', 13)}Filter{#if filterCount}<span class="badge">{filterCount}</span>{/if}</button>
-      <button class="btn btn-ghost" data-task-trigger type="button" aria-label={`Sort tasks: ${sortNames[sortBy]}`} aria-expanded={toolbarMenu === 'sort'} onclick={event => toggleToolbarMenu('sort', event)}>{@html ic('arrow-up-down', 13)}Sort: {sortNames[sortBy]}</button>
-      {#if view !== 'board'}<button class="btn btn-ghost" data-task-trigger aria-expanded={toolbarMenu === 'group'} onclick={event => toggleToolbarMenu('group', event)}>{@html ic('list-filter', 13)}Group: {groupBy === 'none' ? 'None' : groupBy[0].toUpperCase() + groupBy.slice(1)}</button>{/if}
-      {#if view === 'table'}<button class="btn btn-ghost" data-task-trigger aria-label="Columns" aria-expanded={toolbarMenu === 'columns'} onclick={event => toggleToolbarMenu('columns', event)}>{@html ic('columns-3', 13)}Columns</button>{/if}
+      <Button variant="ghost" size="md" data-task-trigger type="button" aria-label="Filter tasks" aria-expanded={toolbarMenu === 'filter'} onclick={event => toggleToolbarMenu('filter', event)}>{@html ic('list-filter', 13)}Filter{#if filterCount}<span class="badge">{filterCount}</span>{/if}</Button>
+      <Button variant="ghost" size="md" data-task-trigger type="button" aria-label={`Sort tasks: ${sortNames[sortBy]}`} aria-expanded={toolbarMenu === 'sort'} onclick={event => toggleToolbarMenu('sort', event)}>{@html ic('arrow-up-down', 13)}Sort: {sortNames[sortBy]}</Button>
+      {#if view !== 'board'}<Button variant="ghost" size="md" data-task-trigger aria-expanded={toolbarMenu === 'group'} onclick={event => toggleToolbarMenu('group', event)}>{@html ic('list-filter', 13)}Group: {groupBy === 'none' ? 'None' : groupBy[0].toUpperCase() + groupBy.slice(1)}</Button>{/if}
+      {#if view === 'table'}<Button variant="ghost" size="md" data-task-trigger aria-label="Columns" aria-expanded={toolbarMenu === 'columns'} onclick={event => toggleToolbarMenu('columns', event)}>{@html ic('columns-3', 13)}Columns</Button>{/if}
       <span class="sp"></span>
       <div class="seg" role="tablist" aria-label="Task view"><button class:on={view === 'list'} aria-pressed={view === 'list'} onclick={() => view = 'list'}>{@html ic('list', 13)}<span class="hide-m">List</span></button><button class:on={view === 'board'} aria-pressed={view === 'board'} onclick={() => view = 'board'}>{@html ic('square-kanban', 13)}<span class="hide-m">Board</span></button><button class:on={view === 'table'} aria-pressed={view === 'table'} onclick={() => view = 'table'}>{@html ic('table-2', 13)}<span class="hide-m">Table</span></button></div>
     </div>
@@ -648,12 +649,12 @@
           <span class="chip"><button style="display:inline-flex;gap:5px;align-items:center" onclick={event => openFilterValues(index, event)}>{@html ic(field?.icon || 'list-filter', 12)}<b>{field?.name || filter.field}</b> {filter.operator === 'not' ? 'is not' : 'is'} <span>{names.length ? names.length > 2 ? `${names.length} selected` : names.join(', ') : 'any'}</span></button><button class="ibtn" aria-label="Remove filter" onclick={() => removeFilter(index)}>{@html ic('x', 12)}</button></span>
           {#if index < filters.length - 1}<span class="faint">and</span>{/if}
         {/each}
-        <button class="btn btn-sm btn-ghost" data-task-trigger onclick={event => toggleToolbarMenu('filter', event)}>{@html ic('plus', 12)}Add</button><span class="sp"></span><button class="btn btn-sm btn-ghost" onclick={clearFilters}>Clear all</button>
+        <Button variant="ghost" size="sm" data-task-trigger onclick={event => toggleToolbarMenu('filter', event)}>{@html ic('plus', 12)}Add</Button><span class="sp"></span><Button variant="ghost" size="sm" onclick={clearFilters}>Clear all</Button>
       </div>
     {/if}
     {#if toolbarMenu === 'filter'}
       <div class="pop floating fbuild enter" data-task-menu role="dialog" aria-label="Filter by" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;max-width:560px`}>
-        <div class="mh fb-h">Filter by{#if filters.length}<button class="btn btn-sm btn-ghost" onclick={clearFilters}>Clear all</button>{/if}</div>
+        <div class="mh fb-h">Filter by{#if filters.length}<Button variant="ghost" size="sm" onclick={clearFilters}>Clear all</Button>{/if}</div>
         {#if filters.length}
           <div class="fb-rows">
             {#each filters as filter, index (index)}
@@ -722,10 +723,10 @@
           {#if progress.total}<div class="subp">{@html ic('list-checks', 12)}<span class="num">{progress.completed}/{progress.total}</span><span class={`prog ${progress.completed === progress.total ? 'green' : ''}`} role="progressbar" aria-valuenow={progress.percentage} aria-valuemin="0" aria-valuemax="100"><i style={`--p:${progress.percentage / 100}`}></i></span></div>{/if}
           <div class="meta"><Link class="m" href={projectShow(task.project_id).url} aria-label={`Project ${task.project?.name}`}><span class="pdot" style={`--c:var(--${task.project?.color || 'indigo'})`}></span></Link><span class="key">{task.key}</span><button type="button" class="m" data-board-card-trigger aria-label={`Priority: ${task.priority}`} title={`Priority: ${task.priority}`} onclick={event => openBoardCardMenu(event, task, 'priority')}>{@html prIcon(task.priority, 13)}</button>{#if task.due_date}<button type="button" class={`m due ${dueClass(task)}`} data-board-card-trigger aria-label={`Due date: ${dueLabel(task)}`} title="Due date" onclick={event => openBoardCardMenu(event, task, 'due')}>{@html ic('calendar', 12)}{dueLabel(task)}</button>{/if}{#if task.recurrence}<span class="m" title={`Repeats ${task.recurrence.toLowerCase()}`} aria-label={`Repeats ${task.recurrence.toLowerCase()}`}>{@html ic('repeat', 12)}</span>{/if}{#if taskCommentsCount(task)}<span class="m" aria-label={`${taskCommentsCount(task)} comments`}>{@html ic('message-square', 12)}{taskCommentsCount(task)}</span>{/if}{#if task.attachments?.length}<span class="m" aria-label={`${task.attachments.length} attachments`}>{@html ic('paperclip', 12)}{task.attachments.length}</span>{/if}<button type="button" class="m" style="margin-left:auto" data-board-card-trigger aria-label="Assignee" title={assignee?.name || 'Unassigned'} onclick={event => openBoardCardMenu(event, task, 'assignee')}>{#if assignee}<span class="av sm" style={`--c:${assignee.color || sourceMember?.c || 'var(--gray)'}`}>{initials(assignee.name)}</span>{:else}<span class="av empty sm">{@html ic('user', 11)}</span>{/if}</button></div>
           <div class="hacts"><button type="button" class="ibtn ibtn-xs" aria-label={task.status === 'done' ? 'Reopen' : 'Mark complete'} title={task.status === 'done' ? 'Reopen' : 'Mark complete'} onclick={event => { event.stopPropagation(); updateTask(task, { status: task.status === 'done' ? 'todo' : 'done' }); }}>{@html ic(task.status === 'done' ? 'rotate-ccw' : 'check', 13)}</button><button type="button" class="ibtn ibtn-xs" aria-label="Quick edit" title="Quick edit" onclick={event => { event.stopPropagation(); drawerTaskId = task.id; }}>{@html ic('pencil', 12)}</button><button type="button" class="ibtn ibtn-xs" aria-label="More" title="More" onclick={event => { event.stopPropagation(); drawerTaskId = task.id; }}>{@html ic('ellipsis', 13)}</button></div>
-        </article>{/each}{#if boardComposerStatus === item.id}<div class="composer"><textarea bind:this={boardComposerInput} bind:value={boardComposerTitle} placeholder="Task name" rows="2" aria-label={`New task in ${item.name}`} onkeydown={event => handleBoardComposerKeydown(event, item.id)}></textarea><div class="row"><span class="faint" style="font-size:11px">Enter to add · Esc to cancel</span><span class="sp"></span><button type="button" class="btn btn-sm btn-ghost" onclick={() => { boardComposerStatus = ''; boardComposerTitle = ''; }}>Cancel</button><button type="button" class="btn btn-sm btn-primary" onclick={() => commitBoardComposer(item.id)}>Add</button></div></div>{:else}<button class="addcard" onclick={() => startBoardComposer(item.id)}>{@html ic('plus', 14)}Add task</button>{/if}</div></section>{/each}</div>
+        </article>{/each}{#if boardComposerStatus === item.id}<div class="composer"><textarea bind:this={boardComposerInput} bind:value={boardComposerTitle} placeholder="Task name" rows="2" aria-label={`New task in ${item.name}`} onkeydown={event => handleBoardComposerKeydown(event, item.id)}></textarea><div class="row"><span class="faint" style="font-size:11px">Enter to add · Esc to cancel</span><span class="sp"></span><Button type="button" variant="ghost" size="sm" onclick={() => { boardComposerStatus = ''; boardComposerTitle = ''; }}>Cancel</Button><Button type="button" variant="primary" size="sm" onclick={() => commitBoardComposer(item.id)}>Add</Button></div></div>{:else}<button class="addcard" onclick={() => startBoardComposer(item.id)}>{@html ic('plus', 14)}Add task</button>{/if}</div></section>{/each}</div>
     {:else if view === 'table'}
       {#if !visibleTasks.length}
-        <div class="empty"><span class="empty-ic">{@html ic('search-x', 20)}</span><h2>No results found</h2><p>No tasks match these filters.</p><button class="btn btn-secondary btn-sm" onclick={clearFilters}>Clear filters</button></div>
+        <div class="empty"><span class="empty-ic">{@html ic('search-x', 20)}</span><h2>No results found</h2><p>No tasks match these filters.</p><Button variant="secondary" size="sm" onclick={clearFilters}>Clear filters</Button></div>
       {:else}
         <div class="tbl-wrap" data-keep="tbl:tasks">
           <table class="tbl" style={`width:${visibleTableColumns.reduce((total, column) => total + tableColumnWidth(column), 0)}px`} aria-label="Tasks table">
@@ -803,7 +804,7 @@
         {/if}{/if}
       {/if}
     {:else if !visibleTasks.length}
-      <div class="list-wrap"><div class="empty"><span class="empty-ic">{@html ic('list-checks', 20)}</span><h2>No tasks here</h2><p>Add a task to get things moving.</p><button class="btn btn-primary btn-sm" onclick={() => openCreateTask()}>{@html ic('plus', 14)}New task</button></div></div>
+      <div class="list-wrap"><div class="empty"><span class="empty-ic">{@html ic('list-checks', 20)}</span><h2>No tasks here</h2><p>Add a task to get things moving.</p><Button variant="primary" size="sm" onclick={() => openCreateTask()}>{@html ic('plus', 14)}New task</Button></div></div>
     {:else}
       <WorkspaceTaskList groups={taskGroups()} {projects} {members} {workspaceData} selectedSort={sortBy} selectedSortDirection={sortDirection} onOpen={task => drawerTaskId = task.id} onUpdate={updateTask} onSort={sortByField} onCreate={createInlineTask} />
     {/if}

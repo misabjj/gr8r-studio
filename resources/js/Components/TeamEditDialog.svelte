@@ -1,4 +1,5 @@
 <script>
+  import Button from "./Button.svelte";
   import Label from "./Label.svelte";
   import Input from "./Input.svelte";
   import { fade } from 'svelte/transition';
@@ -99,7 +100,7 @@
   {#if confirmDelete}
     <div class="modal sm" role="dialog" aria-modal="true" aria-labelledby="team-delete-title" tabindex="-1">
       <div class="modal-b" style="padding-top:18px;gap:10px"><div class="row" style="gap:12px;align-items:flex-start"><span class="ftype" style="--c:var(--red);width:34px;height:34px;border-radius:9px">{@html ic('users', 17)}</span><div class="grow"><h2 id="team-delete-title" style="font-size:15px;font-weight:600;margin:4px 0 6px">Delete {team.name}?</h2><p class="muted" style="margin:0;font-size:13px;line-height:1.55">{members.length ? `${members.length} member${members.length === 1 ? '' : 's'} will have no team` : 'The team has no members'}{projects.length ? ` and ${projects.length} project${projects.length === 1 ? '' : 's'} will need a new team` : ''}. People and projects are not deleted.</p></div></div>{#if errorMessage}<div class="err" role="alert">{@html ic('circle-alert', 12)}{errorMessage}</div>{/if}</div>
-      <div class="modal-f"><span class="sp"></span><button class="btn btn-secondary" type="button" onclick={() => confirmDelete = false}>Cancel</button><button class="btn btn-danger" type="button" disabled={busy} onclick={removeTeam}>{busy ? 'Deleting…' : 'Delete team'}</button></div>
+      <div class="modal-f"><span class="sp"></span><Button variant="secondary" size="md" type="button" onclick={() => confirmDelete = false}>Cancel</Button><Button variant="danger" size="md" type="button" disabled={busy} onclick={removeTeam}>{busy ? 'Deleting…' : 'Delete team'}</Button></div>
     </div>
   {:else}
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="team-edit-title" tabindex="-1">
@@ -119,7 +120,7 @@
         <span class="hint">Everyone belongs to one primary team. Adding someone here moves them from their current team.</span>
       </fieldset>
     </form>
-    <div class="modal-f">{#if !isCreate}<button class="btn btn-danger-ghost" type="button" onclick={() => { errorMessage = ''; confirmDelete = true; }}>{@html ic('trash-2', 14)}Delete team</button>{/if}<span class="sp"></span><button class="btn btn-secondary" type="button" onclick={onClose}>Cancel</button><button class="btn btn-primary" type="submit" form="team-edit-form" disabled={busy}>{busy ? (isCreate ? 'Creating…' : 'Saving…') : isCreate ? 'Create team' : 'Save changes'}</button></div>
+    <div class="modal-f">{#if !isCreate}<Button variant="danger-ghost" size="md" type="button" onclick={() => { errorMessage = ''; confirmDelete = true; }}>{@html ic('trash-2', 14)}Delete team</Button>{/if}<span class="sp"></span><Button variant="secondary" size="md" type="button" onclick={onClose}>Cancel</Button><Button variant="primary" size="md" type="submit" form="team-edit-form" disabled={busy}>{busy ? (isCreate ? 'Creating…' : 'Saving…') : isCreate ? 'Create team' : 'Save changes'}</Button></div>
   </div>
   {/if}
 </div>

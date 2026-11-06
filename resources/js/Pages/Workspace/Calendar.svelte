@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import { Link } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import ProjectCalendar from '../../Components/ProjectCalendar.svelte';
@@ -41,7 +42,7 @@
 
 <AppLayout>
   <div class="page flush">
-    <div class="ph"><div><h1>Calendar</h1><p>Deadlines and events across every project.</p></div><div class="acts"><button class="btn btn-primary" onclick={() => openTaskForm()}>{@html ic('plus', 14)}New task</button></div></div>
+    <div class="ph"><div><h1>Calendar</h1><p>Deadlines and events across every project.</p></div><div class="acts"><Button variant="primary" size="md" onclick={() => openTaskForm()}>{@html ic('plus', 14)}New task</Button></div></div>
     <ProjectCalendar {tasks} {projects} {workspaceData} onCreate={openTaskForm} onTask={task => drawerTaskId = task.id} onReschedule={rescheduleTask} />
   </div>
   <WorkspaceTaskForm open={taskFormOpen} {projects} {initialDate} onClose={() => taskFormOpen = false} onCreated={addTask} />

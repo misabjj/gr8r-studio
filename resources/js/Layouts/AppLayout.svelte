@@ -1,4 +1,5 @@
 <script>
+  import Button from "../Components/Button.svelte";
   import { onMount, tick } from 'svelte';
   import { Link, router, usePage } from '@inertiajs/svelte';
   import { home, logout, overview } from '../routes';
@@ -468,7 +469,7 @@
       <Link class="topsearch" href={searchIndex().url} aria-label="Search and commands">{@html ic('search', 14)}<span class="lbltxt">Search or jump to…</span><span class="kbd">⌘K</span></Link>
       <Link class="ibtn" href={notificationsIndex().url} aria-label="Notifications">{@html ic('bell', 16)}</Link>
       <div class="create-control">
-        <button class="btn btn-secondary btn-sm" type="button" aria-haspopup="menu" aria-expanded={createOpen} aria-label="Create new" onclick={toggleCreateMenu}>{@html ic('plus', 14)}<span class="hide-m">New</span>{@html ic('chevron-down', 12, 'hide-m')}</button>
+        <Button variant="secondary" size="sm" type="button" aria-haspopup="menu" aria-expanded={createOpen} aria-label="Create new" onclick={toggleCreateMenu}>{@html ic('plus', 14)}<span class="hide-m">New</span>{@html ic('chevron-down', 12, 'hide-m')}</Button>
         {#if createOpen}
           <div class="pop floating enter create-menu" id="create-menu" role="menu" aria-label="Create" style={`left:${createPosition.left}px;top:${createPosition.top}px;width:220px`}>
             <div class="mh">Create</div>
@@ -481,7 +482,7 @@
       </div>
       <div class="user-control"><button class="ibtn hide-m" type="button" aria-label="Account menu" aria-haspopup="menu" aria-expanded={userOpen} onclick={toggleUserMenu}><span class="av md">{initials}</span></button></div>
     </header>
-    {#if offline}<div class="offline-bar" role="alert">{@html ic('wifi-off', 15)}<span><b>You're offline.</b> Changes won't be saved until your connection is back.</span><span class="sp"></span><button class="btn btn-sm btn-secondary" onclick={toggleOffline}>Try again</button></div>{/if}
+    {#if offline}<div class="offline-bar" role="alert">{@html ic('wifi-off', 15)}<span><b>You're offline.</b> Changes won't be saved until your connection is back.</span><span class="sp"></span><Button variant="secondary" size="sm" onclick={toggleOffline}>Try again</Button></div>{/if}
     <div class="content" id="main-content" tabindex="-1">
       {@render children?.()}
     </div>

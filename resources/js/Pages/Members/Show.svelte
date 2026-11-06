@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import { onMount } from 'svelte';
   import { Link, router, usePage } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
@@ -217,7 +218,7 @@
         <div class="grow" style="min-width:220px"><div class="row" style="gap:10px;flex-wrap:wrap"><h1 style="font-size:var(--fs-2xl);margin:0;font-weight:600;letter-spacing:-.02em">{member.name}</h1><span class="badge">{#if displayedRole === 'Owner'}{@html ic('crown', 11)}{/if}{displayedRole}</span>{#if member.status === 'invited'}<span class="badge amber">Invite pending</span>{/if}</div>
           <div class="muted" style="margin-top:3px">{member.title} · {teams.find(team => team.id === member.team)?.name || member.team}</div>
           <div class="row faint" style="margin-top:8px;gap:14px;font-size:12.5px;flex-wrap:wrap"><span class="row" style="gap:5px">{@html ic('mail', 13)}<span style="user-select:all">{member.email}</span></span><span class="row" style="gap:5px">{@html ic('map-pin', 13)}{member.tz}</span><span class="row" style="gap:5px">{@html ic('clock', 13)}{lastActive()}</span></div></div>
-        <div class="row"><button type="button" class="btn btn-secondary" onclick={() => navigator.clipboard.writeText(member.email)}>{@html ic('copy', 14)}Copy email</button><button type="button" class="btn btn-primary" onclick={assignTaskToMember}>{@html ic('plus', 14)}Assign task</button><div class="member-options-control"><button type="button" class="ibtn" aria-label="More options" aria-haspopup="menu" aria-expanded={menuOpen || roleMenuOpen} onclick={toggleOptionsMenu}>{@html ic('ellipsis', 16)}</button>
+        <div class="row"><Button type="button" variant="secondary" size="md" onclick={() => navigator.clipboard.writeText(member.email)}>{@html ic('copy', 14)}Copy email</Button><Button type="button" variant="primary" size="md" onclick={assignTaskToMember}>{@html ic('plus', 14)}Assign task</Button><div class="member-options-control"><button type="button" class="ibtn" aria-label="More options" aria-haspopup="menu" aria-expanded={menuOpen || roleMenuOpen} onclick={toggleOptionsMenu}>{@html ic('ellipsis', 16)}</button>
           {#if menuOpen}<div class="pop floating enter" role="menu" aria-label={`More options for ${member.name}`} style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:220px`}>
             <Link class="mi" role="menuitem" href={memberShow(memberId).url} onclick={() => menuOpen = false}>{@html ic('user', 15)}View profile</Link>
             <button class="mi" type="button" role="menuitem" onclick={assignTaskFromMenu}>{@html ic('plus', 15)}Assign a task</button>
@@ -254,7 +255,7 @@
   <div class="modal-wrap" transition:fade={{ duration: 180 }} role="presentation" onclick={event => event.target === event.currentTarget && (removeDialogOpen = false)}>
     <div class="modal sm" transition:scale={{ duration: 260, start: 0.97 }} role="alertdialog" aria-modal="true" aria-labelledby="remove-member-title">
       <div class="modal-h"><div><h2 id="remove-member-title">Remove {member.name}?</h2><p class="muted" style="font-size:12.5px;margin:4px 0 0">{member.name} will lose access to {workspaceData.ws?.name || 'this workspace'} immediately. Tasks assigned to them will become unassigned.</p></div><button class="ibtn ibtn-sm" type="button" aria-label="Close" onclick={() => removeDialogOpen = false}>{@html ic('x', 16)}</button></div>
-      <div class="modal-f"><span class="sp"></span><button class="btn btn-secondary" type="button" onclick={() => removeDialogOpen = false}>Cancel</button><button class="btn btn-danger" type="button" onclick={removeMember}>Remove member</button></div>
+      <div class="modal-f"><span class="sp"></span><Button variant="secondary" size="md" type="button" onclick={() => removeDialogOpen = false}>Cancel</Button><Button variant="danger" size="md" type="button" onclick={removeMember}>Remove member</Button></div>
     </div>
   </div>
 {/if}

@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import Input from "../../Components/Input.svelte";
   import { usePage } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
@@ -292,17 +293,17 @@
           <button class:on={view === 'list'} aria-pressed={view === 'list'} onclick={() => setView('list')}>{@html ic('list', 13)}List</button>
           <button class:on={view === 'calendar'} aria-pressed={view === 'calendar'} onclick={() => setView('calendar')}>{@html ic('calendar', 13)}Calendar</button>
         </div>
-        <button class="btn btn-primary" onclick={() => openCreateTask()}>{@html ic('plus', 14)}New task</button>
+        <Button variant="primary" size="md" onclick={() => openCreateTask()}>{@html ic('plus', 14)}New task</Button>
       </div>
     </div>
 
     {#if errorMessage}<div class="alert danger" role="alert">{@html ic('circle-alert', 15)}<span>{errorMessage}</span></div>{/if}
     <div class="toolbar" role="toolbar">
       <div class="inwrap">{@html ic('search', 13)}<Input class="search-sm" bind:value={query} placeholder="Search tasks" aria-label="Search tasks" /></div>
-      <button class={`btn btn-ghost ${filters.length ? 'on' : ''}`} type="button" aria-label="Filter" data-mytasks-trigger onclick={openFilterMenu}>{@html ic('list-filter', 14)}Filter{#if filters.length}<span class="badge accent" style="height:16px;padding:0 5px">{filters.length}</span>{/if}</button>
-      <button class="btn btn-ghost" type="button" aria-label={`Sort: ${sortNames[sortBy]}`} data-mytasks-trigger onclick={event => toggleToolbarMenu('sort', event)}>{@html ic('arrow-up-down', 14)}<span class="hide-m">Sort:</span> {sortNames[sortBy]}</button>
+      <Button class={filters.length ? 'on' : ''} variant="ghost" size="md" type="button" aria-label="Filter" data-mytasks-trigger onclick={openFilterMenu}>{@html ic('list-filter', 14)}Filter{#if filters.length}<span class="badge accent" style="height:16px;padding:0 5px">{filters.length}</span>{/if}</Button>
+      <Button variant="ghost" size="md" type="button" aria-label={`Sort: ${sortNames[sortBy]}`} data-mytasks-trigger onclick={event => toggleToolbarMenu('sort', event)}>{@html ic('arrow-up-down', 14)}<span class="hide-m">Sort:</span> {sortNames[sortBy]}</Button>
     </div>
-    {#if filters.length}<div class="chipsbar">{@html ic('list-filter', 13)}{#each filters as filter (filter.id)}{@const options = filterOptions(filter.field)}<span class="chip"><button type="button" onclick={event => openFilter(filter, event)}>{filterNames[filter.field]} {filter.operator === 'not' ? 'is not' : 'is'} {filter.values.map(value => options.find(option => option.value === value)?.label || value).join(', ') || 'any'}</button><button type="button" class="ibtn" aria-label={`Remove ${filterNames[filter.field]} filter`} onclick={() => removeFilter(filter.id)}>{@html ic('x', 12)}</button></span>{/each}<button type="button" class="btn btn-sm btn-ghost" data-mytasks-trigger onclick={openFilterMenu}>{@html ic('plus', 12)}Add</button><span class="sp"></span><button type="button" class="btn btn-sm btn-ghost" onclick={clearFilters}>Clear all</button></div>{/if}
+    {#if filters.length}<div class="chipsbar">{@html ic('list-filter', 13)}{#each filters as filter (filter.id)}{@const options = filterOptions(filter.field)}<span class="chip"><button type="button" onclick={event => openFilter(filter, event)}>{filterNames[filter.field]} {filter.operator === 'not' ? 'is not' : 'is'} {filter.values.map(value => options.find(option => option.value === value)?.label || value).join(', ') || 'any'}</button><button type="button" class="ibtn" aria-label={`Remove ${filterNames[filter.field]} filter`} onclick={() => removeFilter(filter.id)}>{@html ic('x', 12)}</button></span>{/each}<Button type="button" variant="ghost" size="sm" data-mytasks-trigger onclick={openFilterMenu}>{@html ic('plus', 12)}Add</Button><span class="sp"></span><Button type="button" variant="ghost" size="sm" onclick={clearFilters}>Clear all</Button></div>{/if}
     {#if view === 'calendar'}
       <ProjectCalendar tasks={visibleTasks} projects={projects} workspaceData={workspaceData} project={null} showToolbar={false} onCreate={openCreateTask} />
     {:else}
@@ -316,7 +317,7 @@
   <div class="pop enter" data-mytasks-pop role="menu" aria-label="Filter tasks" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:300px`}>
     {#if filterField}
       {@const activeFilter = filters.find(filter => filter.id === filterIndex)}
-      <div class="row" style="padding:6px 8px"><button type="button" class="ibtn ibtn-xs" aria-label="Back to filters" onclick={() => { filterField = ''; filterIndex = null; }}>{@html ic('arrow-left', 13)}</button><b style="font-size:12px;font-weight:600">{filterNames[filterField]}</b><span class="sp"></span><button type="button" class="btn btn-sm btn-ghost" onclick={() => toggleFilterOperator(filterIndex)}>{activeFilter?.operator === 'not' ? 'is not' : 'is'}{@html ic('chevron-down', 12)}</button><button type="button" class="btn btn-sm btn-ghost" onclick={() => { toolbarMenu = ''; filterField = ''; filterIndex = null; }}>Done</button></div>
+      <div class="row" style="padding:6px 8px"><button type="button" class="ibtn ibtn-xs" aria-label="Back to filters" onclick={() => { filterField = ''; filterIndex = null; }}>{@html ic('arrow-left', 13)}</button><b style="font-size:12px;font-weight:600">{filterNames[filterField]}</b><span class="sp"></span><Button type="button" variant="ghost" size="sm" onclick={() => toggleFilterOperator(filterIndex)}>{activeFilter?.operator === 'not' ? 'is not' : 'is'}{@html ic('chevron-down', 12)}</Button><Button type="button" variant="ghost" size="sm" onclick={() => { toolbarMenu = ''; filterField = ''; filterIndex = null; }}>Done</Button></div>
       <div class="msep"></div>
       {#if activeFilter}{#each filterOptions(filterField) as option (option.value)}{@const selected = activeFilter.values.includes(option.value)}<button type="button" class="mi" role="menuitemcheckbox" aria-checked={selected} onclick={() => toggleFilterValue(filterIndex, option.value)}><span class="trunc">{option.label}</span>{#if selected}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}{/if}
     {:else}

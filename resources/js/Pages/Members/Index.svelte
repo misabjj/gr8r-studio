@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import { fade, scale } from 'svelte/transition';
@@ -296,7 +297,7 @@
   <div class="page wide" style="max-width:1200px">
     <div class="ph">
       <div><h1>Members</h1><p>{members.length} people in {workspaceData.ws?.name || 'your workspace'} · {members.filter(member => member.status === 'invited').length} pending</p></div>
-      <div class="acts"><button class="btn btn-primary" type="button" onclick={openInviteDialog}>{@html ic('user-plus', 14)}Invite member</button></div>
+      <div class="acts"><Button variant="primary" size="md" type="button" onclick={openInviteDialog}>{@html ic('user-plus', 14)}Invite member</Button></div>
     </div>
     <div class="tabs" style="margin-bottom:14px">
       {#each [['members', 'Members'], ['teams', 'Teams'], ['roles', 'Roles & permissions']] as item}
@@ -368,7 +369,7 @@
         {/if}
       </div>
     {:else if tab === 'teams'}
-      <div class="row" style="margin-bottom:12px"><span class="muted" style="font-size:13px">{teams.length} teams</span><span class="sp"></span><button class="btn btn-secondary btn-sm" type="button" onclick={() => teamDialogOpen = true}>{@html ic('plus', 13)}New team</button></div>
+      <div class="row" style="margin-bottom:12px"><span class="muted" style="font-size:13px">{teams.length} teams</span><span class="sp"></span><Button variant="secondary" size="sm" type="button" onclick={() => teamDialogOpen = true}>{@html ic('plus', 13)}New team</Button></div>
       <div class="pgrid">
         {#each teams as team (team.id)}
           {@const teamMembers = members.filter(member => member.team === team.id)}
@@ -386,7 +387,7 @@
   <div class="modal-wrap" transition:fade={{ duration: 180 }} role="presentation" onclick={event => event.target === event.currentTarget && (removeCandidate = null)}>
     <div class="modal sm" transition:scale={{ duration: 260, start: 0.97 }} role="alertdialog" aria-modal="true" aria-labelledby="remove-member-title" aria-describedby="remove-member-description">
       <div class="modal-h"><div><h2 id="remove-member-title">Remove {removeCandidate.name}?</h2><p id="remove-member-description" class="muted" style="font-size:12.5px;margin:4px 0 0">{removeCandidate.name} will lose access to {workspaceData.ws?.name || 'this workspace'} immediately. Tasks assigned to them will become unassigned.</p></div><button class="ibtn ibtn-sm" type="button" aria-label="Close" onclick={() => removeCandidate = null}>{@html ic('x', 16)}</button></div>
-      <div class="modal-f"><span class="sp"></span><button class="btn btn-secondary" type="button" onclick={() => removeCandidate = null}>Cancel</button><button class="btn btn-danger" type="button" onclick={confirmRemoveMember}>Remove member</button></div>
+      <div class="modal-f"><span class="sp"></span><Button variant="secondary" size="md" type="button" onclick={() => removeCandidate = null}>Cancel</Button><Button variant="danger" size="md" type="button" onclick={confirmRemoveMember}>Remove member</Button></div>
     </div>
   </div>
 {/if}
@@ -412,7 +413,7 @@
         <div class="row" style="gap:12px"><div class="field grow"><Label for="members-invite-role">Role</Label><select class="select" id="members-invite-role" bind:value={inviteRole}><option>Member</option><option>Admin</option><option>Guest</option></select></div><div class="field grow"><Label for="members-invite-team">Team</Label><select class="select" id="members-invite-team" bind:value={inviteTeam}>{#each teams as team (team.id)}<option value={String(team.id)}>{team.name}</option>{/each}</select></div></div>
         <div class="alert info">{@html ic('info', 14)}<span><b>Guests</b> can only see projects they're added to and can't create projects.</span></div>
       </form>
-      <div class="modal-f"><button class="btn btn-ghost" type="button" onclick={copyInviteLink}>{@html ic('link', 14)}Copy invite link</button><span class="sp"></span><button class="btn btn-secondary" type="button" onclick={closeInviteDialog}>Cancel</button><button class="btn btn-primary" type="button" disabled={inviteBusy} onclick={submitInvites}>{inviteBusy ? 'Sending…' : 'Send invites'}</button></div>
+      <div class="modal-f"><Button variant="ghost" size="md" type="button" onclick={copyInviteLink}>{@html ic('link', 14)}Copy invite link</Button><span class="sp"></span><Button variant="secondary" size="md" type="button" onclick={closeInviteDialog}>Cancel</Button><Button variant="primary" size="md" type="button" disabled={inviteBusy} onclick={submitInvites}>{inviteBusy ? 'Sending…' : 'Send invites'}</Button></div>
     </div>
   </div>
 {/if}

@@ -1,4 +1,5 @@
 <script>
+  import Button from "./Button.svelte";
   import Input from "./Input.svelte";
   import { Link } from '@inertiajs/svelte';
   import { show as projectShow } from '../routes/projects';
@@ -354,18 +355,18 @@
 {#if showToolbar}
   <div class="toolbar" role="toolbar">
     <div class="inwrap"><span class="i">{@html ic('search', 13)}</span><Input class="search-sm" bind:value={query} placeholder="Search tasks" aria-label="Search tasks" /></div>
-    <button class={`btn btn-ghost ${filters.length ? 'on' : ''}`} data-calendar-trigger onclick={event => showMenu('filter', event)}>{@html ic('list-filter', 14)}Filter{#if filters.length}<span class="badge accent" style="height:16px;padding:0 5px">{filters.length}</span>{/if}</button>
-    <button class="btn btn-ghost" data-calendar-trigger onclick={event => showMenu('sort', event)}>{@html ic('arrow-up-down', 14)}<span class="hide-m">Sort:</span> {sortable.find(item => item.id === sort)?.name || 'Manual'}</button>
+    <Button variant="ghost" size="md" class={filters.length ? 'on' : ''} data-calendar-trigger onclick={event => showMenu('filter', event)}>{@html ic('list-filter', 14)}Filter{#if filters.length}<span class="badge accent" style="height:16px;padding:0 5px">{filters.length}</span>{/if}</Button>
+    <Button variant="ghost" size="md" data-calendar-trigger onclick={event => showMenu('sort', event)}>{@html ic('arrow-up-down', 14)}<span class="hide-m">Sort:</span> {sortable.find(item => item.id === sort)?.name || 'Manual'}</Button>
     <span class="sp"></span>
   </div>
   {#if filters.length}
-    <div class="chipsbar">{@html ic('list-filter', 13)}{#each filters as filter, index (index)}<span class="chip"><button onclick={() => { editingFilter = index; showMenu('filter', { currentTarget: menuTrigger || document.querySelector('[data-calendar-trigger]') }); }}>{filterSummary(filter)}</button><button class="ibtn" aria-label="Remove filter" onclick={() => filters = filters.filter((_, itemIndex) => itemIndex !== index)}>{@html ic('x', 12)}</button></span>{/each}<button class="btn btn-sm btn-ghost" data-calendar-trigger onclick={event => showMenu('filter', event)}>{@html ic('plus', 12)}Add</button><span class="sp"></span><button class="btn btn-sm btn-ghost" onclick={() => filters = []}>Clear all</button></div>
+    <div class="chipsbar">{@html ic('list-filter', 13)}{#each filters as filter, index (index)}<span class="chip"><button onclick={() => { editingFilter = index; showMenu('filter', { currentTarget: menuTrigger || document.querySelector('[data-calendar-trigger]') }); }}>{filterSummary(filter)}</button><button class="ibtn" aria-label="Remove filter" onclick={() => filters = filters.filter((_, itemIndex) => itemIndex !== index)}>{@html ic('x', 12)}</button></span>{/each}<Button variant="ghost" size="sm" data-calendar-trigger onclick={event => showMenu('filter', event)}>{@html ic('plus', 12)}Add</Button><span class="sp"></span><Button variant="ghost" size="sm" onclick={() => filters = []}>Clear all</Button></div>
   {/if}
 {/if}
 
 <div class="cal" style="min-height:640px">
   <div class="toolbar" style="gap:8px">
-    <button class="btn btn-secondary btn-sm" onclick={() => move(0)}>Today</button>
+    <Button variant="secondary" size="sm" onclick={() => move(0)}>Today</Button>
     <div class="row" style="gap:0"><button class="ibtn ibtn-sm" onclick={() => move(-1)} aria-label="Previous">{@html ic('chevron-left', 16)}</button><button class="ibtn ibtn-sm" onclick={() => move(1)} aria-label="Next">{@html ic('chevron-right', 16)}</button></div>
     <h2 style="font-size:15px;font-weight:600;margin:0 4px;letter-spacing:-.01em" aria-live="polite">{label}</h2>
     <span class="sp"></span>
@@ -424,7 +425,7 @@
 
 {#if openMenu === 'filter'}
   <div class="pop fbuild enter" data-calendar-menu role="dialog" aria-label="Filter by" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;max-width:560px`}>
-    <div class="mh fb-h">Filter by{#if filters.length}<button class="btn btn-sm btn-ghost" onclick={() => filters = []}>Clear all</button>{/if}</div>
+    <div class="mh fb-h">Filter by{#if filters.length}<Button variant="ghost" size="sm" onclick={() => filters = []}>Clear all</Button>{/if}</div>
     {#if filters.length}
       <div class="fb-rows">
         {#each filters as filter, index (index)}

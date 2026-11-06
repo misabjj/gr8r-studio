@@ -1,4 +1,5 @@
 <script>
+  import Button from "./Button.svelte";
   import Label from "./Label.svelte";
   import { onMount, tick } from 'svelte';
   import { fade } from 'svelte/transition';
@@ -119,10 +120,10 @@
       <div class="alert info">{@html ic('info', 14)}<span><b>Guests</b> can only see projects they're added to and can't create projects.</span></div>
     </form>
     <div class="modal-f">
-      <button type="button" class="btn btn-ghost" onclick={copyInviteLink}>{@html ic('link', 14)}Copy invite link</button>
+      <Button type="button" variant="ghost" size="md" onclick={copyInviteLink}>{@html ic('link', 14)}Copy invite link</Button>
       <span class="sp"></span>
-      <button type="button" class="btn btn-secondary" onclick={onClose}>Cancel</button>
-      <button type="submit" class="btn btn-primary" form="invite-dialog-form" disabled={inviteBusy}>{inviteBusy ? 'Sending…' : 'Send invites'}</button>
+      <Button type="button" variant="secondary" size="md" onclick={onClose}>Cancel</Button>
+      <Button type="submit" variant="primary" size="md" form="invite-dialog-form" disabled={inviteBusy}>{inviteBusy ? 'Sending…' : 'Send invites'}</Button>
     </div>
   </div>
 </div>

@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import Input from "../../Components/Input.svelte";
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import { router } from '@inertiajs/svelte';
@@ -196,7 +197,7 @@
         </div></section>
       {/if}
     {:else}
-      <div class="panel"><div class="empty"><span class="empty-ic">{@html ic('search-x', 20)}</span><h2>No results found</h2><p>Nothing matches “{searchQuery}”. Check the spelling or try a broader term.</p><button class="btn btn-secondary btn-sm" onclick={() => searchQuery = ''}>Clear search</button></div></div>
+      <div class="panel"><div class="empty"><span class="empty-ic">{@html ic('search-x', 20)}</span><h2>No results found</h2><p>Nothing matches “{searchQuery}”. Check the spelling or try a broader term.</p><Button variant="secondary" size="sm" onclick={() => searchQuery = ''}>Clear search</Button></div></div>
     {/if}
   </div>
 </AppLayout>

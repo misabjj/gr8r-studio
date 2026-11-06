@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import { Link, router } from '@inertiajs/svelte';
   import { notifEmail as notificationPreferences } from '../../routes/settings';
   import { read as notificationReadRoute, readAll as notificationReadAllRoute } from '../../routes/notifications';
@@ -113,7 +114,7 @@
       <div><h1 class="row" style="gap:10px">Notifications {#if unreadCount}<span class="badge accent">{unreadCount} unread</span>{/if}</h1><p>Updates on tasks and projects you follow.</p></div>
       <div class="acts">
         <div class="seg">{#each [['all', 'All'], ['unread', 'Unread']] as [key, label]}<button class:on={filter === key} onclick={() => setFilter(key)}>{label}</button>{/each}</div>
-        <button class="btn btn-secondary" onclick={markAllRead} disabled={!unreadCount}>{@html ic('check-check', 14)}Mark all as read</button>
+        <Button variant="secondary" size="md" onclick={markAllRead} disabled={!unreadCount}>{@html ic('check-check', 14)}Mark all as read</Button>
         <Link class="ibtn" href={notificationPreferences().url} aria-label="Notification preferences" title="Notification preferences">{@html ic('settings-2', 16)}</Link>
       </div>
     </div>
@@ -144,7 +145,7 @@
         </div>
       {/each}
     {:else}
-      <div class="panel"><div class="empty"><span class="empty-ic">{@html ic('bell-off', 20)}</span><h2>You're all caught up.</h2><p>No unread notifications. We'll let you know when something needs you.</p>{#if filter === 'unread'}<button class="btn btn-secondary btn-sm" onclick={() => setFilter('all')}>Show all</button>{/if}</div></div>
+      <div class="panel"><div class="empty"><span class="empty-ic">{@html ic('bell-off', 20)}</span><h2>You're all caught up.</h2><p>No unread notifications. We'll let you know when something needs you.</p>{#if filter === 'unread'}<Button variant="secondary" size="sm" onclick={() => setFilter('all')}>Show all</Button>{/if}</div></div>
     {/if}
   </div>
   {#if drawerTask}<TaskDrawer task={drawerTask} {workspaceData} onClose={() => drawerTaskId = null} onUpdated={updatedTask => tasks = tasks.map(task => task.id === updatedTask.id ? { ...task, ...updatedTask } : task)} />{/if}

@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import { Link, router, usePage } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import { index as projectsRoute } from '../../routes/projects';
@@ -242,9 +243,9 @@
         <p><span class="num">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span> · Here's what's happening across your workspace.</p>
       </div>
       <div class="acts">
-        <button type="button" class="btn btn-secondary hide-m" onclick={() => inviteOpen = true}>{@html ic('user-plus', 14)}Invite member</button>
-        <button type="button" class="btn btn-secondary hide-m" onclick={startProjectCreation}>{@html ic('folder-plus', 14)}New project</button>
-        <button class="btn btn-primary" type="button" onclick={() => taskFormOpen = true}>{@html ic('plus', 14)}New task</button>
+        <Button type="button" variant="secondary" size="md" class="hide-m" onclick={() => inviteOpen = true}>{@html ic('user-plus', 14)}Invite member</Button>
+        <Button type="button" variant="secondary" size="md" class="hide-m" onclick={startProjectCreation}>{@html ic('folder-plus', 14)}New project</Button>
+        <Button variant="primary" size="md" type="button" onclick={() => taskFormOpen = true}>{@html ic('plus', 14)}New task</Button>
       </div>
     </div>
 

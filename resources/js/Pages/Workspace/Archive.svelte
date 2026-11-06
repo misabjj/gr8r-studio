@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import { fade, scale } from 'svelte/transition';
@@ -111,7 +112,7 @@
               {@html stIcon(task.status, 15)}
               <div class="grow" style="min-width:0"><div class="trunc" style="font-weight:500">{task.title}</div><div class="faint trunc" style="font-size:12px"><span class="mono">{task.key || task.source_key || task.id}</span> · {task.project?.name || ''}</div></div>
               <span class="faint hide-m" style="font-size:12px;white-space:nowrap">{task.archived_at ? `Archived ${ago(new Date(task.archived_at).getTime())}` : 'Archived'}</span>
-              <button class="btn btn-secondary btn-sm" type="button" onclick={() => restoreArchivedTask(task)}>{@html ic('rotate-ccw', 13)}Restore</button>
+              <Button variant="secondary" size="sm" type="button" onclick={() => restoreArchivedTask(task)}>{@html ic('rotate-ccw', 13)}Restore</Button>
               <button class="ibtn ibtn-sm" type="button" style="color:var(--red)" aria-label={`Delete ${task.title} permanently`} title="Delete permanently" onclick={() => askToDelete('task', task)}>{@html ic('trash-2', 15)}</button>
             </div>
           {/each}
@@ -126,7 +127,7 @@
             {@html pIcon(project, '', 14)}
             <div class="grow" style="min-width:0"><div class="trunc" style="font-weight:500">{project.name}</div><div class="faint trunc" style="font-size:12px">{project.tasks_count || 0} tasks · {projectStatusName(project)}</div></div>
             <span class="faint hide-m" style="font-size:12px;white-space:nowrap">{project.archived_at ? `Archived ${ago(new Date(project.archived_at).getTime())}` : 'Archived'}</span>
-            <button class="btn btn-secondary btn-sm" type="button" onclick={() => restoreArchivedProject(project)}>{@html ic('rotate-ccw', 13)}Restore</button>
+            <Button variant="secondary" size="sm" type="button" onclick={() => restoreArchivedProject(project)}>{@html ic('rotate-ccw', 13)}Restore</Button>
             <button class="ibtn ibtn-sm" type="button" style="color:var(--red)" aria-label={`Delete ${project.name} permanently`} title="Delete permanently" onclick={() => askToDelete('project', project)}>{@html ic('trash-2', 15)}</button>
           </div>
         {/each}
@@ -144,7 +145,7 @@
           {#if confirmation.type === 'project'}<div class="field" style="margin-top:6px"><Label for="archive-delete-confirm">Type <b>{confirmation.item.name}</b> to confirm</Label><Input class="" id="archive-delete-confirm" bind:value={confirmationName} autocomplete="off" /></div>{/if}
           {#if errorMessage}<div class="err" role="alert">{@html ic('circle-alert', 12)}{errorMessage}</div>{/if}
         </div>
-        <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => confirmation = null}>Cancel</button><button type="button" class="btn btn-danger" disabled={busy || (confirmation.type === 'project' && confirmationName !== confirmation.item.name)} onclick={deleteArchivedWork}>{busy ? 'Working…' : 'Delete permanently'}</button></div>
+        <div class="modal-f"><span class="sp"></span><Button type="button" variant="secondary" size="md" onclick={() => confirmation = null}>Cancel</Button><Button type="button" variant="danger" size="md" disabled={busy || (confirmation.type === 'project' && confirmationName !== confirmation.item.name)} onclick={deleteArchivedWork}>{busy ? 'Working…' : 'Delete permanently'}</Button></div>
       </div>
     </div>
   {/if}

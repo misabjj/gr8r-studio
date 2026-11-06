@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import { tick } from 'svelte';
@@ -315,7 +316,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
   <div class="page wide">
     <div class="ph">
       <div><h1>Projects</h1><p>{activeCount} active · {completedCount} completed</p></div>
-      <div class="acts"><button class="btn btn-primary" onclick={openCreateProjectForm}>{@html ic('plus', 14)}New project</button></div>
+      <div class="acts"><Button variant="primary" size="md" onclick={openCreateProjectForm}>{@html ic('plus', 14)}New project</Button></div>
     </div>
     <div class="row" style="margin-bottom:16px;flex-wrap:wrap;gap:8px">
       <div class="inwrap">{@html ic('search', 13)}<Input class="search-sm" bind:value={query} placeholder="Search projects" aria-label="Search projects" /></div>
@@ -334,7 +335,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
     </div>
 
     {#if visibleProjects.length === 0}
-      <section class="panel"><div class="empty"><span class="empty-ic">{@html ic(projects.length ? 'search-x' : 'folder-kanban', 20)}</span><h2>{projects.length ? 'No results found' : 'No projects yet'}</h2><p>{projects.length ? 'No projects match your search or filters. Try a different term.' : 'Create your first project to start organizing your work.'}</p>{#if projects.length}<button class="btn btn-secondary btn-sm" onclick={() => { query = ''; statusFilter = 'all'; }}>Clear filters</button>{:else}<button class="btn btn-primary btn-sm" onclick={openCreateProjectForm}>{@html ic('plus', 14)}Create project</button>{/if}</div></section>
+      <section class="panel"><div class="empty"><span class="empty-ic">{@html ic(projects.length ? 'search-x' : 'folder-kanban', 20)}</span><h2>{projects.length ? 'No results found' : 'No projects yet'}</h2><p>{projects.length ? 'No projects match your search or filters. Try a different term.' : 'Create your first project to start organizing your work.'}</p>{#if projects.length}<Button variant="secondary" size="sm" onclick={() => { query = ''; statusFilter = 'all'; }}>Clear filters</Button>{:else}<Button variant="primary" size="sm" onclick={openCreateProjectForm}>{@html ic('plus', 14)}Create project</Button>{/if}</div></section>
     {:else if view === 'grid'}
       <div class="pgrid">
         {#each visibleProjects as project (project.id)}
@@ -410,7 +411,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
           {#if projectConfirmation.action === 'delete'}<div class="field" style="margin-top:6px"><Label for="project-delete-confirm">Type <b>{projectConfirmation.project.name}</b> to confirm</Label><Input class="" id="project-delete-confirm" bind:value={confirmationText} autocomplete="off" /></div>{/if}
           {#if errors.form}<div class="err" role="alert">{@html ic('circle-alert', 12)}{errors.form}</div>{/if}
         </div>
-        <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => projectConfirmation = null}>Cancel</button><button type="button" class={projectConfirmation.action === 'delete' ? 'btn btn-danger' : 'btn btn-primary'} disabled={confirmationBusy || (projectConfirmation.action === 'delete' && confirmationText !== projectConfirmation.project.name)} onclick={confirmProjectAction}>{confirmationBusy ? 'Working…' : projectConfirmation.action === 'delete' ? 'Delete project' : 'Archive project'}</button></div>
+        <div class="modal-f"><span class="sp"></span><Button type="button" variant="secondary" size="md" onclick={() => projectConfirmation = null}>Cancel</Button><Button type="button" variant={projectConfirmation.action === 'delete' ? 'danger' : 'primary'} size="md" disabled={confirmationBusy || (projectConfirmation.action === 'delete' && confirmationText !== projectConfirmation.project.name)} onclick={confirmProjectAction}>{confirmationBusy ? 'Working…' : projectConfirmation.action === 'delete' ? 'Delete project' : 'Archive project'}</Button></div>
       </div>
     </div>
   {/if}
@@ -437,7 +438,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
           </div>
           <div class="field"><span class="label">Template</span><div class="tmpls" role="radiogroup" aria-label="Template">{#each templates as projectTemplate (projectTemplate.id)}<button type="button" role="radio" aria-checked={template === projectTemplate.id} class={`opt ${template === projectTemplate.id ? 'on' : ''}`} style="padding:10px" onclick={() => selectProjectTemplate(projectTemplate.id)}>{@html ic(projectTemplate.icon, 16)}<b style="font-size:12.5px">{projectTemplate.name}</b><span>{projectTemplate.tasks.length ? `${projectTemplate.tasks.length} starter tasks` : projectTemplate.desc}</span></button>{/each}</div></div>
         </form>
-        <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => modalOpen = false}>Cancel</button><button class="btn btn-primary" type="submit" form="project-create-form" disabled={busy}>{busy ? 'Creating…' : 'Create project'}</button></div>
+        <div class="modal-f"><span class="sp"></span><Button type="button" variant="secondary" size="md" onclick={() => modalOpen = false}>Cancel</Button><Button variant="primary" size="md" type="submit" form="project-create-form" disabled={busy}>{busy ? 'Creating…' : 'Create project'}</Button></div>
       </div>
     </div>
   {/if}

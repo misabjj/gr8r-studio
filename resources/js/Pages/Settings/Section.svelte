@@ -1,4 +1,5 @@
 <script>
+  import Button from "../../Components/Button.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import { onMount, tick } from 'svelte';
@@ -474,7 +475,7 @@
           <div class="row" style="gap:12px"><div class="field grow"><Label for="settings-invite-role">Role</Label><select class="select" id="settings-invite-role" bind:value={inviteRole}><option>Member</option><option>Admin</option><option>Guest</option></select></div><div class="field grow"><Label for="settings-invite-team">Team</Label><select class="select" id="settings-invite-team" bind:value={inviteTeam}>{#each teamsList() as team (team.id)}<option value={team.id}>{team.name}</option>{/each}</select></div></div>
           <div class="alert info">{@html ic('info', 14)}<span><b>Guests</b> can only see projects they're added to and can't create projects.</span></div>
         </form>
-        <div class="modal-f"><button type="button" class="btn btn-ghost" onclick={copyInviteLink}>{@html ic('link', 14)}Copy invite link</button><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={closeInviteDialog}>Cancel</button><button type="submit" class="btn btn-primary" form="settings-invite-form" disabled={inviteBusy}>{inviteBusy ? 'Sending…' : 'Send invites'}</button></div>
+        <div class="modal-f"><Button type="button" variant="ghost" size="md" onclick={copyInviteLink}>{@html ic('link', 14)}Copy invite link</Button><span class="sp"></span><Button type="button" variant="secondary" size="md" onclick={closeInviteDialog}>Cancel</Button><Button type="submit" variant="primary" size="md" form="settings-invite-form" disabled={inviteBusy}>{inviteBusy ? 'Sending…' : 'Send invites'}</Button></div>
       </div>
     </div>
   {/if}
@@ -483,7 +484,7 @@
     <div class="modal-wrap" transition:fade={{ duration: 180 }} role="presentation" onclick={event => event.target === event.currentTarget && (removeCandidate = null)}>
       <div class="modal sm" role="alertdialog" aria-modal="true" aria-labelledby="settings-remove-member-title" tabindex="-1">
         <div class="modal-b" style="padding-top:18px;gap:10px"><div class="row" style="gap:12px;align-items:flex-start"><span class="ftype" style="--c:var(--red);width:34px;height:34px;border-radius:9px">{@html ic('user-minus', 17)}</span><div class="grow"><h2 id="settings-remove-member-title" style="font-size:15px;font-weight:600;margin:4px 0 6px">Remove {removeCandidate.name}?</h2><p class="muted" style="margin:0;font-size:13px;line-height:1.55">{removeCandidate.name} will lose access to {S.data.ws.name} immediately.{#if openTaskCount} Their <b>{openTaskCount} open task{openTaskCount > 1 ? 's' : ''}</b> will become unassigned.{/if}</p></div></div></div>
-        <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => removeCandidate = null}>Cancel</button><button type="button" class="btn btn-danger" onclick={removeMember}>Remove member</button></div>
+        <div class="modal-f"><span class="sp"></span><Button type="button" variant="secondary" size="md" onclick={() => removeCandidate = null}>Cancel</Button><Button type="button" variant="danger" size="md" onclick={removeMember}>Remove member</Button></div>
       </div>
     </div>
   {/if}
@@ -493,7 +494,7 @@
         <div class="modal-b" style="padding-top:18px;gap:10px"><div class="row" style="gap:12px;align-items:flex-start"><span class="ftype" style={`--c:${confirmation.danger ? 'var(--red)' : 'var(--amber)'};width:34px;height:34px;border-radius:9px`}>{@html ic(confirmation.icon || (confirmation.danger ? 'trash-2' : 'archive'), 17)}</span><div class="grow"><h2 id="settings-confirm-title" style="font-size:15px;font-weight:600;margin:4px 0 6px">{confirmation.title}</h2><p class="muted" style="margin:0;font-size:13px;line-height:1.55">{confirmation.body}</p></div></div>
           {#if confirmation.typeName}<div class="field" style="margin-top:6px"><Label for="settings-confirm-input" style="font-weight:400;color:var(--text-2)">Type <b style="color:var(--text);font-weight:600">{confirmation.typeName}</b> to confirm</Label><Input class="" id="settings-confirm-input" bind:value={confirmationText} autocomplete="off" /></div>{/if}
         </div>
-        <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => confirmation = null}>Cancel</button><button type="button" class={`btn ${confirmation.danger ? 'btn-danger' : 'btn-primary'}`} disabled={!!confirmation.typeName && confirmationText !== confirmation.typeName} onclick={confirmAction}>{confirmation.ok}</button></div>
+        <div class="modal-f"><span class="sp"></span><Button type="button" variant="secondary" size="md" onclick={() => confirmation = null}>Cancel</Button><Button type="button" variant={confirmation.danger ? 'danger' : 'primary'} size="md" disabled={!!confirmation.typeName && confirmationText !== confirmation.typeName} onclick={confirmAction}>{confirmation.ok}</Button></div>
       </div>
     </div>
   {/if}
