@@ -1,4 +1,5 @@
 <script>
+  import Input from "../../Components/Input.svelte";
   import { usePage } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import ProjectCalendar from '../../Components/ProjectCalendar.svelte';
@@ -297,7 +298,7 @@
 
     {#if errorMessage}<div class="alert danger" role="alert">{@html ic('circle-alert', 15)}<span>{errorMessage}</span></div>{/if}
     <div class="toolbar" role="toolbar">
-      <div class="inwrap">{@html ic('search', 13)}<input class="input search-sm" bind:value={query} placeholder="Search tasks" aria-label="Search tasks" /></div>
+      <div class="inwrap">{@html ic('search', 13)}<Input class="search-sm" bind:value={query} placeholder="Search tasks" aria-label="Search tasks" /></div>
       <button class={`btn btn-ghost ${filters.length ? 'on' : ''}`} type="button" aria-label="Filter" data-mytasks-trigger onclick={openFilterMenu}>{@html ic('list-filter', 14)}Filter{#if filters.length}<span class="badge accent" style="height:16px;padding:0 5px">{filters.length}</span>{/if}</button>
       <button class="btn btn-ghost" type="button" aria-label={`Sort: ${sortNames[sortBy]}`} data-mytasks-trigger onclick={event => toggleToolbarMenu('sort', event)}>{@html ic('arrow-up-down', 14)}<span class="hide-m">Sort:</span> {sortNames[sortBy]}</button>
     </div>

@@ -1,5 +1,6 @@
 <script>
   import Label from "../../Components/Label.svelte";
+  import Input from "../../Components/Input.svelte";
   import { onMount, tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import { Link, router } from '@inertiajs/svelte';
@@ -490,7 +491,7 @@
     <div class="modal-wrap" transition:fade={{ duration: 180 }} role="presentation" onclick={event => event.target === event.currentTarget && (confirmation = null)}>
       <div class="modal sm" role="alertdialog" aria-modal="true" aria-labelledby="settings-confirm-title" tabindex="-1">
         <div class="modal-b" style="padding-top:18px;gap:10px"><div class="row" style="gap:12px;align-items:flex-start"><span class="ftype" style={`--c:${confirmation.danger ? 'var(--red)' : 'var(--amber)'};width:34px;height:34px;border-radius:9px`}>{@html ic(confirmation.icon || (confirmation.danger ? 'trash-2' : 'archive'), 17)}</span><div class="grow"><h2 id="settings-confirm-title" style="font-size:15px;font-weight:600;margin:4px 0 6px">{confirmation.title}</h2><p class="muted" style="margin:0;font-size:13px;line-height:1.55">{confirmation.body}</p></div></div>
-          {#if confirmation.typeName}<div class="field" style="margin-top:6px"><Label for="settings-confirm-input" style="font-weight:400;color:var(--text-2)">Type <b style="color:var(--text);font-weight:600">{confirmation.typeName}</b> to confirm</Label><input class="input" id="settings-confirm-input" bind:value={confirmationText} autocomplete="off" /></div>{/if}
+          {#if confirmation.typeName}<div class="field" style="margin-top:6px"><Label for="settings-confirm-input" style="font-weight:400;color:var(--text-2)">Type <b style="color:var(--text);font-weight:600">{confirmation.typeName}</b> to confirm</Label><Input class="" id="settings-confirm-input" bind:value={confirmationText} autocomplete="off" /></div>{/if}
         </div>
         <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => confirmation = null}>Cancel</button><button type="button" class={`btn ${confirmation.danger ? 'btn-danger' : 'btn-primary'}`} disabled={!!confirmation.typeName && confirmationText !== confirmation.typeName} onclick={confirmAction}>{confirmation.ok}</button></div>
       </div>

@@ -1,5 +1,6 @@
 <script>
   import Label from "../../Components/Label.svelte";
+  import Input from "../../Components/Input.svelte";
   import { useForm } from '@inertiajs/svelte';
   import { tick } from 'svelte';
   import { register } from '../../routes';
@@ -46,13 +47,13 @@
       {#if form.errors.login}<div class="alert danger" role="alert">{@html ic('circle-alert', 15)}<span>{form.errors.login}</span></div>{/if}
       <div class="field">
         <Label for="l-email">Email</Label>
-        <input class="input input-lg" class:is-error={!!form.errors.email} id="l-email" type="email" bind:value={form.email} autocomplete="email" aria-invalid={!!form.errors.email} />
+        <Input class={`input-lg ${!!form.errors.email ? "is-error" : ""}`} id="l-email" type="email" bind:value={form.email} autocomplete="email" aria-invalid={!!form.errors.email} />
         {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
       </div>
       <div class="field">
         <div class="row"><Label for="l-pw">Password</Label><span class="sp"></span><a class="link" href={passwordRequest.url()}>Forgot password?</a></div>
         <div class="inwrap">
-          <input class="input input-lg auth-password-input" id="l-pw" type={showPassword ? 'text' : 'password'} bind:value={form.password} autocomplete="current-password" style="padding-right:38px" aria-invalid={!!form.errors.password} />
+          <Input class="input-lg auth-password-input" id="l-pw" type={showPassword ? 'text' : 'password'} bind:value={form.password} autocomplete="current-password" style="padding-right:38px" aria-invalid={!!form.errors.password} />
           <button type="button" class="ibtn ibtn-sm" style="position:absolute;right:5px" onclick={togglePasswordVisibility} aria-label={showPassword ? 'Hide password' : 'Show password'}>{@html ic(showPassword ? 'eye-off' : 'eye', 15)}</button>
         </div>
         {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{/if}

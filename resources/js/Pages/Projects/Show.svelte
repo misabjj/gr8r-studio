@@ -1,5 +1,6 @@
 <script>
   import Label from "../../Components/Label.svelte";
+  import Input from "../../Components/Input.svelte";
   import { onMount, tick } from 'svelte';
   import { fade, scale } from 'svelte/transition';
   import { Link, router, usePage } from '@inertiajs/svelte';
@@ -1165,7 +1166,7 @@
       {#if errorMessage}<div class="alert danger" role="alert">{errorMessage}</div>{/if}
       {#if selectedSavedView}
         <div class="toolbar" role="toolbar">
-          <div class="inwrap">{@html ic('search', 13)}<input class="input search-sm" bind:value={savedViewQuery} placeholder="Search tasks" aria-label="Search tasks" /></div>
+          <div class="inwrap">{@html ic('search', 13)}<Input class="search-sm" bind:value={savedViewQuery} placeholder="Search tasks" aria-label="Search tasks" /></div>
           <button type="button" class={`btn btn-ghost ${savedViewFilters.length ? 'on' : ''}`} data-saved-filter-trigger aria-haspopup="dialog" aria-expanded={savedFilterOpen} onclick={event => toggleSavedFilterBuilder(event)}>{@html ic('list-filter', 14)}Filter{#if savedViewFilters.length}<span class="badge accent" style="height:16px;padding:0 5px">{savedViewFilters.length}</span>{/if}</button>
           <button type="button" class="btn btn-ghost">{@html ic('arrow-up-down', 14)}<span class="hide-m">Sort:</span> Manual</button>
           <button type="button" class="btn btn-ghost">{@html ic('rows-3', 14)}<span class="hide-m">Group:</span> Status</button>
@@ -1250,7 +1251,7 @@
         </div>
       {:else if tab === 'board'}
         <div class="toolbar" role="toolbar">
-          <div class="inwrap">{@html ic('search', 13)}<input class="input search-sm" bind:value={taskSearch} placeholder="Search tasks" aria-label="Search tasks" /></div>
+          <div class="inwrap">{@html ic('search', 13)}<Input class="search-sm" bind:value={taskSearch} placeholder="Search tasks" aria-label="Search tasks" /></div>
           <button class="btn btn-ghost" type="button" onclick={() => taskSearch = ''}>{@html ic('list-filter', 14)}Filter</button>
           <button class="btn btn-ghost" type="button">{@html ic('arrow-up-down', 14)}<span class="hide-m">Sort:</span> Manual</button>
           <span class="sp"></span>
@@ -1303,7 +1304,7 @@
         {/if}
       {:else if tab === 'list'}
         <div class="toolbar" role="toolbar">
-          <div class="inwrap">{@html ic('search', 13)}<input class="input search-sm" bind:value={projectListQuery} placeholder="Search tasks" aria-label="Search tasks" /></div>
+          <div class="inwrap">{@html ic('search', 13)}<Input class="search-sm" bind:value={projectListQuery} placeholder="Search tasks" aria-label="Search tasks" /></div>
           <button type="button" class={`btn btn-ghost ${projectListFilters.length ? 'on' : ''}`} data-project-list-menu-trigger aria-haspopup="dialog" aria-expanded={projectListMenu === 'filter'} onclick={event => toggleProjectListMenu(event, 'filter')}>{@html ic('list-filter', 14)}Filter{#if projectListFilters.length}<span class="badge accent" style="height:16px;padding:0 5px">{projectListFilters.length}</span>{/if}</button>
           <button type="button" class="btn btn-ghost" data-project-list-menu-trigger aria-haspopup="menu" aria-expanded={projectListMenu === 'sort'} onclick={event => toggleProjectListMenu(event, 'sort')}>{@html ic('arrow-up-down', 14)}<span class="hide-m">Sort:</span> {({ manual: 'Manual', title: 'Title', due: 'Due date', priority: 'Priority', status: 'Status', assignee: 'Assignee', created: 'Created', updated: 'Updated', start: 'Start date', estimate: 'Estimate', project: 'Project' })[projectListSort]}</button>
           <button type="button" class="btn btn-ghost" data-project-list-menu-trigger aria-haspopup="menu" aria-expanded={projectListMenu === 'group'} onclick={event => toggleProjectListMenu(event, 'group')}>{@html ic('rows-3', 14)}<span class="hide-m">Group:</span> {({ status: 'Status', priority: 'Priority', assignee: 'Assignee', project: 'Project', due: 'Due date', none: 'None' })[projectListGroup]}</button>
@@ -1355,7 +1356,7 @@
         </div>
       {:else if tab === 'table'}
         <div class="toolbar" role="toolbar">
-          <div class="inwrap">{@html ic('search', 13)}<input class="input search-sm" bind:value={projectListQuery} placeholder="Search tasks" aria-label="Search tasks" /></div>
+          <div class="inwrap">{@html ic('search', 13)}<Input class="search-sm" bind:value={projectListQuery} placeholder="Search tasks" aria-label="Search tasks" /></div>
           <button type="button" class={`btn btn-ghost ${projectListFilters.length ? 'on' : ''}`} data-project-list-menu-trigger aria-haspopup="dialog" aria-expanded={projectListMenu === 'filter'} onclick={event => toggleProjectListMenu(event, 'filter')}>{@html ic('list-filter', 14)}Filter{#if projectListFilters.length}<span class="badge accent" style="height:16px;padding:0 5px">{projectListFilters.length}</span>{/if}</button>
           <button type="button" class="btn btn-ghost" data-project-list-menu-trigger aria-haspopup="menu" aria-expanded={projectListMenu === 'sort'} onclick={event => toggleProjectListMenu(event, 'sort')}>{@html ic('arrow-up-down', 14)}<span class="hide-m">Sort:</span> {({ manual: 'Manual', title: 'Title', due: 'Due date', priority: 'Priority', status: 'Status', assignee: 'Assignee', created: 'Created', updated: 'Last updated', start: 'Start date' })[projectListSort]}</button>
           <button type="button" class="btn btn-ghost" data-project-list-menu-trigger aria-haspopup="menu" aria-expanded={projectListMenu === 'group'} onclick={event => toggleProjectListMenu(event, 'group')}>{@html ic('rows-3', 14)}<span class="hide-m">Group:</span> {({ status: 'Status', priority: 'Priority', assignee: 'Assignee', project: 'Project', due: 'Due date', none: 'None' })[projectListGroup]}</button>
@@ -1415,7 +1416,7 @@
         <ProjectCalendar {tasks} {project} onCreate={openCreateTask} onReschedule={updateTableTask} />
       {:else if tab === 'files'}
         <div class="toolbar" role="toolbar">
-          <div class="inwrap">{@html ic('search', 13)}<input class="input search-sm" bind:value={fileQuery} placeholder="Search files" aria-label="Search files" /></div>
+          <div class="inwrap">{@html ic('search', 13)}<Input class="search-sm" bind:value={fileQuery} placeholder="Search files" aria-label="Search files" /></div>
           <select class="select" style="height:26px;width:auto;font-size:12px" bind:value={fileType} aria-label="Filter by type"><option value="all">All types</option>{#each Object.entries(FT).filter(([key]) => key !== 'other') as [key, type]}<option value={key}>{type.n}</option>{/each}</select>
           <select class="select" style="height:26px;width:auto;font-size:12px" bind:value={fileSort} aria-label="Sort files"><option value="date">Sort: Newest</option><option value="name">Sort: Name</option><option value="type">Sort: Type</option></select>
           <span class="sp"></span><div class="seg" role="tablist" aria-label="File view"><button type="button" class:on={fileView === 'grid'} aria-label="Grid view" aria-pressed={fileView === 'grid'} onclick={() => fileView = 'grid'}>{@html ic('layout-grid', 13)}</button><button type="button" class:on={fileView === 'list'} aria-label="List view" aria-pressed={fileView === 'list'} onclick={() => fileView = 'list'}>{@html ic('list', 13)}</button></div>
@@ -1486,7 +1487,7 @@
     <div class="modal-wrap" transition:fade={{ duration: 180 }} role="presentation" onclick={event => event.target === event.currentTarget && (fileRenameTarget = null)}>
       <div class="modal sm" transition:scale={{ duration: 240, start: 0.97 }} role="dialog" aria-modal="true" aria-labelledby="rename-file-title" tabindex="-1">
         <div class="modal-h"><h2 id="rename-file-title">Rename file</h2><button type="button" class="ibtn ibtn-sm" aria-label="Close" onclick={() => fileRenameTarget = null}>{@html ic('x', 16)}</button></div>
-        <form id="rename-file-form" class="modal-b" onsubmit={renameProjectFile}><div class="field"><Label for="rename-file-name">File name</Label><input class="input" id="rename-file-name" bind:value={fileRenameName} required /></div></form>
+        <form id="rename-file-form" class="modal-b" onsubmit={renameProjectFile}><div class="field"><Label for="rename-file-name">File name</Label><Input class="" id="rename-file-name" bind:value={fileRenameName} required /></div></form>
         <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => fileRenameTarget = null}>Cancel</button><button type="submit" form="rename-file-form" class="btn btn-primary">Save</button></div>
       </div>
     </div>
@@ -1506,10 +1507,10 @@
       <div class="modal" transition:scale={{ duration: 240, start: 0.97 }} role="dialog" aria-modal="true" aria-labelledby="project-settings-title" tabindex="-1">
         <div class="modal-h"><h2 id="project-settings-title">Project settings</h2><button type="button" class="ibtn ibtn-sm" aria-label="Close" onclick={() => editDialogOpen = false}>{@html ic('x', 16)}</button></div>
         <form class="modal-b" onsubmit={saveProjectSettings}>
-          <div class="field"><Label for="project-settings-name">Name</Label><input class="input" id="project-settings-name" bind:value={projectForm.name} maxlength="120" required /></div>
+          <div class="field"><Label for="project-settings-name">Name</Label><Input class="" id="project-settings-name" bind:value={projectForm.name} maxlength="120" required /></div>
           <div class="field"><Label for="project-settings-description">Description</Label><textarea class="textarea" id="project-settings-description" bind:value={projectForm.description} rows="3" maxlength="5000"></textarea></div>
           <div class="field"><Label for="project-settings-status">Status</Label><select class="select" id="project-settings-status" bind:value={projectForm.status}>{#each Object.entries(PSTAT) as [status, details]}<option value={status}>{details.name}</option>{/each}</select></div>
-          <div class="row" style="gap:10px"><div class="field grow"><Label for="project-settings-start">Start date</Label><input class="input" id="project-settings-start" type="date" bind:value={projectForm.start_date} /></div><div class="field grow"><Label for="project-settings-due">Due date</Label><input class="input" id="project-settings-due" type="date" bind:value={projectForm.due_date} /></div></div>
+          <div class="row" style="gap:10px"><div class="field grow"><Label for="project-settings-start">Start date</Label><Input class="" id="project-settings-start" type="date" bind:value={projectForm.start_date} /></div><div class="field grow"><Label for="project-settings-due">Due date</Label><Input class="" id="project-settings-due" type="date" bind:value={projectForm.due_date} /></div></div>
           {#if projectDialogError}<span class="err" role="alert">{projectDialogError}</span>{/if}
         </form>
         <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => editDialogOpen = false}>Cancel</button><button type="button" class="btn btn-primary" disabled={projectDialogBusy} onclick={() => saveProjectSettings({ preventDefault() {} })}>{projectDialogBusy ? 'Saving…' : 'Save changes'}</button></div>
@@ -1521,7 +1522,7 @@
       <div class="modal" transition:scale={{ duration: 240, start: 0.97 }} role="dialog" aria-modal="true" aria-labelledby="project-share-title" tabindex="-1">
         <div class="modal-h"><h2 id="project-share-title">Share “{project.name}”</h2><button type="button" class="ibtn ibtn-sm" aria-label="Close" onclick={() => membersDialogOpen = false}>{@html ic('x', 16)}</button></div>
         <div class="modal-b">
-          <div class="field"><Label for="project-member-search">Add people by name or email</Label><input class="input" id="project-member-search" bind:value={memberQuery} placeholder="Search workspace members" /></div>
+          <div class="field"><Label for="project-member-search">Add people by name or email</Label><Input class="" id="project-member-search" bind:value={memberQuery} placeholder="Search workspace members" /></div>
           <div class="eyebrow" style="margin-bottom:4px">People with access</div>
           {#each projectMemberOptions as member (member.id)}
             {@const isProjectMember = selectedMemberIds.includes(member.id)}
@@ -1540,7 +1541,7 @@
       <div class="modal sm" transition:scale={{ duration: 240, start: 0.97 }} role="dialog" aria-modal="true" aria-labelledby="save-project-view-title" tabindex="-1">
         <div class="modal-h"><div><h2 id="save-project-view-title">Save view</h2><p class="faint" style="margin:3px 0 0;font-size:12px">Save the current filters as a tab on this project.</p></div><button type="button" class="ibtn ibtn-sm" aria-label="Close" onclick={() => saveViewOpen = false}>{@html ic('x', 16)}</button></div>
         <form id="save-project-view-form" class="modal-b" onsubmit={saveProjectView}>
-          <div class="field"><Label for="save-project-view-name">View name</Label><input class="input" id="save-project-view-name" bind:this={saveViewNameInput} bind:value={saveViewName} placeholder="e.g. Design review queue" maxlength="80" /></div>
+          <div class="field"><Label for="save-project-view-name">View name</Label><Input class="" id="save-project-view-name" bind:element={saveViewNameInput} bind:value={saveViewName} placeholder="e.g. Design review queue" maxlength="80" /></div>
           <div class="field"><Label for="save-project-view-type">Layout</Label><select class="select" id="save-project-view-type" bind:value={saveViewType}><option value="list">List</option><option value="board">Board</option><option value="table">Table</option></select></div>
           {#if projectViewFilters.length}<div class="hint">{projectViewFilters.length} filter{projectViewFilters.length === 1 ? '' : 's'} will be saved with this view.</div>{:else}<div class="alert info">{@html ic('info', 14)}<span>No filters are active — the view will show all tasks. You can add filters after saving.</span></div>{/if}
         </form>

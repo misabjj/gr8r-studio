@@ -1,4 +1,5 @@
 <script>
+  import Input from "./Input.svelte";
   import { fade } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
   import { tick } from 'svelte';
@@ -481,7 +482,7 @@
       <form id="workspace-task-form" class="modal-b" style="gap:12px" onsubmit={submit}>
           <div class="field">
             <label class="sr" for="workspace-task-title">Task name</label>
-            <input class={`input input-lg ${errorMessage ? 'is-error' : ''}`} id="workspace-task-title" bind:this={titleInput} bind:value={title} oninput={() => title.trim() && (errorMessage = '')} placeholder="Task name" aria-invalid={!!errorMessage} aria-describedby={errorMessage ? 'workspace-task-title-error' : undefined} maxlength="255" style="font-size:15px;font-weight:500" />
+            <Input class={`input-lg ${errorMessage ? 'is-error' : ''}`} id="workspace-task-title" bind:element={titleInput} bind:value={title} oninput={() => title.trim() && (errorMessage = '')} placeholder="Task name" aria-invalid={!!errorMessage} aria-describedby={errorMessage ? 'workspace-task-title-error' : undefined} maxlength="255" style="font-size:15px;font-weight:500" />
             {#if errorMessage}<span id="workspace-task-title-error" class="err" role="alert">{@html ic('circle-alert', 12)}{errorMessage}</span>{/if}
           </div>
           <div class="field">
@@ -503,7 +504,7 @@
             {#each subtasks as subtask, index (subtask.id)}
               <div class="subt" style="padding:0 4px">{@html ic('circle', 13)}<span class="s">{subtask.title}</span><button type="button" class="ibtn ibtn-xs x" style="opacity:1" aria-label={`Remove ${subtask.title}`} onclick={() => subtasks = subtasks.filter((_, subtaskIndex) => subtaskIndex !== index)}>{@html ic('x', 12)}</button></div>
             {/each}
-            <div class="inwrap">{@html ic('plus', 14)}<input class="input" bind:value={subtaskTitle} onkeydown={handleSubtaskKeydown} placeholder="Add a subtask and press Enter" /></div>
+            <div class="inwrap">{@html ic('plus', 14)}<Input class="" bind:value={subtaskTitle} onkeydown={handleSubtaskKeydown} placeholder="Add a subtask and press Enter" /></div>
           </div>
           <div class="field">
             <span class="label">Attachments</span>

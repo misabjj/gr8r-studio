@@ -1,5 +1,6 @@
 <script>
   import Label from "../../Components/Label.svelte";
+  import Input from "../../Components/Input.svelte";
   import { useForm } from '@inertiajs/svelte';
   import { update as resetPassword } from '../../routes/password';
   import { ic, LOGO } from '@/src/core/icons.js';
@@ -28,13 +29,13 @@
         <input type="hidden" name="token" value={form.token} />
       <div class="field">
         <Label for="r-pw">New password</Label>
-        <input class="input input-lg" class:is-error={!!form.errors.password} id="r-pw" type="password" bind:value={form.password} autocomplete="new-password" aria-invalid={!!form.errors.password} />
+        <Input class={`input-lg ${!!form.errors.password ? "is-error" : ""}`} id="r-pw" type="password" bind:value={form.password} autocomplete="new-password" aria-invalid={!!form.errors.password} />
         {@html strengthMeter(form.password)}
         {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{/if}
       </div>
       <div class="field">
         <Label for="r-pw2">Confirm password</Label>
-        <input class="input input-lg" class:is-error={!!form.errors.password_confirmation} id="r-pw2" type="password" bind:value={form.password_confirmation} autocomplete="new-password" aria-invalid={!!form.errors.password_confirmation} />
+        <Input class={`input-lg ${!!form.errors.password_confirmation ? "is-error" : ""}`} id="r-pw2" type="password" bind:value={form.password_confirmation} autocomplete="new-password" aria-invalid={!!form.errors.password_confirmation} />
         {#if form.errors.password_confirmation}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password_confirmation}</span>{/if}
         {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
       </div>

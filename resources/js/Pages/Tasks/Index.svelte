@@ -1,4 +1,5 @@
 <script>
+  import Input from "../../Components/Input.svelte";
   import { onMount } from 'svelte';
   import { tick } from 'svelte';
   import { Link, usePage } from '@inertiajs/svelte';
@@ -631,7 +632,7 @@
     <div class="ph"><div><h1>Tasks</h1><p>Every task across {projects.length} projects.</p></div><div class="acts"><button class="btn btn-primary" onclick={() => openCreateTask()}>{@html ic('plus', 14)}New task</button></div></div>
     {#if errorMessage}<div class="alert danger" role="alert">{@html ic('circle-alert', 15)}<span>{errorMessage}</span></div>{/if}
     <div class="toolbar" role="toolbar">
-      <div class="inwrap">{@html ic('search', 13)}<input class="input search-sm" bind:value={query} placeholder="Search tasks" aria-label="Search tasks" /></div>
+      <div class="inwrap">{@html ic('search', 13)}<Input class="search-sm" bind:value={query} placeholder="Search tasks" aria-label="Search tasks" /></div>
       <button class="btn btn-ghost" data-task-trigger type="button" aria-label="Filter tasks" aria-expanded={toolbarMenu === 'filter'} onclick={event => toggleToolbarMenu('filter', event)}>{@html ic('list-filter', 13)}Filter{#if filterCount}<span class="badge">{filterCount}</span>{/if}</button>
       <button class="btn btn-ghost" data-task-trigger type="button" aria-label={`Sort tasks: ${sortNames[sortBy]}`} aria-expanded={toolbarMenu === 'sort'} onclick={event => toggleToolbarMenu('sort', event)}>{@html ic('arrow-up-down', 13)}Sort: {sortNames[sortBy]}</button>
       {#if view !== 'board'}<button class="btn btn-ghost" data-task-trigger aria-expanded={toolbarMenu === 'group'} onclick={event => toggleToolbarMenu('group', event)}>{@html ic('list-filter', 13)}Group: {groupBy === 'none' ? 'None' : groupBy[0].toUpperCase() + groupBy.slice(1)}</button>{/if}

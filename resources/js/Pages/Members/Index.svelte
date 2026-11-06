@@ -1,5 +1,6 @@
 <script>
   import Label from "../../Components/Label.svelte";
+  import Input from "../../Components/Input.svelte";
   import { fade, scale } from 'svelte/transition';
   import { onMount, tick } from 'svelte';
   import { Link, router, usePage } from '@inertiajs/svelte';
@@ -305,7 +306,7 @@
 
     {#if tab === 'members'}
       <div class="row" style="margin-bottom:12px;gap:8px;flex-wrap:wrap">
-        <div class="inwrap">{@html ic('search', 13)}<input class="input search-sm" bind:value={query} placeholder="Search by name or email" aria-label="Search members" /></div>
+        <div class="inwrap">{@html ic('search', 13)}<Input class="search-sm" bind:value={query} placeholder="Search by name or email" aria-label="Search members" /></div>
         <div class="seg">
           {#each ['all', ...ROLES] as item}
             <button type="button" class:on={role === item} onclick={() => role = item}>{item === 'all' ? 'All' : item}</button>

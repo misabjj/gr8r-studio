@@ -1,4 +1,5 @@
 <script>
+  import Input from "./Input.svelte";
   import { Link } from '@inertiajs/svelte';
   import { show as projectShow } from '../routes/projects';
   import { ic } from '@/src/core/icons.js';
@@ -352,7 +353,7 @@
 
 {#if showToolbar}
   <div class="toolbar" role="toolbar">
-    <div class="inwrap"><span class="i">{@html ic('search', 13)}</span><input class="input search-sm" bind:value={query} placeholder="Search tasks" aria-label="Search tasks" /></div>
+    <div class="inwrap"><span class="i">{@html ic('search', 13)}</span><Input class="search-sm" bind:value={query} placeholder="Search tasks" aria-label="Search tasks" /></div>
     <button class={`btn btn-ghost ${filters.length ? 'on' : ''}`} data-calendar-trigger onclick={event => showMenu('filter', event)}>{@html ic('list-filter', 14)}Filter{#if filters.length}<span class="badge accent" style="height:16px;padding:0 5px">{filters.length}</span>{/if}</button>
     <button class="btn btn-ghost" data-calendar-trigger onclick={event => showMenu('sort', event)}>{@html ic('arrow-up-down', 14)}<span class="hide-m">Sort:</span> {sortable.find(item => item.id === sort)?.name || 'Manual'}</button>
     <span class="sp"></span>

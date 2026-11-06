@@ -1,5 +1,6 @@
 <script>
   import Label from "../../Components/Label.svelte";
+  import Input from "../../Components/Input.svelte";
   import { tick } from 'svelte';
   import { fade, scale } from 'svelte/transition';
   import { onMount } from 'svelte';
@@ -317,7 +318,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
       <div class="acts"><button class="btn btn-primary" onclick={openCreateProjectForm}>{@html ic('plus', 14)}New project</button></div>
     </div>
     <div class="row" style="margin-bottom:16px;flex-wrap:wrap;gap:8px">
-      <div class="inwrap">{@html ic('search', 13)}<input class="input search-sm" bind:value={query} placeholder="Search projects" aria-label="Search projects" /></div>
+      <div class="inwrap">{@html ic('search', 13)}<Input class="search-sm" bind:value={query} placeholder="Search projects" aria-label="Search projects" /></div>
       <select class="select" style="height:26px;width:auto;font-size:12px" bind:value={statusFilter} aria-label="Filter by status">
         <option value="all">All statuses</option><option value="planning">Planning</option><option value="active">In Progress</option><option value="risk">At Risk</option><option value="hold">On Hold</option><option value="complete">Completed</option>
       </select>
@@ -406,7 +407,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
       <div class="modal sm" transition:scale={{ duration: 260, start: 0.97 }} role="alertdialog" aria-modal="true" aria-labelledby="project-confirm-title" aria-describedby="project-confirm-description">
         <div class="modal-b" style="padding-top:18px;gap:10px">
           <div class="row" style="gap:12px;align-items:flex-start"><span class="ftype" style={`--c:${projectConfirmation.action === 'delete' ? 'var(--red)' : 'var(--amber)'};width:34px;height:34px;border-radius:9px`}>{@html ic(projectConfirmation.action === 'delete' ? 'trash-2' : 'archive', 17)}</span><div class="grow"><h2 id="project-confirm-title" style="font-size:15px;font-weight:600;margin:4px 0 6px">{projectConfirmation.action === 'delete' ? `Delete ${projectConfirmation.project.name}?` : `Archive ${projectConfirmation.project.name}?`}</h2><p id="project-confirm-description" class="muted" style="margin:0;font-size:13px;line-height:1.55">{projectConfirmation.action === 'delete' ? `This permanently deletes the project and its ${projectConfirmation.project.tasks_count || 0} task${projectConfirmation.project.tasks_count === 1 ? '' : 's'}, files, and comments for everyone. This can't be undone.` : 'The project will be hidden from the sidebar and project lists. Tasks, files, and comments are kept, and you can restore it from Settings → Projects.'}</p></div></div>
-          {#if projectConfirmation.action === 'delete'}<div class="field" style="margin-top:6px"><Label for="project-delete-confirm">Type <b>{projectConfirmation.project.name}</b> to confirm</Label><input class="input" id="project-delete-confirm" bind:value={confirmationText} autocomplete="off" /></div>{/if}
+          {#if projectConfirmation.action === 'delete'}<div class="field" style="margin-top:6px"><Label for="project-delete-confirm">Type <b>{projectConfirmation.project.name}</b> to confirm</Label><Input class="" id="project-delete-confirm" bind:value={confirmationText} autocomplete="off" /></div>{/if}
           {#if errors.form}<div class="err" role="alert">{@html ic('circle-alert', 12)}{errors.form}</div>{/if}
         </div>
         <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => projectConfirmation = null}>Cancel</button><button type="button" class={projectConfirmation.action === 'delete' ? 'btn btn-danger' : 'btn btn-primary'} disabled={confirmationBusy || (projectConfirmation.action === 'delete' && confirmationText !== projectConfirmation.project.name)} onclick={confirmProjectAction}>{confirmationBusy ? 'Working…' : projectConfirmation.action === 'delete' ? 'Delete project' : 'Archive project'}</button></div>
@@ -422,7 +423,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
           {#if errors.form}<div class="alert danger" role="alert">{errors.form}</div>{/if}
           <div class="row" style="gap:10px;align-items:flex-start">
             <span class="picon lg" style={`--c:${PCOLORS[color]};cursor:default;flex-shrink:0;margin-top:22px`}>{@html ic(icon, 18)}</span>
-            <div class="field grow"><Label for="project-name">Project name</Label><input class={`input ${errors.name ? 'is-error' : ''}`} id="project-name" bind:this={projectNameInput} bind:value={name} maxlength="120" required aria-invalid={!!errors.name} placeholder="e.g. Website Redesign" />{#if errors.name}<span class="err" role="alert">{errors.name[0]}</span>{/if}</div>
+            <div class="field grow"><Label for="project-name">Project name</Label><Input class={errors.name ? 'is-error' : ''} id="project-name" bind:element={projectNameInput} bind:value={name} maxlength="120" required aria-invalid={!!errors.name} placeholder="e.g. Website Redesign" />{#if errors.name}<span class="err" role="alert">{errors.name[0]}</span>{/if}</div>
           </div>
           <div class="field"><Label for="project-description">Description</Label><textarea class="textarea" id="project-description" bind:value={description} rows="2" maxlength="5000" placeholder="What is this project about?"></textarea></div>
           <div class="row" style="gap:16px;align-items:flex-start;flex-wrap:wrap">
@@ -432,7 +433,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
           <div class="row" style="gap:12px;flex-wrap:wrap">
             <div class="field" style="flex:1;min-width:150px"><Label for="project-team">Team</Label><select class="select" id="project-team" bind:value={teamId}>{#each teams.length ? teams : TEAMS_SEED as team (team.id)}<option value={team.id}>{team.name}</option>{/each}</select></div>
             <div class="field" style="flex:1;min-width:150px"><Label for="project-lead">Lead</Label><select class="select" id="project-lead" bind:value={leadId}>{#each activeMembers as member (member.id)}<option value={String(member.id)}>{member.name}</option>{/each}</select></div>
-            <div class="field" style="flex:1;min-width:150px"><Label for="project-target-date">Target date</Label><input class="input" id="project-target-date" type="date" bind:value={dueDate} /></div>
+            <div class="field" style="flex:1;min-width:150px"><Label for="project-target-date">Target date</Label><Input class="" id="project-target-date" type="date" bind:value={dueDate} /></div>
           </div>
           <div class="field"><span class="label">Template</span><div class="tmpls" role="radiogroup" aria-label="Template">{#each templates as projectTemplate (projectTemplate.id)}<button type="button" role="radio" aria-checked={template === projectTemplate.id} class={`opt ${template === projectTemplate.id ? 'on' : ''}`} style="padding:10px" onclick={() => selectProjectTemplate(projectTemplate.id)}>{@html ic(projectTemplate.icon, 16)}<b style="font-size:12.5px">{projectTemplate.name}</b><span>{projectTemplate.tasks.length ? `${projectTemplate.tasks.length} starter tasks` : projectTemplate.desc}</span></button>{/each}</div></div>
         </form>

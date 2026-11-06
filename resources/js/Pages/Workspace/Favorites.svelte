@@ -1,5 +1,6 @@
 <script>
   import Label from "../../Components/Label.svelte";
+  import Input from "../../Components/Input.svelte";
   import { fade, scale } from 'svelte/transition';
   import { router, usePage } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
@@ -297,7 +298,7 @@
       <div class="modal sm" transition:scale={{ duration: 260, start: 0.97 }} role="alertdialog" aria-modal="true" aria-labelledby="favorite-project-confirm-title" aria-describedby="favorite-project-confirm-description">
         <div class="modal-b" style="padding-top:18px;gap:10px">
           <div class="row" style="gap:12px;align-items:flex-start"><span class="ftype" style={`--c:${projectConfirmation.action === 'delete' ? 'var(--red)' : 'var(--amber)'};width:34px;height:34px;border-radius:9px`}>{@html ic(projectConfirmation.action === 'delete' ? 'trash-2' : 'archive', 17)}</span><div class="grow"><h2 id="favorite-project-confirm-title" style="font-size:15px;font-weight:600;margin:4px 0 6px">{projectConfirmation.action === 'delete' ? `Delete ${projectConfirmation.project.name}?` : `Archive ${projectConfirmation.project.name}?`}</h2><p id="favorite-project-confirm-description" class="muted" style="margin:0;font-size:13px;line-height:1.55">{projectConfirmation.action === 'delete' ? `This permanently deletes the project and its ${projectConfirmation.project.tasks_count || 0} task${projectConfirmation.project.tasks_count === 1 ? '' : 's'}, files, and comments for everyone. This can't be undone.` : 'The project will be hidden from the sidebar and project lists. Tasks, files, and comments are kept, and you can restore it from Settings → Projects.'}</p></div></div>
-          {#if projectConfirmation.action === 'delete'}<div class="field" style="margin-top:6px"><Label for="favorite-project-delete-confirm">Type <b>{projectConfirmation.project.name}</b> to confirm</Label><input class="input" id="favorite-project-delete-confirm" bind:value={confirmationText} autocomplete="off" /></div>{/if}
+          {#if projectConfirmation.action === 'delete'}<div class="field" style="margin-top:6px"><Label for="favorite-project-delete-confirm">Type <b>{projectConfirmation.project.name}</b> to confirm</Label><Input class="" id="favorite-project-delete-confirm" bind:value={confirmationText} autocomplete="off" /></div>{/if}
           {#if errorMessage}<div class="err" role="alert">{@html ic('circle-alert', 12)}{errorMessage}</div>{/if}
         </div>
         <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => projectConfirmation = null}>Cancel</button><button type="button" class={projectConfirmation.action === 'delete' ? 'btn btn-danger' : 'btn btn-primary'} disabled={confirmationBusy || (projectConfirmation.action === 'delete' && confirmationText !== projectConfirmation.project.name)} onclick={confirmProjectAction}>{confirmationBusy ? 'Working…' : projectConfirmation.action === 'delete' ? 'Delete project' : 'Archive project'}</button></div>

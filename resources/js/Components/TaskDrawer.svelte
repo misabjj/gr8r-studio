@@ -1,4 +1,5 @@
 <script>
+  import Input from "./Input.svelte";
   import DOMPurify from 'dompurify';
   import { fade, scale } from 'svelte/transition';
   import { Link, router } from '@inertiajs/svelte';
@@ -692,7 +693,7 @@
         <div class="faint" style="font-size:12px;margin:4px 0 0 26px">Subtask {subtaskIndex + 1} of {subtasks.length} · {selectedSubtask.done ? 'Done' : 'Open'}</div>
         <dl class="kv" style="margin-top:16px">
           <dt>{@html ic('user', 14)}Assignee</dt><dd><select class="select" aria-label="Subtask assignee" value={selectedSubtask.assignee || ''} disabled={busy} onchange={event => updateSubtask(selectedSubtask.id, { assignee: event.currentTarget.value || null })}><option value="">Unassigned</option>{#each workspaceData.members || [] as member (member.id)}<option value={member.id}>{member.name}</option>{/each}</select></dd>
-          <dt>{@html ic('calendar', 14)}Due date</dt><dd><input class="input" type="date" aria-label="Subtask due date" value={selectedSubtask.due || ''} disabled={busy} onchange={event => updateSubtask(selectedSubtask.id, { due: event.currentTarget.value || null })} /></dd>
+          <dt>{@html ic('calendar', 14)}Due date</dt><dd><Input class="" type="date" aria-label="Subtask due date" value={selectedSubtask.due || ''} disabled={busy} onchange={event => updateSubtask(selectedSubtask.id, { due: event.currentTarget.value || null })} /></dd>
           <dt>{@html ic('folder', 14)}Parent</dt><dd><button type="button" class="pillbtn" onclick={() => selectedSubtaskId = null}><span class="mono faint" style="font-size:11px">{task.key}</span>{task.title}</button></dd>
         </dl>
         <section class="dsec"><div class="dsec-h"><h3>Notes</h3></div><textarea class="textarea" aria-label="Subtask notes" rows="4" placeholder="Add details, links, or acceptance criteria…" value={selectedSubtask.note || ''} disabled={busy} onblur={event => updateSubtask(selectedSubtask.id, { note: event.currentTarget.value })}></textarea></section>
