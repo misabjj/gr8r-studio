@@ -5,9 +5,10 @@
   import TaskDrawer from '../../Components/TaskDrawer.svelte';
   import WorkspaceTaskForm from '../../Components/WorkspaceTaskForm.svelte';
   import { update as taskUpdate } from '../../routes/tasks';
-  import { jsonRequest } from '../../lib/http.js';
+  import { useHttpRequest } from '../../lib/http.js';
   import { ic } from '@/src/core/icons.js';
 
+  const httpRequest = useHttpRequest();
   let { tasks: incomingTasks = [], projects = [], workspaceData = {} } = $props();
   let tasks = $state([]);
   let taskFormOpen = $state(false);
@@ -29,7 +30,7 @@
   }
 
   async function rescheduleTask(task, changes) {
-    const updatedTask = await jsonRequest(taskUpdate(task.id).url, 'PATCH', changes);
+    const updatedTask = await httpRequest(taskUpdate(task.id).url, 'PATCH', changes);
     updateTask(updatedTask);
   }
 

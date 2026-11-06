@@ -7,12 +7,13 @@
   import TaskDrawer from '../../Components/TaskDrawer.svelte';
   import { store as taskStore } from '../../routes/projects/tasks';
   import { update as taskUpdateRoute } from '../../routes/tasks';
-  import { jsonRequest } from '../../lib/http.js';
+  import { useHttpRequest } from '../../lib/http.js';
   import { ic } from '@/src/core/icons.js';
   import { LABELS } from '@/src/core/constants.js';
   import { S, save } from '@/src/core/store.js';
   import { viewOf } from '@/src/shell/view-engine.js';
 
+  const httpRequest = useHttpRequest();
   let { tasks: incomingTasks = [], projects = [], workspaceData = {} } = $props();
   const page = usePage();
   const savedView = viewOf('mytasks');
@@ -235,7 +236,7 @@
     const status = task.status === 'done' ? previousStatuses.get(task.id) || 'todo' : 'done';
     errorMessage = '';
     try {
-      const updated = await jsonRequest(taskUpdateRoute(task.id).url, 'PATCH', { status });
+      const updated = await httpRequest(taskUpdateRoute(task.id).url, 'PATCH', { status });
       tasks = tasks.map(item => item.id === updated.id ? { ...item, ...updated } : item);
       const nextPreviousStatuses = new Map(previousStatuses);
       if (status === 'done') nextPreviousStatuses.set(task.id, task.status);
@@ -249,7 +250,7 @@
   async function updateTask(task, values) {
     errorMessage = '';
     try {
-      const updated = await jsonRequest(taskUpdateRoute(task.id).url, 'PATCH', values);
+      const updated = await httpRequest(taskUpdateRoute(task.id).url, 'PATCH', values);
       taskUpdated(updated);
     } catch (error) {
       errorMessage = error.message;
@@ -260,7 +261,7 @@
     const project = projects.find(item => !['complete', 'completed', 'archived'].includes(item.status)) || projects[0];
     if (!project) return;
     try {
-      const created = await jsonRequest(taskStore({ project: project.id }).url, 'POST', {
+      const created = await httpRequest(taskStore({ project: project.id }).url, 'POST', {
         title,
         status: group.id === 'completed' ? 'done' : 'todo',
         due_date: group.id === 'today' ? new Date().toISOString().slice(0, 10) : group.id === 'upcoming' ? new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10) : null,

@@ -1,25 +1,22 @@
-export async function jsonRequest(url, method, data) {
-  if (localStorage.getItem('gr8r.offline') === 'true') {
-    throw new Error("Your changes couldn't be saved. You're offline.");
-  }
+import { useHttp } from '@inertiajs/svelte';
 
-  const response = await fetch(url, {
-    method,
-    credentials: 'same-origin',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-    },
-    body: JSON.stringify(data),
-  });
+export function useHttpRequest() {
+  const http = useHttp({});
 
-  const result = await response.json();
-  if (!response.ok) {
-    const error = new Error(result.message || 'The request could not be completed.');
-    error.errors = result.errors || {};
-    throw error;
-  }
+  return async function request(url, method, data = {}) {
+    if (localStorage.getItem('gr8r.offline') === 'true') {
+      throw new Error("Your changes couldn't be saved. You're offline.");
+    }
 
-  return result;
+    http.setStore(data);
+
+    const response = await http.submit(method.toLowerCase(), url);
+
+    if (http.hasErrors) {
+      const errorMessage = Object.values(http.errors).flat()[0] || 'The request could not be completed.';
+      throw new Error(errorMessage);
+    }
+
+    return response;
+  };
 }

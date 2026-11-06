@@ -4,9 +4,10 @@
   import WorkspaceTaskForm from '../../Components/WorkspaceTaskForm.svelte';
   import TaskDrawer from '../../Components/TaskDrawer.svelte';
   import { update as taskUpdate } from '../../routes/tasks';
-  import { jsonRequest } from '../../lib/http.js';
+  import { useHttpRequest } from '../../lib/http.js';
   import { toast } from '@/src/ui/toast.js';
 
+  const httpRequest = useHttpRequest();
   let { tasks: incomingTasks = [], projects = [], workspaceData = {} } = $props();
   let tasks = $state([]);
   let taskFormOpen = $state(false);
@@ -21,7 +22,7 @@
 
   async function updateTimelineTask(task, changes) {
     try {
-      const updatedTask = await jsonRequest(taskUpdate(task.id).url, 'PATCH', changes);
+      const updatedTask = await httpRequest(taskUpdate(task.id).url, 'PATCH', changes);
       tasks = tasks.map(item => item.id === updatedTask.id ? { ...item, ...updatedTask } : item);
     } catch (error) {
       toast(error.message, { kind: 'err' });

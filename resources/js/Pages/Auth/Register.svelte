@@ -1,4 +1,5 @@
 <script>
+  import { useForm } from '@inertiajs/svelte';
   import { store as registerRoute } from '../../routes/register';
   import { login } from '../../routes';
   import { ic, LOGO } from '@/src/core/icons.js';
@@ -6,46 +7,11 @@
   import AuthThemeToggle from '../../Components/AuthThemeToggle.svelte';
   import { strengthMeter } from '../../lib/password.js';
 
-  let name = $state('');
-  let email = $state('');
-  let password = $state('');
-  let busy = $state(false);
-  let errors = $state({});
+  const form = useForm({ name: '', email: '', password: '', password_confirmation: '' });
 
   async function submit(event) {
     event.preventDefault();
-    errors = {};
-    busy = true;
-
-    try {
-      const response = await fetch(registerRoute().url, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-          email: email.trim(),
-          password,
-          password_confirmation: password,
-        }),
-      });
-
-      if (response.ok && response.redirected) {
-        window.location.assign(response.url);
-        return;
-      }
-
-      const result = await response.json();
-      errors = result.errors || { register: result.message || 'We could not create your account. Try again.' };
-    } catch {
-      errors = { register: 'We could not reach the server. Check your connection and try again.' };
-    } finally {
-      busy = false;
-    }
+    form.transform(data => ({ ...data, name: data.name.trim(), email: data.email.trim(), password_confirmation: data.password })).post(registerRoute().url);
   }
 </script>
 
@@ -71,21 +37,21 @@
       <div class="or">or sign up with email</div>
       <div class="field">
         <label class="label" for="r-name">Full name</label>
-        <input class="input input-lg" class:is-error={!!errors.name} id="r-name" type="text" bind:value={name} autocomplete="name" maxlength="255" required aria-invalid={!!errors.name} />
-        {#if errors.name}<span class="err">{@html ic('circle-alert', 12)}{errors.name[0]}</span>{/if}
+        <input class="input input-lg" class:is-error={!!form.errors.name} id="r-name" type="text" bind:value={form.name} autocomplete="name" maxlength="255" required aria-invalid={!!form.errors.name} />
+        {#if form.errors.name}<span class="err">{@html ic('circle-alert', 12)}{form.errors.name}</span>{/if}
       </div>
       <div class="field">
         <label class="label" for="r-email">Work email</label>
-        <input class="input input-lg" class:is-error={!!errors.email} id="r-email" type="email" bind:value={email} autocomplete="email" required aria-invalid={!!errors.email} />
-        {#if errors.email}<span class="err">{@html ic('circle-alert', 12)}{errors.email[0]}</span>{/if}
+        <input class="input input-lg" class:is-error={!!form.errors.email} id="r-email" type="email" bind:value={form.email} autocomplete="email" required aria-invalid={!!form.errors.email} />
+        {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
       </div>
       <div class="field">
         <label class="label" for="s-pw">Password</label>
-        <input class="input input-lg" class:is-error={!!errors.password} id="s-pw" type="password" bind:value={password} autocomplete="new-password" required aria-invalid={!!errors.password} />
-        {@html strengthMeter(password)}
-        {#if errors.password}<span class="err">{@html ic('circle-alert', 12)}{errors.password[0]}</span>{:else}<span class="hint">At least 10 characters with a number or symbol.</span>{/if}
+        <input class="input input-lg" class:is-error={!!form.errors.password} id="s-pw" type="password" bind:value={form.password} autocomplete="new-password" required aria-invalid={!!form.errors.password} />
+        {@html strengthMeter(form.password)}
+        {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{:else}<span class="hint">At least 10 characters with a number or symbol.</span>{/if}
       </div>
-      <button class="btn btn-primary btn-lg btn-block" class:is-loading={busy} disabled={busy}>{busy ? 'Creating account…' : 'Create account'}</button>
+      <button class="btn btn-primary btn-lg btn-block" class:is-loading={form.processing} disabled={form.processing}>{form.processing ? 'Creating account…' : 'Create account'}</button>
       <p class="hint" style="text-align:center">By creating an account you agree to the Terms and Privacy Policy.</p>
       <p class="auth-foot">Already have an account? <a class="link" href={login.url()}>Sign in</a></p>
     </form>

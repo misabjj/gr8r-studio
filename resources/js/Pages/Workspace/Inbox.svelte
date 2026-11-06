@@ -6,7 +6,7 @@
   import { read as notificationReadRoute, readAll as notificationReadAllRoute } from '../../routes/notifications';
   import { show as projectShow } from '../../routes/projects';
   import { update as taskUpdateRoute } from '../../routes/tasks';
-  import { jsonRequest } from '../../lib/http.js';
+  import { useHttpRequest } from '../../lib/http.js';
   import { S } from '@/src/core/store.js';
   import { PCOLORS, PRIOS, STATUSES, ST } from '@/src/core/constants.js';
   import { addD, ago, diffD, fmtDate, iso, MOD, MONL, relDate, TODAY, uid, WD } from '@/src/core/utils.js';
@@ -16,6 +16,7 @@
   import { fmtComment } from '@/src/ui/helpers.js';
   import { toast } from '@/src/ui/toast.js';
 
+  const httpRequest = useHttpRequest();
   let { workspaceData = {}, tasks: initialTasks = [] } = $props();
   let category = $state(S.ui.inboxCat || 'all');
   let unreadOnly = $state(S.ui.inboxUnread || false);
@@ -122,7 +123,7 @@
     notifications = notifications.map(item => item.id === notification.id ? { ...item, read } : item);
 
     try {
-      await jsonRequest(notificationReadRoute(notification.id).url, 'PATCH', { read });
+      await httpRequest(notificationReadRoute(notification.id).url, 'PATCH', { read });
     } catch (error) {
       notifications = notifications.map(item => item.id === notification.id ? { ...item, read: previousRead } : item);
       toast(error.message || 'Could not update notification.', { kind: 'err' });
@@ -149,7 +150,7 @@
     notifications = notifications.map(notification => ({ ...notification, read: true }));
 
     try {
-      await jsonRequest(notificationReadAllRoute().url, 'PATCH', {});
+      await httpRequest(notificationReadAllRoute().url, 'PATCH', {});
     } catch (error) {
       const unreadIdSet = new Set(unreadIds);
       notifications = notifications.map(notification => unreadIdSet.has(notification.id) ? { ...notification, read: false } : notification);
@@ -237,7 +238,7 @@
     const previousTask = task;
 
     try {
-      const updated = await jsonRequest(taskUpdateRoute(task.id).url, 'PATCH', { [field]: value });
+      const updated = await httpRequest(taskUpdateRoute(task.id).url, 'PATCH', { [field]: value });
       updateTask({ ...previousTask, ...updated, project: updated.project || previousTask.project, assignee: updated.assignee || previousTask.assignee });
       let snapshotField = field;
       let snapshotValue = value;

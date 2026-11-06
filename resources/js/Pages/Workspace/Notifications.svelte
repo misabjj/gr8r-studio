@@ -5,13 +5,14 @@
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import TaskDrawer from '../../Components/TaskDrawer.svelte';
   import { show as projectShow } from '../../routes/projects';
-  import { jsonRequest } from '../../lib/http.js';
+  import { useHttpRequest } from '../../lib/http.js';
   import { toast } from '@/src/ui/toast.js';
   import { ago, dayBucket } from '@/src/core/utils.js';
   import { ic } from '@/src/core/icons.js';
   import { S } from '@/src/core/store.js';
   import { fmtComment } from '@/src/ui/helpers.js';
 
+  const httpRequest = useHttpRequest();
   let { workspaceData = {}, tasks: initialTasks = [] } = $props();
   let filter = $state(S.ui.notifFilter || 'all');
   let notifications = $state([]);
@@ -55,7 +56,7 @@
     notifications = notifications.map(item => item.id === notification.id ? { ...item, read } : item);
 
     try {
-      await jsonRequest(notificationReadRoute(notification.id).url, 'PATCH', { read });
+      await httpRequest(notificationReadRoute(notification.id).url, 'PATCH', { read });
     } catch (error) {
       notifications = notifications.map(item => item.id === notification.id ? { ...item, read: previousRead } : item);
       toast(error.message || 'Could not update notification.', { kind: 'err' });
@@ -73,7 +74,7 @@
     notifications = notifications.map(notification => ({ ...notification, read: true }));
 
     try {
-      await jsonRequest(notificationReadAllRoute().url, 'PATCH', {});
+      await httpRequest(notificationReadAllRoute().url, 'PATCH', {});
     } catch (error) {
       const unreadIdSet = new Set(unreadIds);
       notifications = notifications.map(notification => unreadIdSet.has(notification.id) ? { ...notification, read: false } : notification);

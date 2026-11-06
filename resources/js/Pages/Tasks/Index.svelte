@@ -8,7 +8,7 @@
   import TaskDrawer from '../../Components/TaskDrawer.svelte';
   import { index as tasksIndexRoute, update as taskUpdate } from '../../routes/tasks';
   import { store as storeTaskRoute } from '../../routes/projects/tasks';
-  import { jsonRequest } from '../../lib/http.js';
+  import { useHttpRequest } from '../../lib/http.js';
   import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
   import { show as projectShow } from '../../routes/projects';
   import { LABELS } from '@/src/core/constants.js';
@@ -18,6 +18,7 @@
   import { ic } from '@/src/core/icons.js';
   import { lbl, prIcon, prPill, stIcon, stPill } from '@/src/ui/helpers.js';
 
+  const httpRequest = useHttpRequest();
   let { tasks: incomingTasks = [], projects = [], members = [], workspaceData = {}, defaultFilter = 'all' } = $props();
   const savedTaskView = viewOf('tasks');
   let tasks = $state([]);
@@ -583,7 +584,7 @@
   async function updateTask(task, values) {
     errorMessage = '';
     try {
-      const updated = await jsonRequest(taskUpdate(task.id).url, 'PATCH', values);
+      const updated = await httpRequest(taskUpdate(task.id).url, 'PATCH', values);
       tasks = tasks.map(item => item.id === updated.id ? { ...item, ...updated } : item);
     } catch (error) {
       errorMessage = error.message;
@@ -599,7 +600,7 @@
     if (!projectId) return;
 
     try {
-      const task = await jsonRequest(storeTaskRoute({ project: projectId }).url, 'POST', {
+      const task = await httpRequest(storeTaskRoute({ project: projectId }).url, 'POST', {
         title,
         status: isStatusGroup ? group.id : 'todo',
         priority: 'none',

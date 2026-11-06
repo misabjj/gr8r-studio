@@ -12,13 +12,14 @@
   import InviteMemberDialog from '../../Components/InviteMemberDialog.svelte';
   import TaskDrawer from '../../Components/TaskDrawer.svelte';
   import { setNavigationIntent } from '../../lib/navigation-intents.js';
-  import { jsonRequest } from '../../lib/http.js';
+  import { useHttpRequest } from '../../lib/http.js';
   import { ic } from '@/src/core/icons.js';
   import { PCOLORS, PR, PSTAT, ST } from '@/src/core/constants.js';
   import { S } from '@/src/core/store.js';
   import { dueHtml, prIcon, stIcon } from '@/src/ui/helpers.js';
   import { ago, DAY, diffD, fmtDate, parse, TODAY } from '@/src/core/utils.js';
 
+  const httpRequest = useHttpRequest();
   let { projects = [], tasks = [], myTasks = [], stats = {}, workspaceData = {} } = $props();
   const page = usePage();
   let localTasks = $state([]);
@@ -132,7 +133,7 @@
     errorMessage = '';
     const nextStatus = task.status === 'done' ? 'todo' : 'done';
     try {
-      const updated = await jsonRequest(updateTaskRoute(task.database_id || task.id).url, 'PATCH', { status: nextStatus });
+      const updated = await httpRequest(updateTaskRoute(task.database_id || task.id).url, 'PATCH', { status: nextStatus });
       const completedAt = nextStatus === 'done' ? Date.now() : null;
       localTasks = localTasks.map(item => item.id === task.id ? { ...item, status: updated.status, completedAt } : item);
       localMyTasks = localMyTasks.map(item => item.id === task.id ? { ...item, status: updated.status, completedAt } : item);

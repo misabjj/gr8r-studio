@@ -2106,7 +2106,6 @@ A.doLogin = async () => {
       remember: $('#l-rem')?.checked ?? false,
     });
     if (result.authenticated) {
-      window.location.assign(result.destination);
       return;
     }
     if (Object.keys(result.errors).length) {

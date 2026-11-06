@@ -1,49 +1,16 @@
 <script>
+  import { useForm } from '@inertiajs/svelte';
   import { update as resetPassword } from '../../routes/password';
   import { ic, LOGO } from '@/src/core/icons.js';
   import AuthThemeToggle from '../../Components/AuthThemeToggle.svelte';
   import { strengthMeter } from '../../lib/password.js';
 
   let { email: initialEmail = '', token } = $props();
-  let password = $state('');
-  let passwordConfirmation = $state('');
-  let busy = $state(false);
-  let errors = $state({});
+  const form = useForm(() => ({ token, email: initialEmail, password: '', password_confirmation: '' }));
 
   async function submit(event) {
     event.preventDefault();
-    busy = true;
-    errors = {};
-
-    try {
-      const response = await fetch(resetPassword().url, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-        },
-        body: JSON.stringify({
-          token,
-          email: initialEmail.trim(),
-          password,
-          password_confirmation: passwordConfirmation,
-        }),
-      });
-
-      if (response.ok && response.redirected) {
-        window.location.assign(response.url);
-        return;
-      }
-
-      const result = await response.json();
-      errors = result.errors || { form: result.message || 'We could not reset your password. Request a new link and try again.' };
-    } catch {
-      errors = { form: 'We could not reach the server. Check your connection and try again.' };
-    } finally {
-      busy = false;
-    }
+    form.transform(data => ({ ...data, email: data.email.trim() })).post(resetPassword().url);
   }
 </script>
 
@@ -57,21 +24,20 @@
       <div style="display:flex;justify-content:center">{@html LOGO(30)}</div>
       <h1>Choose a new password</h1>
       <p class="sub">for {initialEmail}</p>
-      <input type="hidden" name="token" value={token} />
+        <input type="hidden" name="token" value={form.token} />
       <div class="field">
         <label class="label" for="r-pw">New password</label>
-        <input class="input input-lg" class:is-error={!!errors.password} id="r-pw" type="password" bind:value={password} autocomplete="new-password" aria-invalid={!!errors.password} />
-        {@html strengthMeter(password)}
-        {#if errors.password}<span class="err">{@html ic('circle-alert', 12)}{errors.password[0]}</span>{/if}
-        {#if errors.form}<span class="err">{@html ic('circle-alert', 12)}{errors.form}</span>{/if}
+        <input class="input input-lg" class:is-error={!!form.errors.password} id="r-pw" type="password" bind:value={form.password} autocomplete="new-password" aria-invalid={!!form.errors.password} />
+        {@html strengthMeter(form.password)}
+        {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{/if}
       </div>
       <div class="field">
         <label class="label" for="r-pw2">Confirm password</label>
-        <input class="input input-lg" class:is-error={!!errors.password_confirmation} id="r-pw2" type="password" bind:value={passwordConfirmation} autocomplete="new-password" aria-invalid={!!errors.password_confirmation} />
-        {#if errors.password_confirmation}<span class="err">{@html ic('circle-alert', 12)}{errors.password_confirmation[0]}</span>{/if}
-        {#if errors.email}<span class="err">{@html ic('circle-alert', 12)}{errors.email[0]}</span>{/if}
+        <input class="input input-lg" class:is-error={!!form.errors.password_confirmation} id="r-pw2" type="password" bind:value={form.password_confirmation} autocomplete="new-password" aria-invalid={!!form.errors.password_confirmation} />
+        {#if form.errors.password_confirmation}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password_confirmation}</span>{/if}
+        {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
       </div>
-      <button class="btn btn-primary btn-lg btn-block" disabled={busy}>Reset password</button>
+      <button class="btn btn-primary btn-lg btn-block" class:is-loading={form.processing} disabled={form.processing}>{form.processing ? 'Resetting…' : 'Reset password'}</button>
     </form>
   </div>
   <div class="auth-foot" style="padding:18px;font-size:12px"><span class="faint">© 2026 Gr8r Studio · Terms · Privacy</span></div>

@@ -6,7 +6,7 @@
   import { index as membersIndex, show as memberShow } from '../../routes/members';
   import { show as projectShow } from '../../routes/projects';
   import { index as tasksIndex, update as taskUpdate } from '../../routes/tasks';
-  import { jsonRequest } from '../../lib/http.js';
+  import { useHttpRequest } from '../../lib/http.js';
   import { setNavigationIntent } from '../../lib/navigation-intents.js';
   import { ago, minsAgo } from '@/src/core/utils.js';
   import { ic } from '@/src/core/icons.js';
@@ -14,6 +14,7 @@
   import { PCOLORS } from '@/src/core/constants.js';
   import { D, isOver, save } from '@/src/core/store.js';
 
+  const httpRequest = useHttpRequest();
   let { memberId, teams = [], workspaceData = {} } = $props();
   const page = usePage();
   let tab = $state('assigned');
@@ -182,7 +183,7 @@
 
   async function toggleTask(task) {
     const nextStatus = task.status === 'done' ? 'todo' : 'done';
-    const updated = await jsonRequest(taskUpdate(task.database_id).url, 'PATCH', { status: nextStatus });
+    const updated = await httpRequest(taskUpdate(task.database_id).url, 'PATCH', { status: nextStatus });
     workspaceTasks = workspaceTasks.map(item => String(item.database_id) === String(updated.id)
       ? { ...item, status: updated.status }
       : item);

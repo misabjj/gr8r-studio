@@ -1,12 +1,13 @@
 <script>
   import { fade } from 'svelte/transition';
   import { tick } from 'svelte';
-  import { jsonRequest } from '../lib/http.js';
+  import { useHttpRequest } from '../lib/http.js';
   import { destroy as deleteTeam, store as createTeam, update as updateTeam } from '../routes/teams';
   import { PCOLORS, PICONS } from '@/src/core/constants.js';
   import { ic } from '@/src/core/icons.js';
   import { toast } from '@/src/ui/toast.js';
 
+  const httpRequest = useHttpRequest();
   let { team, members = [], teams = [], projects = [], isCreate = false, onClose, onUpdated, onDeleted, onCreated } = $props();
   let name = $state('');
   let description = $state('');
@@ -54,7 +55,7 @@
 
     try {
       const teamRoute = isCreate ? createTeam() : updateTeam(team.id);
-      const savedTeam = await jsonRequest(teamRoute.url, isCreate ? 'POST' : 'PATCH', {
+      const savedTeam = await httpRequest(teamRoute.url, isCreate ? 'POST' : 'PATCH', {
         name: name.trim(),
         description: description.trim() || null,
         icon,
@@ -80,7 +81,7 @@
     busy = true;
 
     try {
-      await jsonRequest(deleteTeam(team.id).url, 'DELETE', {});
+      await httpRequest(deleteTeam(team.id).url, 'DELETE', {});
       onDeleted();
       toast(`Deleted ${team.name}`);
     } catch (error) {

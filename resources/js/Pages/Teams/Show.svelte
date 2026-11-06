@@ -7,11 +7,12 @@
   import { show as memberShow } from '../../routes/members';
   import { index as membersIndex } from '../../routes/members';
   import { update as taskUpdate } from '../../routes/tasks';
-  import { jsonRequest } from '../../lib/http.js';
+  import { useHttpRequest } from '../../lib/http.js';
   import { PCOLORS, PSTAT } from '@/src/core/constants.js';
   import { ic } from '@/src/core/icons.js';
   import { dueHtml, prIcon, progBar, pStatus, stIcon } from '@/src/ui/helpers.js';
 
+  const httpRequest = useHttpRequest();
   let { team, workspaceData = {} } = $props();
   const page = usePage();
   let teamName = $state('');
@@ -116,7 +117,7 @@
   async function toggleTask(task) {
     taskError = '';
     try {
-      const updated = await jsonRequest(taskUpdate(task.database_id).url, 'PATCH', {
+      const updated = await httpRequest(taskUpdate(task.database_id).url, 'PATCH', {
         status: task.status === 'done' ? 'todo' : 'done',
       });
       tasks = tasks.map(item => String(item.database_id) === String(updated.id)

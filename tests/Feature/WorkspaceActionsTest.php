@@ -1300,6 +1300,20 @@ it('does not reveal whether an email address has an account', function () {
     Notification::assertNothingSent();
 });
 
+it('shows the password reset confirmation on the forgot password page', function () {
+    $message = 'If an account exists for that email, reset instructions will be sent.';
+
+    $this->from('/forgot-password')->post('/forgot-password', ['email' => 'unknown@example.com'])
+        ->assertRedirect('/forgot-password')
+        ->assertSessionHas('status', $message);
+
+    $this->get('/forgot-password')
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Auth/ForgotPassword')
+            ->where('status', $message));
+});
+
 it('renders the password reset page with its token and email', function () {
     $user = User::factory()->create(['email' => 'misa@example.com']);
     $token = Password::createToken($user);

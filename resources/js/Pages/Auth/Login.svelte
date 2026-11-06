@@ -1,4 +1,5 @@
 <script>
+  import { useForm } from '@inertiajs/svelte';
   import { tick } from 'svelte';
   import { register } from '../../routes';
   import { store as loginRoute } from '../../routes/login';
@@ -8,12 +9,8 @@
   import AuthThemeToggle from '../../Components/AuthThemeToggle.svelte';
 
   let { status = null } = $props();
-  let email = $state('hello@gr8rstudio.com');
-  let password = $state('');
-  let remember = $state(true);
   let showPassword = $state(false);
-  let busy = $state(false);
-  let errors = $state({});
+  const form = useForm({ email: 'hello@gr8rstudio.com', password: '', remember: true });
 
   async function togglePasswordVisibility() {
     showPassword = !showPassword;
@@ -23,33 +20,7 @@
 
   async function submit(event) {
     event.preventDefault();
-    errors = {};
-    busy = true;
-
-    try {
-      const response = await fetch(loginRoute().url, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-        },
-        body: JSON.stringify({ email: email.trim(), password, remember }),
-      });
-
-      if (response.ok && response.redirected) {
-        window.location.assign(response.url);
-        return;
-      }
-
-      const result = await response.json();
-      errors = result.errors || { login: result.message || 'We could not sign you in. Try again.' };
-    } catch {
-      errors = { login: 'We could not reach the server. Check your connection and try again.' };
-    } finally {
-      busy = false;
-    }
+    form.transform(data => ({ ...data, email: data.email.trim() })).post(loginRoute().url);
   }
 </script>
 
@@ -71,22 +42,22 @@
       <h1>Welcome back</h1>
       <p class="sub">Sign in to Gr8r Studio</p>
       {#if status}<div class="alert ok" role="status">{@html ic('circle-check', 15)}<span>{status}</span></div>{/if}
-      {#if errors.login}<div class="alert danger" role="alert">{@html ic('circle-alert', 15)}<span>{errors.login}</span></div>{/if}
+      {#if form.errors.login}<div class="alert danger" role="alert">{@html ic('circle-alert', 15)}<span>{form.errors.login}</span></div>{/if}
       <div class="field">
         <label class="label" for="l-email">Email</label>
-        <input class="input input-lg" class:is-error={!!errors.email} id="l-email" type="email" bind:value={email} autocomplete="email" aria-invalid={!!errors.email} />
-        {#if errors.email}<span class="err">{@html ic('circle-alert', 12)}{errors.email[0]}</span>{/if}
+        <input class="input input-lg" class:is-error={!!form.errors.email} id="l-email" type="email" bind:value={form.email} autocomplete="email" aria-invalid={!!form.errors.email} />
+        {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
       </div>
       <div class="field">
         <div class="row"><label class="label" for="l-pw">Password</label><span class="sp"></span><a class="link" href={passwordRequest.url()}>Forgot password?</a></div>
         <div class="inwrap">
-          <input class="input input-lg auth-password-input" id="l-pw" type={showPassword ? 'text' : 'password'} bind:value={password} autocomplete="current-password" style="padding-right:38px" aria-invalid={!!errors.password} />
+          <input class="input input-lg auth-password-input" id="l-pw" type={showPassword ? 'text' : 'password'} bind:value={form.password} autocomplete="current-password" style="padding-right:38px" aria-invalid={!!form.errors.password} />
           <button type="button" class="ibtn ibtn-sm" style="position:absolute;right:5px" onclick={togglePasswordVisibility} aria-label={showPassword ? 'Hide password' : 'Show password'}>{@html ic(showPassword ? 'eye-off' : 'eye', 15)}</button>
         </div>
-        {#if errors.password}<span class="err">{@html ic('circle-alert', 12)}{errors.password[0]}</span>{/if}
+        {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{/if}
       </div>
-      <label class="row" style="font-size:13px;gap:8px;cursor:pointer"><input type="checkbox" class="check" bind:checked={remember} />Remember me for 30 days</label>
-      <button class="btn btn-primary btn-lg btn-block" class:is-loading={busy} disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+      <label class="row" style="font-size:13px;gap:8px;cursor:pointer"><input type="checkbox" class="check" bind:checked={form.remember} />Remember me for 30 days</label>
+      <button class="btn btn-primary btn-lg btn-block" class:is-loading={form.processing} disabled={form.processing}>{form.processing ? 'Signing in…' : 'Sign in'}</button>
       <div class="or">or</div>
       <AuthSocialButtons />
       <p class="auth-foot">Don't have an account? <a class="link" href={register.url()}>Sign up</a></p>

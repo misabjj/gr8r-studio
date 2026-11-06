@@ -5,7 +5,7 @@
   import { Link, router, usePage } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
 import { destroy as projectDestroy, duplicate as projectDuplicate, favorite as projectFavorite, show as projectShow, store as projectStore, update as projectUpdate } from '../../routes/projects';
-  import { jsonRequest } from '../../lib/http.js';
+  import { useHttpRequest } from '../../lib/http.js';
   import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
 import { setNavigationIntent } from '../../lib/navigation-intents.js';
 import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
@@ -13,6 +13,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
   import { PCOLORS, PICONS, PSTAT, TEAMS_SEED } from '@/src/core/constants.js';
   import { ago, fmtDate } from '@/src/core/utils.js';
 
+  const httpRequest = useHttpRequest();
   let { projects: incomingProjects = [], teams = [], members = [] } = $props();
   const page = usePage();
   let projects = $state([]);
@@ -183,7 +184,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
 
     if (action === 'favorite') {
       try {
-        const updatedProject = await jsonRequest(projectFavorite(selectedProject.id).url, 'PATCH', {});
+        const updatedProject = await httpRequest(projectFavorite(selectedProject.id).url, 'PATCH', {});
         projects = projects.map(project => project.id === selectedProject.id
           ? { ...project, is_favorite: updatedProject.is_favorite }
           : project);
@@ -195,7 +196,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
 
     if (action === 'duplicate') {
       try {
-        const copy = await jsonRequest(projectDuplicate(selectedProject.id).url, 'POST', {});
+        const copy = await httpRequest(projectDuplicate(selectedProject.id).url, 'POST', {});
         toast(`Duplicated ${selectedProject.name}`, {
           action: 'Open',
           onAction: () => router.visit(projectShow(copy.id).url),
@@ -244,10 +245,10 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
 
     try {
       if (confirmation.action === 'archive') {
-        await jsonRequest(projectUpdate(confirmation.project.id).url, 'PATCH', { status: 'archived' });
+        await httpRequest(projectUpdate(confirmation.project.id).url, 'PATCH', { status: 'archived' });
         toast(`Archived ${confirmation.project.name}`);
       } else {
-        await jsonRequest(projectDestroy(confirmation.project.id).url, 'DELETE', {});
+        await httpRequest(projectDestroy(confirmation.project.id).url, 'DELETE', {});
         toast(`Deleted ${confirmation.project.name}`);
       }
       projectConfirmation = null;
@@ -282,7 +283,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
     busy = true;
     errors = {};
     try {
-      const project = await jsonRequest(projectStore().url, 'POST', {
+      const project = await httpRequest(projectStore().url, 'POST', {
         name: name.trim(),
         key: makeKey(name),
         description: description.trim() || null,

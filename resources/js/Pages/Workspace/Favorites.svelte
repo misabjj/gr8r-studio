@@ -4,13 +4,14 @@
   import TaskDrawer from '../../Components/TaskDrawer.svelte';
   import { index as projectsIndex, show as projectShow, favorite as projectFavorite } from '../../routes/projects';
   import { update as taskUpdate } from '../../routes/tasks';
-  import { jsonRequest } from '../../lib/http.js';
+  import { useHttpRequest } from '../../lib/http.js';
   import { ago, fmtDate, minsAgo } from '@/src/core/utils.js';
   import { ic } from '@/src/core/icons.js';
   import { PCOLORS, PR, PSTAT, ST } from '@/src/core/constants.js';
   import { prIcon, stIcon } from '@/src/ui/helpers.js';
   import { dueHtml } from '@/src/ui/helpers.js';
 
+  const httpRequest = useHttpRequest();
   let { projects: initialProjects = [], tasks: initialTasks = [], workspaceData = {} } = $props();
   const page = usePage();
   let projects = $state([]);
@@ -94,7 +95,7 @@
     if (action === 'favorite') {
       errorMessage = '';
       try {
-        const updatedProject = await jsonRequest(projectFavorite(selectedProject.id).url, 'PATCH', {});
+        const updatedProject = await httpRequest(projectFavorite(selectedProject.id).url, 'PATCH', {});
         projects = projects.map(project => project.id === selectedProject.id
           ? { ...project, is_favorite: updatedProject.is_favorite }
           : project);
@@ -137,7 +138,7 @@
     const status = task.status === 'done' ? previousStatuses.get(task.id) || 'todo' : 'done';
     errorMessage = '';
     try {
-      const updated = await jsonRequest(taskUpdate(task.id).url, 'PATCH', { status });
+      const updated = await httpRequest(taskUpdate(task.id).url, 'PATCH', { status });
       tasks = tasks.map(item => item.id === updated.id ? { ...item, ...updated } : item);
       const nextPreviousStatuses = new Map(previousStatuses);
       if (status === 'done') nextPreviousStatuses.set(task.id, task.status);

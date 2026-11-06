@@ -45,7 +45,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Auth\ForgotPasswordController::store
-* @see app/Http/Controllers/Auth/ForgotPasswordController.php:20
+* @see app/Http/Controllers/Auth/ForgotPasswordController.php:22
 * @route '/forgot-password'
 */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -60,7 +60,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Auth\ForgotPasswordController::store
-* @see app/Http/Controllers/Auth/ForgotPasswordController.php:20
+* @see app/Http/Controllers/Auth/ForgotPasswordController.php:22
 * @route '/forgot-password'
 */
 store.url = (options?: RouteQueryOptions) => {
@@ -69,7 +69,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Auth\ForgotPasswordController::store
-* @see app/Http/Controllers/Auth/ForgotPasswordController.php:20
+* @see app/Http/Controllers/Auth/ForgotPasswordController.php:22
 * @route '/forgot-password'
 */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

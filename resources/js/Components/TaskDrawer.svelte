@@ -4,7 +4,7 @@
   import { Link, router } from '@inertiajs/svelte';
   import { archive as archiveTaskRoute, destroy as deleteTaskRoute, favorite as taskFavorite, update as taskUpdate } from '../routes/tasks';
   import { show as projectShow } from '../routes/projects';
-  import { jsonRequest } from '../lib/http.js';
+  import { useHttpRequest } from '../lib/http.js';
   import { store as storeTask } from '../routes/projects/tasks';
   import { ic } from '@/src/core/icons.js';
   import { filePrev, fmtComment, FT, fsize, fileType, lbl, prIcon, prPill, progBar, stIcon, stPill } from '@/src/ui/helpers.js';
@@ -15,6 +15,7 @@
   import { toast } from '@/src/ui/toast.js';
   import WorkspaceTaskForm from './WorkspaceTaskForm.svelte';
 
+  const httpRequest = useHttpRequest();
   let { task, workspaceData = {}, onClose, onUpdated } = $props();
   let full = $state(false);
   let entering = $state(true);
@@ -400,7 +401,7 @@
     busy = true;
     errorMessage = '';
     try {
-      const updated = await jsonRequest(taskUpdate(task.id).url, 'PATCH', values);
+      const updated = await httpRequest(taskUpdate(task.id).url, 'PATCH', values);
       onUpdated({ ...task, ...updated, project: updated.project || task.project, assignee: updated.assignee || task.assignee });
       return true;
     } catch (error) {
@@ -448,7 +449,7 @@
     errorMessage = '';
     try {
       const assigneeId = membersBySourceKey.get(subtask.assignee)?.database_id || task.assignee_id || null;
-      await jsonRequest(storeTask({ project: task.project_id }).url, 'POST', {
+      await httpRequest(storeTask({ project: task.project_id }).url, 'POST', {
         title: subtask.title,
         description: subtask.note || null,
         status: subtask.done ? 'done' : 'todo',
@@ -520,7 +521,7 @@
     busy = true;
     errorMessage = '';
     try {
-      const updated = await jsonRequest(taskFavorite(task.id).url, 'PATCH', {});
+      const updated = await httpRequest(taskFavorite(task.id).url, 'PATCH', {});
       onUpdated({ ...task, ...updated, project: task.project, assignee: task.assignee });
     } catch (error) {
       errorMessage = error.message;
@@ -576,7 +577,7 @@
     busy = true;
     errorMessage = '';
     try {
-      await jsonRequest(storeTask({ project: task.project_id }).url, 'POST', {
+      await httpRequest(storeTask({ project: task.project_id }).url, 'POST', {
         title: `${task.title} (copy)`,
         description: task.description || null,
         status: task.status,
@@ -611,7 +612,7 @@
     busy = true;
     errorMessage = '';
     try {
-      await jsonRequest(archiveTaskRoute(task.id).url, 'PATCH', {});
+      await httpRequest(archiveTaskRoute(task.id).url, 'PATCH', {});
       toast(`Archived “${task.title}”`);
       onClose();
       router.reload({ preserveScroll: true });
@@ -626,7 +627,7 @@
     busy = true;
     errorMessage = '';
     try {
-      await jsonRequest(deleteTaskRoute(task.id).url, 'DELETE', {});
+      await httpRequest(deleteTaskRoute(task.id).url, 'DELETE', {});
       confirmDeleteOpen = false;
       toast(`Deleted “${task.title}”`);
       onClose();

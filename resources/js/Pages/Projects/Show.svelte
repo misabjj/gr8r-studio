@@ -13,7 +13,7 @@
 import { destroy as projectDestroy, duplicate as projectDuplicate, favorite as projectFavorite, index as projectsIndex, update as projectUpdate } from '../../routes/projects';
   import { update as projectMembersUpdate } from '../../routes/projects/members';
   import { show as teamShow } from '../../routes/teams';
-  import { jsonRequest } from '../../lib/http.js';
+  import { useHttpRequest } from '../../lib/http.js';
 import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
   import { ago, dayBucket, fmtDate, relDate, uid } from '@/src/core/utils.js';
   import { save as saveWorkspaceStore } from '@/src/core/store.js';
@@ -23,6 +23,7 @@ import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
   import { LABELS, PCOLORS, PSTAT, TEAMS_SEED } from '@/src/core/constants.js';
   import { FT, filePrev, fileType as getFileType, fsize, lbl, prIcon, stIcon } from '@/src/ui/helpers.js';
 
+  const httpRequest = useHttpRequest();
   let { project, projects = [], workspaceData = {}, activeTab = 'board' } = $props();
   const page = usePage();
   let tasks = $state([]);
@@ -448,7 +449,7 @@ import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
   async function updateTableTask(task, changes, keepMenu = false) {
     if (!keepMenu) tableCellMenu = null;
     try {
-      const updated = await jsonRequest(taskUpdate(task.id).url, 'PATCH', changes);
+      const updated = await httpRequest(taskUpdate(task.id).url, 'PATCH', changes);
       tasks = tasks.map(item => item.id === updated.id ? { ...item, ...updated } : item);
       return true;
     } catch (error) {
@@ -506,7 +507,7 @@ import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
 
   async function updateSavedViewTask(task, values) {
     try {
-      const updatedTask = await jsonRequest(taskUpdate(task.id).url, 'PATCH', values);
+      const updatedTask = await httpRequest(taskUpdate(task.id).url, 'PATCH', values);
       taskUpdated(updatedTask);
     } catch (error) {
       savedViewError = error.message;
@@ -515,7 +516,7 @@ import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
 
   async function updateProjectListTask(task, values) {
     try {
-      const updatedTask = await jsonRequest(taskUpdate(task.id).url, 'PATCH', values);
+      const updatedTask = await httpRequest(taskUpdate(task.id).url, 'PATCH', values);
       taskUpdated(updatedTask);
     } catch (error) {
       errorMessage = error.message;
@@ -524,7 +525,7 @@ import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
 
   async function createSavedViewTask(title, group) {
     try {
-      const createdTask = await jsonRequest(taskStore({ project: project.id }).url, 'POST', {
+      const createdTask = await httpRequest(taskStore({ project: project.id }).url, 'POST', {
         title,
         status: group.id,
         priority: 'medium',
@@ -537,7 +538,7 @@ import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
 
   async function createProjectListTask(title, group) {
     try {
-      const createdTask = await jsonRequest(taskStore({ project: project.id }).url, 'POST', {
+      const createdTask = await httpRequest(taskStore({ project: project.id }).url, 'POST', {
         title,
         status: group.id,
         priority: 'medium',
@@ -741,7 +742,7 @@ import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
     if (task.status === nextStatus) return;
     errorMessage = '';
     try {
-      const updated = await jsonRequest(taskUpdate(task.id).url, 'PATCH', { status: nextStatus });
+      const updated = await httpRequest(taskUpdate(task.id).url, 'PATCH', { status: nextStatus });
       tasks = tasks.map(item => item.id === updated.id ? { ...item, ...updated } : item);
     } catch (error) {
       errorMessage = error.message;
@@ -942,7 +943,7 @@ import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
 
   async function toggleFavorite() {
     try {
-      const updated = await jsonRequest(projectFavorite(project.id).url, 'PATCH', {});
+      const updated = await httpRequest(projectFavorite(project.id).url, 'PATCH', {});
       isFavorite = updated.is_favorite;
       project.is_favorite = updated.is_favorite;
     } catch (error) {
@@ -981,7 +982,7 @@ import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
   async function updateProject(changes) {
     projectDialogError = '';
     try {
-      const updated = await jsonRequest(projectUpdate(project.id).url, 'PATCH', changes);
+      const updated = await httpRequest(projectUpdate(project.id).url, 'PATCH', changes);
       Object.assign(project, updated);
       return true;
     } catch (error) {
@@ -1029,7 +1030,7 @@ import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
 
     if (action === 'duplicate') {
       try {
-        const copy = await jsonRequest(projectDuplicate(project.id).url, 'POST', {});
+        const copy = await httpRequest(projectDuplicate(project.id).url, 'POST', {});
         toast(`Duplicated ${project.name}`, {
           action: 'Open',
           onAction: () => router.visit(projectShow(copy.id).url),
@@ -1079,10 +1080,10 @@ import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
 
     try {
       if (action === 'archive') {
-        await jsonRequest(projectUpdate(project.id).url, 'PATCH', { status: 'archived' });
+        await httpRequest(projectUpdate(project.id).url, 'PATCH', { status: 'archived' });
         toast(`Archived ${project.name}`);
       } else {
-        await jsonRequest(projectDestroy(project.id).url, 'DELETE', {});
+        await httpRequest(projectDestroy(project.id).url, 'DELETE', {});
         toast(`Deleted ${project.name}`);
       }
       projectConfirmation = null;
@@ -1104,7 +1105,7 @@ import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
     memberDialogError = '';
     projectDialogBusy = true;
     try {
-      const result = await jsonRequest(projectMembersUpdate(project.id).url, 'PUT', { members: selectedMemberIds });
+      const result = await httpRequest(projectMembersUpdate(project.id).url, 'PUT', { members: selectedMemberIds });
       project.members = result.members;
       membersDialogOpen = false;
     } catch (error) {

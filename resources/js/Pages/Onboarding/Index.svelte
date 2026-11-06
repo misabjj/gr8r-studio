@@ -3,10 +3,11 @@
   import { router } from '@inertiajs/svelte';
   import { store as storeProject, show as showProject } from '../../routes/projects';
   import { home } from '../../routes';
-  import { jsonRequest } from '../../lib/http.js';
+  import { useHttpRequest } from '../../lib/http.js';
   import { S, save } from '@/src/core/store.js';
   import { ic } from '@/src/core/icons.js';
 
+  const httpRequest = useHttpRequest();
   let authModule = $state(null);
   let templates = $state([]);
   let revision = $state(0);
@@ -134,7 +135,7 @@
     const projectName = onboarding.proj.trim() || 'Website Launch';
     const key = projectName.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8) || 'PROJECT';
     try {
-      const project = await jsonRequest(storeProject().url, 'POST', {
+      const project = await httpRequest(storeProject().url, 'POST', {
         name: projectName,
         key,
         description: `Created during setup from the ${templates.find(item => item.id === onboarding.tmpl)?.name || 'project'} template.`,

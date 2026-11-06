@@ -5,13 +5,14 @@
   import { usePage } from '@inertiajs/svelte';
   import { store as taskStore } from '../routes/projects/tasks';
   import { update as taskUpdate } from '../routes/tasks';
-  import { jsonRequest } from '../lib/http.js';
+  import { useHttpRequest } from '../lib/http.js';
   import { ic } from '@/src/core/icons.js';
   import { S } from '@/src/core/store.js';
   import { LABELS, PCOLORS } from '@/src/core/constants.js';
   import { addD, diffD, fmtDate, iso, MONL, TODAY, WD } from '@/src/core/utils.js';
   import { FT, fileType, fsize, prIcon, stIcon } from '@/src/ui/helpers.js';
 
+  const httpRequest = useHttpRequest();
   let {
     open = false,
     projects = [],
@@ -444,13 +445,13 @@
       };
 
       if (editingTask) {
-        const updatedTask = await jsonRequest(taskUpdate(editingTask.id).url, 'PATCH', taskData);
+        const updatedTask = await httpRequest(taskUpdate(editingTask.id).url, 'PATCH', taskData);
         onUpdated(updatedTask);
         onClose();
         return;
       }
 
-      const task = await jsonRequest(taskStore({ project: targetProjectId }).url, 'POST', {
+      const task = await httpRequest(taskStore({ project: targetProjectId }).url, 'POST', {
         ...taskData,
         attachments,
       });
