@@ -1,7 +1,7 @@
 <script>
   import { onMount, tick } from 'svelte';
   import { fade, scale } from 'svelte/transition';
-  import { Link, usePage } from '@inertiajs/svelte';
+  import { Link, router, usePage } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
   import WorkspaceTaskForm from '../../Components/WorkspaceTaskForm.svelte';
   import TaskDrawer from '../../Components/TaskDrawer.svelte';
@@ -10,11 +10,11 @@
   import WorkspaceTaskList from '../../Components/WorkspaceTaskList.svelte';
   import { update as taskUpdate } from '../../routes/tasks';
   import { store as taskStore } from '../../routes/projects/tasks';
-import { destroy as projectDestroy, duplicate as projectDuplicate, favorite as projectFavorite, index as projectsIndex, update as projectUpdate } from '../../routes/projects';
+  import { destroy as projectDestroy, duplicate as projectDuplicate, favorite as projectFavorite, index as projectsIndex, update as projectUpdate } from '../../routes/projects';
   import { update as projectMembersUpdate } from '../../routes/projects/members';
   import { show as teamShow } from '../../routes/teams';
   import { useHttpRequest } from '../../lib/http.js';
-import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
+  import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
   import { ago, dayBucket, fmtDate, relDate, uid } from '@/src/core/utils.js';
   import { save as saveWorkspaceStore } from '@/src/core/store.js';
   import { S } from '@/src/core/store.js';
