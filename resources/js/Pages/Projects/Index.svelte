@@ -4,10 +4,11 @@
   import { onMount } from 'svelte';
   import { Link, router, usePage } from '@inertiajs/svelte';
   import AppLayout from '../../Layouts/AppLayout.svelte';
-  import { favorite as projectFavorite, show as projectShow, store as projectStore } from '../../routes/projects';
+import { destroy as projectDestroy, duplicate as projectDuplicate, favorite as projectFavorite, show as projectShow, store as projectStore, update as projectUpdate } from '../../routes/projects';
   import { jsonRequest } from '../../lib/http.js';
   import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
-  import { S } from '@/src/core/store.js';
+import { setNavigationIntent } from '../../lib/navigation-intents.js';
+import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
   import { ic } from '@/src/core/icons.js';
   import { PCOLORS, PICONS, PSTAT, TEAMS_SEED } from '@/src/core/constants.js';
   import { ago, fmtDate } from '@/src/core/utils.js';
@@ -37,6 +38,9 @@
   let busy = $state(false);
   let errors = $state({});
   let projectMenu = $state(null);
+  let projectConfirmation = $state(null);
+  let confirmationText = $state('');
+  let confirmationBusy = $state(false);
   const teamsById = new Map(TEAMS_SEED.map(team => [team.id, team]));
   const templates = [
     { id: 'blank', name: 'Blank project', icon: 'file', desc: 'Start from scratch', tasks: [] },
@@ -124,7 +128,7 @@
     router.visit(projectShow(projectId).url);
   }
 
-  function openProjectMenu(event, projectId) {
+  async function openProjectMenu(event, projectId) {
     event.stopPropagation();
     if (projectMenu?.projectId === projectId) {
       projectMenu = null;
@@ -135,7 +139,15 @@
     projectMenu = {
       projectId,
       left: Math.max(8, Math.min(bounds.right - 220, window.innerWidth - 228)),
-      top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 140)),
+      top: Math.max(8, bounds.bottom + 4),
+    };
+    await tick();
+    const menu = document.querySelector('[data-project-menu]');
+    if (!menu) return;
+    const height = menu.getBoundingClientRect().height;
+    projectMenu = {
+      ...projectMenu,
+      top: bounds.bottom + height > window.innerHeight - 8 ? Math.max(8, bounds.top - height - 4) : bounds.bottom + 4,
     };
   }
 
@@ -163,6 +175,12 @@
       return;
     }
 
+    if (action === 'edit' || action === 'share') {
+      setNavigationIntent({ type: 'project-action', action });
+      router.visit(projectShow(selectedProject.id).url);
+      return;
+    }
+
     if (action === 'favorite') {
       try {
         const updatedProject = await jsonRequest(projectFavorite(selectedProject.id).url, 'PATCH', {});
@@ -175,10 +193,70 @@
       return;
     }
 
+    if (action === 'duplicate') {
+      try {
+        const copy = await jsonRequest(projectDuplicate(selectedProject.id).url, 'POST', {});
+        toast(`Duplicated ${selectedProject.name}`, {
+          action: 'Open',
+          onAction: () => router.visit(projectShow(copy.id).url),
+        });
+        router.reload({ preserveScroll: true });
+      } catch (error) {
+        errors = { ...errors, form: error.message };
+      }
+      return;
+    }
+
+    if (action === 'archive' || action === 'delete') {
+      confirmationText = '';
+      projectConfirmation = { action, project: selectedProject };
+      return;
+    }
+
+    if (action === 'move-up' || action === 'move-down') {
+      const sourceProjectId = selectedProject.source_key;
+      const order = S.data.projOrder || [];
+      const currentIndex = order.indexOf(sourceProjectId);
+      const nextIndex = action === 'move-up' ? currentIndex - 1 : currentIndex + 1;
+      if (currentIndex >= 0 && nextIndex >= 0 && nextIndex < order.length) {
+        const nextOrder = [...order];
+        [nextOrder[currentIndex], nextOrder[nextIndex]] = [nextOrder[nextIndex], nextOrder[currentIndex]];
+        S.data.projOrder = nextOrder;
+        saveWorkspaceStore();
+      }
+      return;
+    }
+
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}${projectShow(selectedProject.id).url}`);
+      await navigator.clipboard.writeText(`https://gr8rstudio.com/${S.data.ws.url}/project/${selectedProject.key.toLowerCase()}`);
     } catch {
       errors = { ...errors, form: 'Could not copy the project link.' };
+    }
+  }
+
+  async function confirmProjectAction() {
+    const confirmation = projectConfirmation;
+    if (!confirmation || confirmationBusy) return;
+    if (confirmation.action === 'delete' && confirmationText !== confirmation.project.name) return;
+
+    confirmationBusy = true;
+    errors = { ...errors, form: '' };
+
+    try {
+      if (confirmation.action === 'archive') {
+        await jsonRequest(projectUpdate(confirmation.project.id).url, 'PATCH', { status: 'archived' });
+        toast(`Archived ${confirmation.project.name}`);
+      } else {
+        await jsonRequest(projectDestroy(confirmation.project.id).url, 'DELETE', {});
+        toast(`Deleted ${confirmation.project.name}`);
+      }
+      projectConfirmation = null;
+      confirmationText = '';
+      router.reload({ preserveScroll: true });
+    } catch (error) {
+      errors = { ...errors, form: error.message };
+    } finally {
+      confirmationBusy = false;
     }
   }
 
@@ -306,9 +384,31 @@
       <div class="pop enter" data-project-menu role="menu" tabindex="-1" aria-label={`${selectedProject.name} options`} style={`left:${projectMenu.left}px;top:${projectMenu.top}px;width:220px`}>
         <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'open')}>{@html ic('arrow-up-right', 15)}Open</button>
         <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'favorite')}>{@html ic('star', 15)}{selectedProject.is_favorite ? 'Remove from favorites' : 'Add to favorites'}</button>
+        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'edit')}>{@html ic('pencil', 15)}Rename &amp; edit</button>
+        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'share')}>{@html ic('share-2', 15)}Share</button>
         <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'copy')}>{@html ic('link', 15)}Copy link</button>
+        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'duplicate')}>{@html ic('copy', 15)}Duplicate</button>
+        <div class="msep"></div>
+        {#if projects.findIndex(project => project.id === selectedProject.id) > 0}<button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'move-up')}>{@html ic('arrow-up', 15)}Move up in sidebar</button>{/if}
+        {#if projects.findIndex(project => project.id === selectedProject.id) < projects.length - 1}<button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'move-down')}>{@html ic('arrow-down', 15)}Move down in sidebar</button>{/if}
+        <div class="msep"></div>
+        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'archive')}>{@html ic('archive', 15)}{selectedProject.status === 'complete' ? 'Archive' : 'Archive project'}</button>
+        <button class="mi danger" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'delete')}>{@html ic('trash-2', 15)}Delete project</button>
       </div>
     {/if}
+  {/if}
+
+  {#if projectConfirmation}
+    <div class="modal-wrap" transition:fade={{ duration: 180 }} role="presentation" onclick={event => event.target === event.currentTarget && (projectConfirmation = null)}>
+      <div class="modal sm" transition:scale={{ duration: 260, start: 0.97 }} role="alertdialog" aria-modal="true" aria-labelledby="project-confirm-title" aria-describedby="project-confirm-description">
+        <div class="modal-b" style="padding-top:18px;gap:10px">
+          <div class="row" style="gap:12px;align-items:flex-start"><span class="ftype" style={`--c:${projectConfirmation.action === 'delete' ? 'var(--red)' : 'var(--amber)'};width:34px;height:34px;border-radius:9px`}>{@html ic(projectConfirmation.action === 'delete' ? 'trash-2' : 'archive', 17)}</span><div class="grow"><h2 id="project-confirm-title" style="font-size:15px;font-weight:600;margin:4px 0 6px">{projectConfirmation.action === 'delete' ? `Delete ${projectConfirmation.project.name}?` : `Archive ${projectConfirmation.project.name}?`}</h2><p id="project-confirm-description" class="muted" style="margin:0;font-size:13px;line-height:1.55">{projectConfirmation.action === 'delete' ? `This permanently deletes the project and its ${projectConfirmation.project.tasks_count || 0} task${projectConfirmation.project.tasks_count === 1 ? '' : 's'}, files, and comments for everyone. This can't be undone.` : 'The project will be hidden from the sidebar and project lists. Tasks, files, and comments are kept, and you can restore it from Settings → Projects.'}</p></div></div>
+          {#if projectConfirmation.action === 'delete'}<div class="field" style="margin-top:6px"><label class="label" for="project-delete-confirm">Type <b>{projectConfirmation.project.name}</b> to confirm</label><input class="input" id="project-delete-confirm" bind:value={confirmationText} autocomplete="off" /></div>{/if}
+          {#if errors.form}<div class="err" role="alert">{@html ic('circle-alert', 12)}{errors.form}</div>{/if}
+        </div>
+        <div class="modal-f"><span class="sp"></span><button type="button" class="btn btn-secondary" onclick={() => projectConfirmation = null}>Cancel</button><button type="button" class={projectConfirmation.action === 'delete' ? 'btn btn-danger' : 'btn btn-primary'} disabled={confirmationBusy || (projectConfirmation.action === 'delete' && confirmationText !== projectConfirmation.project.name)} onclick={confirmProjectAction}>{confirmationBusy ? 'Working…' : projectConfirmation.action === 'delete' ? 'Delete project' : 'Archive project'}</button></div>
+      </div>
+    </div>
   {/if}
 
   {#if modalOpen}

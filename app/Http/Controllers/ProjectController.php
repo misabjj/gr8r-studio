@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Projects\CreateProject;
+use App\Actions\Projects\DeleteProject;
+use App\Actions\Projects\DuplicateProject;
 use App\Actions\Projects\ToggleProjectFavorite;
 use App\Actions\Projects\UpdateProject;
 use App\Actions\Projects\UpdateProjectMembers;
@@ -12,6 +14,8 @@ use App\Enums\ProjectIcon;
 use App\Enums\ProjectStatus;
 use App\Enums\ProjectTemplate;
 use App\Http\Requests\StoreProjectRequest;
+use App\Http\Requests\DeleteProjectRequest;
+use App\Http\Requests\DuplicateProjectRequest;
 use App\Http\Requests\ToggleProjectFavoriteRequest;
 use App\Http\Requests\UpdateProjectMembersRequest;
 use App\Http\Requests\UpdateProjectRequest;
@@ -87,6 +91,20 @@ class ProjectController extends Controller
         );
 
         return response()->json($updatedProject);
+    }
+
+    public function destroy(Project $project, DeleteProjectRequest $request, DeleteProject $deleteProject): JsonResponse
+    {
+        $deleteProject->handle(project: $project);
+
+        return response()->json(status: 204);
+    }
+
+    public function duplicate(Project $project, DuplicateProjectRequest $request, DuplicateProject $duplicateProject): JsonResponse
+    {
+        $copy = $duplicateProject->handle(project: $project, owner: $request->user());
+
+        return response()->json($copy, 201);
     }
 
     public function updateMembers(Project $project, UpdateProjectMembersRequest $request, UpdateProjectMembers $updateProjectMembers): JsonResponse

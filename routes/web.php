@@ -72,6 +72,8 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/help/broken-link', [SystemController::class, 'brokenLink'])->name('help.broken-link');
     Route::resource('projects', ProjectController::class)->only(['index', 'store', 'show']);
     Route::patch('projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+    Route::post('projects/{project}/duplicate', [ProjectController::class, 'duplicate'])->name('projects.duplicate');
+    Route::delete('projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
     Route::put('projects/{project}/members', [ProjectController::class, 'updateMembers'])->name('projects.members.update');
     Route::patch('projects/{project}/favorite', [ProjectController::class, 'toggleFavorite'])->name('projects.favorite');
     Route::post('projects/{project}/tasks', [TaskController::class, 'store'])->name('projects.tasks.store');

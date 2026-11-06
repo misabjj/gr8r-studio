@@ -53,6 +53,7 @@ class GetWorkspaceDemoData
             ),
         ));
         $projectIds = Project::ownedBy($user)
+            ->notArchived()
             ->whereNotNull('source_key')
             ->pluck('id', 'source_key');
         $taskIds = Task::query()
@@ -66,7 +67,10 @@ class GetWorkspaceDemoData
 
         $projects = array_map(
             fn (array $project): array => [...$project, 'database_id' => $projectIds->get($project['id'])],
-            $data['projects'] ?? [],
+            array_values(array_filter(
+                $data['projects'] ?? [],
+                fn (array $project): bool => $projectIds->has($project['id']),
+            )),
         );
         $members = array_map(
             fn (array $member): array => [...$member, 'database_id' => $memberIds->get($member['id'])],
@@ -75,6 +79,7 @@ class GetWorkspaceDemoData
         $tasks = array_values(array_filter(
             $data['tasks'] ?? [],
             fn (array $task): bool => in_array($task['project'], $visibleTaskProjectIds, true)
+                && $projectIds->has($task['project'])
                 && $taskIds->has($task['id']),
         ));
         $tasks = $this->rebaseTimestamps($tasks, ['created', 'updated', 'completedAt'], $sourceGeneratedAt);

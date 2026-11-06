@@ -10,10 +10,11 @@
   import WorkspaceTaskList from '../../Components/WorkspaceTaskList.svelte';
   import { update as taskUpdate } from '../../routes/tasks';
   import { store as taskStore } from '../../routes/projects/tasks';
-  import { favorite as projectFavorite, update as projectUpdate } from '../../routes/projects';
+import { destroy as projectDestroy, duplicate as projectDuplicate, favorite as projectFavorite, index as projectsIndex, update as projectUpdate } from '../../routes/projects';
   import { update as projectMembersUpdate } from '../../routes/projects/members';
   import { show as teamShow } from '../../routes/teams';
   import { jsonRequest } from '../../lib/http.js';
+import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
   import { ago, dayBucket, fmtDate, relDate, uid } from '@/src/core/utils.js';
   import { save as saveWorkspaceStore } from '@/src/core/store.js';
   import { S } from '@/src/core/store.js';
@@ -71,6 +72,9 @@
   let projectStatusMenu = $state(null);
   let projectMorePosition = $state({ left: 0, top: 0 });
   let projectMoreOpen = $state(false);
+  let projectConfirmation = $state(null);
+  let projectConfirmationText = $state('');
+  let projectConfirmationBusy = $state(false);
   let membersDialogOpen = $state(false);
   let editDialogOpen = $state(false);
   let projectDialogBusy = $state(false);
@@ -189,6 +193,13 @@
     };
     document.addEventListener('pointerdown', closeStatusMenu, true);
     document.addEventListener('keydown', closeOnEscape);
+    const projectAction = consumeNavigationIntent('project-action');
+    if (projectAction) {
+      tick().then(() => {
+        if (projectAction.action === 'edit') openProjectSettings();
+        if (projectAction.action === 'share') openProjectMembers();
+      });
+    }
     return () => {
       projectUploadTimers.forEach(timer => window.clearInterval(timer));
       projectUploadTimers.clear();
@@ -1005,6 +1016,82 @@
     memberDialogError = '';
     membersDialogOpen = true;
     projectMoreOpen = false;
+  }
+
+  function openProjectConfirmation(action) {
+    projectMoreOpen = false;
+    projectConfirmationText = '';
+    projectConfirmation = action;
+  }
+
+  async function runProjectMoreAction(action) {
+    projectMoreOpen = false;
+
+    if (action === 'duplicate') {
+      try {
+        const copy = await jsonRequest(projectDuplicate(project.id).url, 'POST', {});
+        toast(`Duplicated ${project.name}`, {
+          action: 'Open',
+          onAction: () => router.visit(projectShow(copy.id).url),
+        });
+        router.reload({ preserveScroll: true });
+      } catch (error) {
+        errorMessage = error.message;
+      }
+      return;
+    }
+
+    if (action === 'copy') {
+      const link = `https://gr8rstudio.com/${S.data.ws.url}/project/${project.key.toLowerCase()}`;
+      try {
+        await navigator.clipboard.writeText(link);
+        toast('Link copied');
+      } catch {
+        toast(`Copy isn't available here — ${link}`, { kind: 'info', ms: 6000 });
+      }
+      return;
+    }
+
+    if (action === 'move-up' || action === 'move-down') {
+      const sourceProjectId = project.source_key;
+      const order = S.data.projOrder || [];
+      const currentIndex = order.indexOf(sourceProjectId);
+      const nextIndex = action === 'move-up' ? currentIndex - 1 : currentIndex + 1;
+      if (currentIndex >= 0 && nextIndex >= 0 && nextIndex < order.length) {
+        const nextOrder = [...order];
+        [nextOrder[currentIndex], nextOrder[nextIndex]] = [nextOrder[nextIndex], nextOrder[currentIndex]];
+        S.data.projOrder = nextOrder;
+        saveWorkspaceStore();
+      }
+      return;
+    }
+
+    openProjectConfirmation(action);
+  }
+
+  async function confirmProjectAction() {
+    const action = projectConfirmation;
+    if (!action || projectConfirmationBusy) return;
+    if (action === 'delete' && projectConfirmationText !== project.name) return;
+
+    projectConfirmationBusy = true;
+    errorMessage = '';
+
+    try {
+      if (action === 'archive') {
+        await jsonRequest(projectUpdate(project.id).url, 'PATCH', { status: 'archived' });
+        toast(`Archived ${project.name}`);
+      } else {
+        await jsonRequest(projectDestroy(project.id).url, 'DELETE', {});
+        toast(`Deleted ${project.name}`);
+      }
+      projectConfirmation = null;
+      router.visit(projectsIndex().url);
+    } catch (error) {
+      errorMessage = error.message;
+    } finally {
+      projectConfirmationBusy = false;
+    }
   }
 
   function toggleProjectMember(memberId) {

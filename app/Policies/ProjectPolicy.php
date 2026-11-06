@@ -31,4 +31,9 @@ class ProjectPolicy
     {
         return $project->owner_id === $user->id;
     }
+
+    public function delete(User $user, Project $project): bool
+    {
+        return $project->owner_id === $user->id;
+    }
 }

@@ -109,6 +109,69 @@ it('updates project details only for the project owner', function () {
     expect($project->refresh()->name)->toBe('Updated project name');
 });
 
+it('deletes a project and its tasks only for the project owner', function () {
+    $owner = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $project = Project::factory()->for($owner, 'owner')->create();
+    $task = Task::factory()->for($project)->create();
+
+    $this->actingAs($otherUser)->deleteJson(route('projects.destroy', $project))
+        ->assertForbidden();
+
+    $this->actingAs($owner)->deleteJson(route('projects.destroy', $project))
+        ->assertNoContent();
+
+    expect(Project::query()->whereKey($project->id)->exists())->toBeFalse()
+        ->and(Task::query()->whereKey($task->id)->exists())->toBeFalse();
+});
+
+it('removes archived seeded projects and their tasks from workspace page data', function () {
+    $this->seed(DatabaseSeeder::class);
+    $owner = User::query()->where('source_key', 'm1')->firstOrFail();
+    $project = Project::query()->where('source_key', 'p1')->firstOrFail();
+
+    $this->actingAs($owner)->patchJson(route('projects.update', $project), [
+        'status' => ProjectStatus::Archived->value,
+    ])->assertOk();
+
+    $workspaceData = app(GetWorkspaceDemoData::class)->handle($owner);
+
+    expect(collect($workspaceData['projects'])->pluck('id'))->not->toContain('p1')
+        ->and(collect($workspaceData['tasks'])->pluck('project'))->not->toContain('p1');
+});
+
+it('duplicates a project and resets copied tasks to the to do status', function () {
+    $owner = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $project = Project::factory()->for($owner, 'owner')->create([
+        'name' => 'Website Redesign',
+        'key' => 'WEB',
+    ]);
+    Task::factory()->for($project)->create([
+        'title' => 'Review wireframes',
+        'status' => TaskStatus::Review,
+        'priority' => TaskPriority::High,
+        'labels' => ['design'],
+    ]);
+
+    $this->actingAs($otherUser)->postJson(route('projects.duplicate', $project))
+        ->assertForbidden();
+
+    $this->actingAs($owner)->postJson(route('projects.duplicate', $project))
+        ->assertCreated()
+        ->assertJsonPath('name', 'Website Redesign copy')
+        ->assertJsonPath('status', ProjectStatus::Planning->value);
+
+    $copy = Project::query()->where('name', 'Website Redesign copy')->firstOrFail();
+
+    expect($copy->key)->not->toBe('WEB')
+        ->and($copy->tasks)->toHaveCount(1)
+        ->and($copy->tasks->first()->title)->toBe('Review wireframes')
+        ->and($copy->tasks->first()->status)->toBe(TaskStatus::Todo)
+        ->and($copy->tasks->first()->priority)->toBe(TaskPriority::High)
+        ->and($copy->tasks->first()->labels)->toBe(['design']);
+});
+
 it('syncs project members only for the project owner', function () {
     $owner = User::factory()->create();
     $member = User::factory()->create();
