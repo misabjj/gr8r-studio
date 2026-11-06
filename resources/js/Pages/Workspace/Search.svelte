@@ -138,7 +138,7 @@
   <div class="page" style="max-width:860px">
     <form class="inwrap" style="margin-bottom:14px" action={searchIndex().url} method="get" onsubmit={searchOnServer}>
       {@html ic('search', 16)}
-      <Input variant="large" id="search-page-q" name="q" bind:value={searchQuery} placeholder="Search tasks, projects, people, files, and comments" style="padding-left:34px;font-size:15px" aria-label="Search" />
+      <Input size="large" id="search-page-q" name="q" bind:value={searchQuery} placeholder="Search tasks, projects, people, files, and comments" style="padding-left:34px;font-size:15px" aria-label="Search" />
     </form>
     <div class="tabs" style="margin-bottom:18px" role="tablist">
       {#each categories as [key, label, count]}

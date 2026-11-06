@@ -482,7 +482,7 @@
       <form id="workspace-task-form" class="modal-b" style="gap:12px" onsubmit={submit}>
           <div class="field">
             <label class="sr" for="workspace-task-title">Task name</label>
-            <Input variant="large" error={!!errorMessage} id="workspace-task-title" bind:element={titleInput} bind:value={title} oninput={() => title.trim() && (errorMessage = '')} placeholder="Task name" aria-invalid={!!errorMessage} aria-describedby={errorMessage ? 'workspace-task-title-error' : undefined} maxlength="255" style="font-size:15px;font-weight:500" />
+            <Input size="large" error={!!errorMessage} id="workspace-task-title" bind:element={titleInput} bind:value={title} oninput={() => title.trim() && (errorMessage = '')} placeholder="Task name" aria-describedby={errorMessage ? 'workspace-task-title-error' : undefined} maxlength="255" style="font-size:15px;font-weight:500" />
             {#if errorMessage}<span id="workspace-task-title-error" class="err" role="alert">{@html ic('circle-alert', 12)}{errorMessage}</span>{/if}
           </div>
           <div class="field">

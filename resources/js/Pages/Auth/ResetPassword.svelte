@@ -29,13 +29,13 @@
         <input type="hidden" name="token" value={form.token} />
       <div class="field">
         <Label for="r-pw">New password</Label>
-        <Input variant="large" error={!!form.errors.password} id="r-pw" type="password" bind:value={form.password} autocomplete="new-password" />
+        <Input size="large" error={!!form.errors.password} id="r-pw" type="password" bind:value={form.password} autocomplete="new-password" />
         {@html strengthMeter(form.password)}
         {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{/if}
       </div>
       <div class="field">
         <Label for="r-pw2">Confirm password</Label>
-        <Input variant="large" error={!!form.errors.password_confirmation} id="r-pw2" type="password" bind:value={form.password_confirmation} autocomplete="new-password" />
+        <Input size="large" error={!!form.errors.password_confirmation} id="r-pw2" type="password" bind:value={form.password_confirmation} autocomplete="new-password" />
         {#if form.errors.password_confirmation}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password_confirmation}</span>{/if}
         {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
       </div>

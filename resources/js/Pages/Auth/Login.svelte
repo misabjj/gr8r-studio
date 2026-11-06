@@ -47,13 +47,13 @@
       {#if form.errors.login}<div class="alert danger" role="alert">{@html ic('circle-alert', 15)}<span>{form.errors.login}</span></div>{/if}
       <div class="field">
         <Label for="l-email">Email</Label>
-        <Input variant="large" error={!!form.errors.email} id="l-email" type="email" bind:value={form.email} autocomplete="email" />
+        <Input size="large" error={!!form.errors.email} id="l-email" type="email" bind:value={form.email} autocomplete="email" />
         {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
       </div>
       <div class="field">
         <div class="row"><Label for="l-pw">Password</Label><span class="sp"></span><a class="link" href={passwordRequest.url()}>Forgot password?</a></div>
         <div class="inwrap">
-          <Input variant="large" class="auth-password-input" error={!!form.errors.password} id="l-pw" type={showPassword ? 'text' : 'password'} bind:value={form.password} autocomplete="current-password" style="padding-right:38px" />
+          <Input size="large" class="auth-password-input" error={!!form.errors.password} id="l-pw" type={showPassword ? 'text' : 'password'} bind:value={form.password} autocomplete="current-password" style="padding-right:38px" />
           <button type="button" class="ibtn ibtn-sm" style="position:absolute;right:5px" onclick={togglePasswordVisibility} aria-label={showPassword ? 'Hide password' : 'Show password'}>{@html ic(showPassword ? 'eye-off' : 'eye', 15)}</button>
         </div>
         {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{/if}
