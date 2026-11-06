@@ -75,6 +75,7 @@
 
     try {
       await httpRequest(notificationReadAllRoute().url, 'PATCH', {});
+      toast("You're all caught up.");
     } catch (error) {
       const unreadIdSet = new Set(unreadIds);
       notifications = notifications.map(notification => unreadIdSet.has(notification.id) ? { ...notification, read: false } : notification);

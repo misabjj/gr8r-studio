@@ -2,13 +2,15 @@ import { useHttp } from '@inertiajs/svelte';
 
 export function useHttpRequest() {
   const http = useHttp({});
+  let requestData = {};
+  http.transform(() => requestData);
 
   return async function request(url, method, data = {}) {
     if (localStorage.getItem('gr8r.offline') === 'true') {
       throw new Error("Your changes couldn't be saved. You're offline.");
     }
 
-    http.setStore(data);
+    requestData = data;
 
     const response = await http.submit(method.toLowerCase(), url);
 
