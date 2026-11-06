@@ -8,7 +8,6 @@
   import { update as resetPassword } from '../../routes/password';
   import { ic, LOGO } from '@/src/core/icons.js';
   import AuthLayout from '../../Components/AuthLayout.svelte';
-  import { strengthMeter } from '../../lib/password.js';
 
   let { email: initialEmail = '', token } = $props();
   const form = useForm(() => ({ token, email: initialEmail, password: '', password_confirmation: '' }));
@@ -27,8 +26,7 @@
         <input type="hidden" name="token" value={form.token} />
       <div class="field">
         <Label for="r-pw">New password</Label>
-        <InputPassword size="large" error={!!form.errors.password} id="r-pw" bind:value={form.password} autocomplete="new-password" />
-        {@html strengthMeter(form.password)}
+        <InputPassword size="large" strengthMeter error={!!form.errors.password} id="r-pw" bind:value={form.password} autocomplete="new-password" />
         {#if form.errors.password}<ErrorMessage message={form.errors.password} />{/if}
       </div>
       <div class="field">

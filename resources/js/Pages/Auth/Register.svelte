@@ -11,7 +11,6 @@
   import AuthSocialButtons from '../../Components/AuthSocialButtons.svelte';
   import AuthLayout from '../../Components/AuthLayout.svelte';
   import OrDivider from "../../Components/OrDivider.svelte";
-  import { strengthMeter } from '../../lib/password.js';
 
   const form = useForm({ name: '', email: '', password: '', password_confirmation: '' });
 
@@ -44,8 +43,7 @@
       </div>
       <div class="field">
         <Label for="s-pw">Password</Label>
-        <InputPassword size="large" error={!!form.errors.password} id="s-pw" bind:value={form.password} autocomplete="new-password" required />
-        {@html strengthMeter(form.password)}
+        <InputPassword size="large" strengthMeter error={!!form.errors.password} id="s-pw" bind:value={form.password} autocomplete="new-password" required />
         {#if form.errors.password}<ErrorMessage message={form.errors.password} />{:else}<span class="hint">At least 10 characters with a number or symbol.</span>{/if}
       </div>
       <Button variant="primary" size="lg" block loading={form.processing} disabled={form.processing}>{form.processing ? 'Creating account…' : 'Create account'}</Button>

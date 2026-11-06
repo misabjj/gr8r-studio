@@ -3,6 +3,7 @@
   import type { HTMLInputAttributes } from 'svelte/elements';
   import Input from './Input.svelte';
   import { ic } from '../../../src/core/icons.js';
+  import { strengthMeter as getStrengthMeter } from '../lib/password.js';
 
   type Size = 'default' | 'large';
 
@@ -11,10 +12,11 @@
     error?: boolean;
     size?: Size;
     revealable?: boolean;
+    strengthMeter?: boolean;
     value?: string;
   };
 
-  let { class: className = '', error = false, size = 'default', revealable = false, value = $bindable(''), ...attributes }: Props = $props();
+  let { class: className = '', error = false, size = 'default', revealable = false, strengthMeter = false, value = $bindable(''), ...attributes }: Props = $props();
   let visible = $state(false);
   let inputElement: HTMLInputElement | null = $state(null);
 
@@ -33,3 +35,4 @@
 {:else}
   <Input {...attributes} class={className} size={size} error={error} type="password" bind:value />
 {/if}
+{#if strengthMeter}{@html getStrengthMeter(value)}{/if}
