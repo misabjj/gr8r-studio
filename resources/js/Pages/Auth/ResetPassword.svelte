@@ -7,7 +7,7 @@
   import { useForm } from '@inertiajs/svelte';
   import { update as resetPassword } from '../../routes/password';
   import { ic, LOGO } from '@/src/core/icons.js';
-  import AuthThemeToggle from '../../Components/AuthThemeToggle.svelte';
+  import AuthLayout from '../../Components/AuthLayout.svelte';
   import { strengthMeter } from '../../lib/password.js';
 
   let { email: initialEmail = '', token } = $props();
@@ -19,12 +19,7 @@
   }
 </script>
 
-<div class="auth">
-  <div class="auth-top">
-    <span class="brand">{@html LOGO(22)}</span>
-    <div class="row"><AuthThemeToggle /></div>
-  </div>
-  <div class="auth-c">
+<AuthLayout>
     <form class="auth-card" onsubmit={submit} novalidate>
       <div style="display:flex;justify-content:center">{@html LOGO(30)}</div>
       <h1>Choose a new password</h1>
@@ -44,6 +39,4 @@
       </div>
       <Button variant="primary" size="lg" block loading={form.processing} disabled={form.processing}>{form.processing ? 'Resetting…' : 'Reset password'}</Button>
     </form>
-  </div>
-  <div class="auth-foot" style="padding:18px;font-size:12px"><span class="faint">© 2026 Gr8r Studio · Terms · Privacy</span></div>
-</div>
+</AuthLayout>

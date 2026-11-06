@@ -9,7 +9,7 @@
   import { login } from '../../routes';
   import { ic, LOGO } from '@/src/core/icons.js';
   import AuthSocialButtons from '../../Components/AuthSocialButtons.svelte';
-  import AuthThemeToggle from '../../Components/AuthThemeToggle.svelte';
+  import AuthLayout from '../../Components/AuthLayout.svelte';
   import { strengthMeter } from '../../lib/password.js';
 
   const form = useForm({ name: '', email: '', password: '', password_confirmation: '' });
@@ -24,15 +24,7 @@
   <title>Create account · Gr8r Studio</title>
 </svelte:head>
 
-<div class="auth">
-  <div class="auth-top">
-    <span class="brand">{@html LOGO(22)}</span>
-    <div class="row">
-      <a class="btn btn-ghost btn-sm" href={login.url()}>Log in</a>
-      <AuthThemeToggle />
-    </div>
-  </div>
-  <div class="auth-c">
+<AuthLayout actionLabel="Log in" actionHref={login.url()}>
     <form class="auth-card" onsubmit={submit} novalidate>
       <div style="display:flex;justify-content:center">{@html LOGO(30)}</div>
       <h1>Create your account</h1>
@@ -60,6 +52,4 @@
       <p class="hint" style="text-align:center">By creating an account you agree to the Terms and Privacy Policy.</p>
       <p class="auth-foot">Already have an account? <a class="link" href={login.url()}>Sign in</a></p>
     </form>
-  </div>
-  <div class="auth-foot" style="padding:18px;font-size:12px"><span class="faint">© 2026 Gr8r Studio · Terms · Privacy</span></div>
-</div>
+</AuthLayout>

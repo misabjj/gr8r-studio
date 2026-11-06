@@ -6,8 +6,8 @@
   import { useForm } from '@inertiajs/svelte';
   import { login } from '../../routes';
   import { email as sendResetLink } from '../../routes/password';
-  import { ic, LOGO } from '@/src/core/icons.js';
-  import AuthThemeToggle from '../../Components/AuthThemeToggle.svelte';
+  import { ic } from '@/src/core/icons.js';
+  import AuthLayout from '../../Components/AuthLayout.svelte';
 
   let { status = null } = $props();
   const form = useForm({ email: '' });
@@ -22,12 +22,7 @@
   <title>Forgot password · Gr8r Studio</title>
 </svelte:head>
 
-<div class="auth">
-  <div class="auth-top">
-    <span class="brand">{@html LOGO(22)}</span>
-    <div class="row"><AuthThemeToggle /></div>
-  </div>
-  <div class="auth-c">
+<AuthLayout>
     <form class="auth-card" onsubmit={submit} novalidate>
       <div style="display:flex;justify-content:center"><span class="ftype" style="--c:var(--accent);width:44px;height:44px;border-radius:11px">{@html ic('key-round', 20)}</span></div>
       <h1>Reset your password</h1>
@@ -41,6 +36,4 @@
       <Button variant="primary" size="lg" block loading={form.processing} disabled={form.processing}>{form.processing ? 'Sending…' : 'Send reset link'}</Button>
       <p class="auth-foot"><a class="link row" style="display:inline-flex;gap:6px" href={login.url()}>{@html ic('arrow-left', 14)}Back to sign in</a></p>
     </form>
-  </div>
-  <div class="auth-foot" style="padding:18px;font-size:12px"><span class="faint">© 2026 Gr8r Studio · Terms · Privacy</span></div>
-</div>
+</AuthLayout>
