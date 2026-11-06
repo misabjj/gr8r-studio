@@ -12,7 +12,7 @@
   import { addD, ago, diffD, fmtDate, iso, MOD, MONL, relDate, TODAY, uid, WD } from '@/src/core/utils.js';
   import { save as saveWorkspaceStore } from '@/src/core/store.js';
   import { ic } from '@/src/core/icons.js';
-  import { prIcon, prPill, stIcon, stPill } from '@/src/ui/helpers.js';
+  import { empty, prIcon, prPill, stIcon, stPill } from '@/src/ui/helpers.js';
   import { fmtComment } from '@/src/ui/helpers.js';
   import { toast } from '@/src/ui/toast.js';
 
@@ -332,7 +332,7 @@
               </div>
             {/each}
           {:else}
-            <div class="empty"><span class="empty-ic">{@html ic('inbox', 20)}</span><h2>You're all caught up.</h2><p>{unreadOnly ? 'No unread notifications in this category.' : 'New mentions, assignments, and comments will show up here.'}</p></div>
+            {@html empty('inbox', "You're all caught up.", unreadOnly ? 'No unread notifications in this category.' : 'New mentions, assignments, and comments will show up here.', '', 'sm')}
           {/if}
         </div>
       </section>
