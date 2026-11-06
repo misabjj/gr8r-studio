@@ -1,5 +1,6 @@
 <script>
   import Button from "../../Components/Button.svelte";
+  import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import InputPassword from "../../Components/InputPassword.svelte";
@@ -42,18 +43,18 @@
       <div class="field">
         <Label for="r-name">Full name</Label>
         <Input size="large" error={!!form.errors.name} id="r-name" type="text" bind:value={form.name} autocomplete="name" maxlength="255" required />
-        {#if form.errors.name}<span class="err">{@html ic('circle-alert', 12)}{form.errors.name}</span>{/if}
+        {#if form.errors.name}<ErrorMessage message={form.errors.name} />{/if}
       </div>
       <div class="field">
         <Label for="r-email">Work email</Label>
         <Input size="large" error={!!form.errors.email} id="r-email" type="email" bind:value={form.email} autocomplete="email" required />
-        {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
+        {#if form.errors.email}<ErrorMessage message={form.errors.email} />{/if}
       </div>
       <div class="field">
         <Label for="s-pw">Password</Label>
         <InputPassword size="large" error={!!form.errors.password} id="s-pw" bind:value={form.password} autocomplete="new-password" required />
         {@html strengthMeter(form.password)}
-        {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{:else}<span class="hint">At least 10 characters with a number or symbol.</span>{/if}
+        {#if form.errors.password}<ErrorMessage message={form.errors.password} />{:else}<span class="hint">At least 10 characters with a number or symbol.</span>{/if}
       </div>
       <Button variant="primary" size="lg" block loading={form.processing} disabled={form.processing}>{form.processing ? 'Creating account…' : 'Create account'}</Button>
       <p class="hint" style="text-align:center">By creating an account you agree to the Terms and Privacy Policy.</p>

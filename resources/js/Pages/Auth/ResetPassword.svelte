@@ -1,5 +1,6 @@
 <script>
   import Button from "../../Components/Button.svelte";
+  import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import InputPassword from "../../Components/InputPassword.svelte";
@@ -33,13 +34,13 @@
         <Label for="r-pw">New password</Label>
         <InputPassword size="large" error={!!form.errors.password} id="r-pw" bind:value={form.password} autocomplete="new-password" />
         {@html strengthMeter(form.password)}
-        {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{/if}
+        {#if form.errors.password}<ErrorMessage message={form.errors.password} />{/if}
       </div>
       <div class="field">
         <Label for="r-pw2">Confirm password</Label>
         <InputPassword size="large" error={!!form.errors.password_confirmation} id="r-pw2" bind:value={form.password_confirmation} autocomplete="new-password" />
-        {#if form.errors.password_confirmation}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password_confirmation}</span>{/if}
-        {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
+        {#if form.errors.password_confirmation}<ErrorMessage message={form.errors.password_confirmation} />{/if}
+        {#if form.errors.email}<ErrorMessage message={form.errors.email} />{/if}
       </div>
       <Button variant="primary" size="lg" block loading={form.processing} disabled={form.processing}>{form.processing ? 'Resetting…' : 'Reset password'}</Button>
     </form>

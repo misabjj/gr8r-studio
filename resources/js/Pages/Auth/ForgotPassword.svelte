@@ -1,5 +1,6 @@
 <script>
   import Button from "../../Components/Button.svelte";
+  import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import { useForm } from '@inertiajs/svelte';
@@ -35,7 +36,7 @@
       <div class="field">
         <Label for="f-email">Email</Label>
         <Input size="large" error={!!form.errors.email} id="f-email" type="email" bind:value={form.email} autocomplete="email" required />
-        {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
+        {#if form.errors.email}<ErrorMessage message={form.errors.email} />{/if}
       </div>
       <Button variant="primary" size="lg" block loading={form.processing} disabled={form.processing}>{form.processing ? 'Sending…' : 'Send reset link'}</Button>
       <p class="auth-foot"><a class="link row" style="display:inline-flex;gap:6px" href={login.url()}>{@html ic('arrow-left', 14)}Back to sign in</a></p>

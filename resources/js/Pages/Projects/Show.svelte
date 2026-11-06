@@ -1,5 +1,6 @@
 <script>
   import Button from "../../Components/Button.svelte";
+  import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import { onMount, tick } from 'svelte';
@@ -1512,7 +1513,7 @@
           <div class="field"><Label for="project-settings-description">Description</Label><textarea class="textarea" id="project-settings-description" bind:value={projectForm.description} rows="3" maxlength="5000"></textarea></div>
           <div class="field"><Label for="project-settings-status">Status</Label><select class="select" id="project-settings-status" bind:value={projectForm.status}>{#each Object.entries(PSTAT) as [status, details]}<option value={status}>{details.name}</option>{/each}</select></div>
           <div class="row" style="gap:10px"><div class="field grow"><Label for="project-settings-start">Start date</Label><Input class="" id="project-settings-start" type="date" bind:value={projectForm.start_date} /></div><div class="field grow"><Label for="project-settings-due">Due date</Label><Input class="" id="project-settings-due" type="date" bind:value={projectForm.due_date} /></div></div>
-          {#if projectDialogError}<span class="err" role="alert">{projectDialogError}</span>{/if}
+          {#if projectDialogError}<ErrorMessage icon={false} role="alert" message={projectDialogError} />{/if}
         </form>
         <div class="modal-f"><span class="sp"></span><Button type="button" variant="secondary" size="md" onclick={() => editDialogOpen = false}>Cancel</Button><Button type="button" variant="primary" size="md" disabled={projectDialogBusy} onclick={() => saveProjectSettings({ preventDefault() {} })}>{projectDialogBusy ? 'Saving…' : 'Save changes'}</Button></div>
       </div>
@@ -1530,7 +1531,7 @@
             {@const isProjectOwner = member.id === project.owner_id}
             <label class="row" style="height:44px;gap:10px;cursor:pointer"><span class="av md" style={`--c:${member.color || '#8A867E'}`} aria-hidden="true">{memberInitials(member.name)}</span><span class="grow"><span style="font-weight:500;font-size:13px">{member.name}{isProjectOwner ? ' (you)' : ''}</span><span class="faint" style="display:block;font-size:11.5px">{member.email}{isProjectOwner ? ' · Project lead' : ''}</span></span>{#if isProjectOwner}<span class="muted" style="font-size:12.5px">Full access</span>{:else}<input type="checkbox" class="check" checked={isProjectMember} onchange={() => toggleProjectMember(member.id)} aria-label={`Project access for ${member.name}`} />{/if}</label>
           {/each}
-          {#if memberDialogError}<span class="err" role="alert">{memberDialogError}</span>{/if}
+          {#if memberDialogError}<ErrorMessage icon={false} role="alert" message={memberDialogError} />{/if}
           <div style="border-top:1px solid var(--divider);padding-top:12px"><div class="eyebrow" style="margin-bottom:8px">General access</div><div class="row" style="gap:10px"><span class="ftype" style="--c:var(--text-2)">{@html ic(project.is_private ? 'lock' : 'building-2', 14)}</span><div class="grow"><b style="font-weight:500;font-size:13px">{project.is_private ? 'Only people invited' : `Everyone at ${workspaceData.ws?.name || 'Gr8r Studio'}`}</b><div class="faint" style="font-size:11.5px">{project.is_private ? 'Only people listed above can open this project.' : 'Anyone in the workspace can view and comment.'}</div></div></div></div>
         </div>
         <div class="modal-f"><span class="sp"></span><Button type="button" variant="secondary" size="md" onclick={() => membersDialogOpen = false}>Cancel</Button><Button type="button" variant="primary" size="md" disabled={projectDialogBusy} onclick={saveProjectMembers}>{projectDialogBusy ? 'Saving…' : 'Done'}</Button></div>

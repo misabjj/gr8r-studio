@@ -1,5 +1,6 @@
 <script>
   import Button from "./Button.svelte";
+  import ErrorMessage from "./ErrorMessage.svelte";
   import Input from "./Input.svelte";
   import { fade } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
@@ -484,7 +485,7 @@
           <div class="field">
             <label class="sr" for="workspace-task-title">Task name</label>
             <Input size="large" error={!!errorMessage} id="workspace-task-title" bind:element={titleInput} bind:value={title} oninput={() => title.trim() && (errorMessage = '')} placeholder="Task name" aria-describedby={errorMessage ? 'workspace-task-title-error' : undefined} maxlength="255" style="font-size:15px;font-weight:500" />
-            {#if errorMessage}<span id="workspace-task-title-error" class="err" role="alert">{@html ic('circle-alert', 12)}{errorMessage}</span>{/if}
+            {#if errorMessage}<ErrorMessage id="workspace-task-title-error" role="alert" message={errorMessage} />{/if}
           </div>
           <div class="field">
             <label class="sr" for="workspace-task-description">Description</label>

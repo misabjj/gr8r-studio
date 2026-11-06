@@ -1,5 +1,6 @@
 <script>
   import Button from "./Button.svelte";
+  import ErrorMessage from "./ErrorMessage.svelte";
   import Label from "./Label.svelte";
   import Input from "./Input.svelte";
   import { fade } from 'svelte/transition';
@@ -108,7 +109,7 @@
     <form id="team-edit-form" class="modal-b" onsubmit={submit}>
       <div class="row" style="gap:10px;align-items:flex-start">
         <span class="picon lg" style={`--c:${PCOLORS[color]};margin-top:22px`} aria-hidden="true">{@html ic(icon, 18)}</span>
-        <div class="field grow"><Label for="team-edit-name">Team name</Label><Input error={!!errorMessage} id="team-edit-name" bind:element={nameInput} bind:value={name} placeholder="e.g. Growth" aria-describedby={errorMessage ? 'team-edit-name-error' : undefined} maxlength="120" />{#if errorMessage}<span id="team-edit-name-error" class="err" role="alert">{@html ic('circle-alert', 12)}{errorMessage}</span>{/if}</div>
+        <div class="field grow"><Label for="team-edit-name">Team name</Label><Input error={!!errorMessage} id="team-edit-name" bind:element={nameInput} bind:value={name} placeholder="e.g. Growth" aria-describedby={errorMessage ? 'team-edit-name-error' : undefined} maxlength="120" />{#if errorMessage}<ErrorMessage id="team-edit-name-error" role="alert" message={errorMessage} />{/if}</div>
       </div>
       <div class="field"><Label for="team-edit-description">What does this team own?</Label><Input class="" id="team-edit-description" bind:value={description} placeholder="e.g. Acquisition experiments and lifecycle email" maxlength="500" /></div>
       <div class="row" style="gap:16px;align-items:flex-start;flex-wrap:wrap">

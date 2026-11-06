@@ -1,5 +1,6 @@
 <script>
   import Button from "../../Components/Button.svelte";
+  import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import InputPassword from "../../Components/InputPassword.svelte";
@@ -42,12 +43,12 @@
       <div class="field">
         <Label for="l-email">Email</Label>
         <Input size="large" error={!!form.errors.email} id="l-email" type="email" bind:value={form.email} autocomplete="email" />
-        {#if form.errors.email}<span class="err">{@html ic('circle-alert', 12)}{form.errors.email}</span>{/if}
+        {#if form.errors.email}<ErrorMessage message={form.errors.email} />{/if}
       </div>
       <div class="field">
         <div class="row"><Label for="l-pw">Password</Label><span class="sp"></span><a class="link" href={passwordRequest.url()}>Forgot password?</a></div>
         <InputPassword size="large" error={!!form.errors.password} id="l-pw" bind:value={form.password} autocomplete="current-password" revealable />
-        {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{/if}
+        {#if form.errors.password}<ErrorMessage message={form.errors.password} />{/if}
       </div>
       <label class="row" style="font-size:13px;gap:8px;cursor:pointer"><input type="checkbox" class="check" bind:checked={form.remember} />Remember me for 30 days</label>
       <Button variant="primary" size="lg" block loading={form.processing} disabled={form.processing}>{form.processing ? 'Signing in…' : 'Sign in'}</Button>
