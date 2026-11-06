@@ -1,7 +1,6 @@
 <script>
   import Button from "../../Components/Button.svelte";
   import ErrorMessage from "../../Components/ErrorMessage.svelte";
-  import Alert from "../../Components/Alert.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import InputPassword from "../../Components/InputPassword.svelte";
@@ -11,6 +10,7 @@
   import { LOGO } from '@/src/core/icons.js';
   import AuthSocialButtons from '../../Components/AuthSocialButtons.svelte';
   import AuthLayout from '../../Components/AuthLayout.svelte';
+  import OrDivider from "../../Components/OrDivider.svelte";
   import { strengthMeter } from '../../lib/password.js';
 
   const form = useForm({ name: '', email: '', password: '', password_confirmation: '' });
@@ -30,9 +30,8 @@
       <div style="display:flex;justify-content:center">{@html LOGO(30)}</div>
       <h1>Create your account</h1>
       <p class="sub">Free for up to 3 members. No credit card required.</p>
-      {#if errors.register}<Alert variant="danger" icon="circle-alert">{errors.register}</Alert>{/if}
       <AuthSocialButtons />
-      <div class="or">or sign up with email</div>
+      <OrDivider>or sign up with email</OrDivider>
       <div class="field">
         <Label for="r-name">Full name</Label>
         <Input size="large" error={!!form.errors.name} id="r-name" type="text" bind:value={form.name} autocomplete="name" maxlength="255" required />

@@ -6,6 +6,7 @@
   import Input from "../../Components/Input.svelte";
   import InputPassword from "../../Components/InputPassword.svelte";
   import Checkbox from "../../Components/Checkbox.svelte";
+  import OrDivider from "../../Components/OrDivider.svelte";
   import { useForm } from '@inertiajs/svelte';
   import { register } from '../../routes';
   import { store as loginRoute } from '../../routes/login';
@@ -46,7 +47,7 @@
       </div>
       <label class="row" style="font-size:13px;gap:8px;cursor:pointer"><Checkbox bind:checked={form.remember} />Remember me for 30 days</label>
       <Button variant="primary" size="lg" block loading={form.processing} disabled={form.processing}>{form.processing ? 'Signing in…' : 'Sign in'}</Button>
-      <div class="or">or</div>
+      <OrDivider>or</OrDivider>
       <AuthSocialButtons />
       <p class="auth-foot">Don't have an account? <a class="link" href={register.url()}>Sign up</a></p>
     </form>

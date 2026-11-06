@@ -3,6 +3,7 @@
   import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
+  import Textarea from "../../Components/Textarea.svelte";
   import { onMount, tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import { Link, router } from '@inertiajs/svelte';
@@ -472,7 +473,7 @@
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-invite-title" tabindex="-1">
         <div class="modal-h"><div><h2 id="settings-invite-title">Invite to {S.data.ws.name}</h2><div class="muted" style="font-size:12.5px;margin-top:2px">Invited people get an email with a link to join.</div></div><button type="button" class="ibtn ibtn-sm" aria-label="Close" onclick={closeInviteDialog}>{@html ic('x', 16)}</button></div>
         <form id="settings-invite-form" class="modal-b" data-submit="submitInvite" onsubmit={submitInvites}>
-          <div class="field"><Label for="settings-invite-emails">Email addresses</Label><textarea class={`textarea ${inviteError ? 'is-error' : ''}`} id="settings-invite-emails" bind:this={inviteEmailInput} bind:value={inviteDraft} placeholder="name@company.com, another@company.com" rows="3" aria-invalid={!!inviteError} aria-describedby={inviteError ? 'settings-invite-error' : 'settings-invite-hint'}></textarea>{#if inviteError}<ErrorMessage id="settings-invite-error" role="alert" message={inviteError} />{:else}<span class="hint" id="settings-invite-hint">Separate multiple addresses with commas.</span>{/if}</div>
+          <div class="field"><Label for="settings-invite-emails">Email addresses</Label><Textarea error={!!inviteError} id="settings-invite-emails" bind:this={inviteEmailInput} bind:value={inviteDraft} placeholder="name@company.com, another@company.com" rows="3" aria-describedby={inviteError ? 'settings-invite-error' : 'settings-invite-hint'} />{#if inviteError}<ErrorMessage id="settings-invite-error" role="alert" message={inviteError} />{:else}<span class="hint" id="settings-invite-hint">Separate multiple addresses with commas.</span>{/if}</div>
           <div class="row" style="gap:12px"><div class="field grow"><Label for="settings-invite-role">Role</Label><select class="select" id="settings-invite-role" bind:value={inviteRole}><option>Member</option><option>Admin</option><option>Guest</option></select></div><div class="field grow"><Label for="settings-invite-team">Team</Label><select class="select" id="settings-invite-team" bind:value={inviteTeam}>{#each teamsList() as team (team.id)}<option value={team.id}>{team.name}</option>{/each}</select></div></div>
           <div class="alert info">{@html ic('info', 14)}<span><b>Guests</b> can only see projects they're added to and can't create projects.</span></div>
         </form>

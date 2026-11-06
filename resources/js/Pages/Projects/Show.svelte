@@ -3,6 +3,7 @@
   import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
+  import Textarea from "../../Components/Textarea.svelte";
   import { onMount, tick } from 'svelte';
   import { fade, scale } from 'svelte/transition';
   import { Link, router, usePage } from '@inertiajs/svelte';
@@ -1510,7 +1511,7 @@
         <div class="modal-h"><h2 id="project-settings-title">Project settings</h2><button type="button" class="ibtn ibtn-sm" aria-label="Close" onclick={() => editDialogOpen = false}>{@html ic('x', 16)}</button></div>
         <form class="modal-b" onsubmit={saveProjectSettings}>
           <div class="field"><Label for="project-settings-name">Name</Label><Input class="" id="project-settings-name" bind:value={projectForm.name} maxlength="120" required /></div>
-          <div class="field"><Label for="project-settings-description">Description</Label><textarea class="textarea" id="project-settings-description" bind:value={projectForm.description} rows="3" maxlength="5000"></textarea></div>
+          <div class="field"><Label for="project-settings-description">Description</Label><Textarea id="project-settings-description" bind:value={projectForm.description} rows="3" maxlength="5000" /></div>
           <div class="field"><Label for="project-settings-status">Status</Label><select class="select" id="project-settings-status" bind:value={projectForm.status}>{#each Object.entries(PSTAT) as [status, details]}<option value={status}>{details.name}</option>{/each}</select></div>
           <div class="row" style="gap:10px"><div class="field grow"><Label for="project-settings-start">Start date</Label><Input class="" id="project-settings-start" type="date" bind:value={projectForm.start_date} /></div><div class="field grow"><Label for="project-settings-due">Due date</Label><Input class="" id="project-settings-due" type="date" bind:value={projectForm.due_date} /></div></div>
           {#if projectDialogError}<ErrorMessage icon={false} role="alert" message={projectDialogError} />{/if}

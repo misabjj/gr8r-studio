@@ -1,6 +1,7 @@
 <script>
   import Button from "./Button.svelte";
   import Input from "./Input.svelte";
+  import Textarea from "./Textarea.svelte";
   import DOMPurify from 'dompurify';
   import { fade, scale } from 'svelte/transition';
   import { Link, router } from '@inertiajs/svelte';
@@ -697,7 +698,7 @@
           <dt>{@html ic('calendar', 14)}Due date</dt><dd><Input class="" type="date" aria-label="Subtask due date" value={selectedSubtask.due || ''} disabled={busy} onchange={event => updateSubtask(selectedSubtask.id, { due: event.currentTarget.value || null })} /></dd>
           <dt>{@html ic('folder', 14)}Parent</dt><dd><button type="button" class="pillbtn" onclick={() => selectedSubtaskId = null}><span class="mono faint" style="font-size:11px">{task.key}</span>{task.title}</button></dd>
         </dl>
-        <section class="dsec"><div class="dsec-h"><h3>Notes</h3></div><textarea class="textarea" aria-label="Subtask notes" rows="4" placeholder="Add details, links, or acceptance criteria…" value={selectedSubtask.note || ''} disabled={busy} onblur={event => updateSubtask(selectedSubtask.id, { note: event.currentTarget.value })}></textarea></section>
+        <section class="dsec"><div class="dsec-h"><h3>Notes</h3></div><Textarea aria-label="Subtask notes" rows="4" placeholder="Add details, links, or acceptance criteria…" value={selectedSubtask.note || ''} disabled={busy} onblur={event => updateSubtask(selectedSubtask.id, { note: event.currentTarget.value })} /></section>
         <div class="dsec row" style="gap:6px;flex-wrap:wrap">
           <Button type="button" variant="secondary" size="sm" disabled={busy} onclick={() => convertSubtask(selectedSubtask)}>{@html ic('arrow-up-right', 13)}Convert to task</Button>
           <span class="sp"></span>

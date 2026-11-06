@@ -3,6 +3,7 @@
   import ErrorMessage from "../../Components/ErrorMessage.svelte";
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
+  import Textarea from "../../Components/Textarea.svelte";
   import { tick } from 'svelte';
   import { fade, scale } from 'svelte/transition';
   import { onMount } from 'svelte';
@@ -427,7 +428,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
             <span class="picon lg" style={`--c:${PCOLORS[color]};cursor:default;flex-shrink:0;margin-top:22px`}>{@html ic(icon, 18)}</span>
             <div class="field grow"><Label for="project-name">Project name</Label><Input error={!!errors.name} id="project-name" bind:element={projectNameInput} bind:value={name} maxlength="120" required placeholder="e.g. Website Redesign" />{#if errors.name}<ErrorMessage icon={false} role="alert" message={errors.name[0]} />{/if}</div>
           </div>
-          <div class="field"><Label for="project-description">Description</Label><textarea class="textarea" id="project-description" bind:value={description} rows="2" maxlength="5000" placeholder="What is this project about?"></textarea></div>
+          <div class="field"><Label for="project-description">Description</Label><Textarea id="project-description" bind:value={description} rows="2" maxlength="5000" placeholder="What is this project about?" /></div>
           <div class="row" style="gap:16px;align-items:flex-start;flex-wrap:wrap">
             <div class="field" style="flex:1;min-width:220px"><span class="label">Icon</span><div class="iconpick" role="radiogroup" aria-label="Icon">{#each PICONS as projectIcon (projectIcon)}<button type="button" role="radio" aria-checked={icon === projectIcon} class={icon === projectIcon ? 'on' : ''} aria-label={projectIcon} onclick={() => icon = projectIcon}>{@html ic(projectIcon, 15)}</button>{/each}</div></div>
             <div class="field"><span class="label">Color</span><div class="swatches" role="radiogroup" aria-label="Color" style="max-width:140px">{#each Object.entries(PCOLORS) as [projectColor, hex] (projectColor)}<button type="button" role="radio" aria-checked={color === projectColor} class={`sw ${color === projectColor ? 'on' : ''}`} style={`--c:${hex};width:22px;height:22px`} aria-label={projectColor} onclick={() => color = projectColor}>{#if color === projectColor}{@html ic('check', 12)}{/if}</button>{/each}</div></div>

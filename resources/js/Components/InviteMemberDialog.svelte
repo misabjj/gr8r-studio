@@ -2,6 +2,7 @@
   import Button from "./Button.svelte";
   import ErrorMessage from "./ErrorMessage.svelte";
   import Label from "./Label.svelte";
+  import Textarea from "./Textarea.svelte";
   import { onMount, tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import { D, save, teamsList } from '@/src/core/store.js';
@@ -101,7 +102,7 @@
     <form id="invite-dialog-form" class="modal-b" onsubmit={submitInvites}>
       <div class="field">
         <Label for="invite-dialog-emails">Email addresses</Label>
-        <textarea bind:this={emailInput} bind:value={inviteDraft} class={`textarea ${inviteError ? 'is-error' : ''}`} id="invite-dialog-emails" placeholder="name@company.com, another@company.com" rows="3" aria-invalid={!!inviteError} aria-describedby={inviteError ? 'invite-dialog-error' : 'invite-dialog-hint'}></textarea>
+        <Textarea bind:this={emailInput} bind:value={inviteDraft} error={!!inviteError} id="invite-dialog-emails" placeholder="name@company.com, another@company.com" rows="3" aria-describedby={inviteError ? 'invite-dialog-error' : 'invite-dialog-hint'} />
         {#if inviteError}
           <ErrorMessage id="invite-dialog-error" role="alert" message={inviteError} />
         {:else}

@@ -2,6 +2,7 @@
   import Button from "./Button.svelte";
   import ErrorMessage from "./ErrorMessage.svelte";
   import Input from "./Input.svelte";
+  import Textarea from "./Textarea.svelte";
   import { fade } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
   import { tick } from 'svelte';
@@ -489,7 +490,7 @@
           </div>
           <div class="field">
             <label class="sr" for="workspace-task-description">Description</label>
-            <textarea class="textarea" id="workspace-task-description" bind:value={description} placeholder="Add a description… (optional)" rows="3" maxlength="10000"></textarea>
+            <Textarea id="workspace-task-description" bind:value={description} placeholder="Add a description… (optional)" rows="3" maxlength="10000" />
           </div>
           <div class="row" style="flex-wrap:wrap;gap:6px">
             <button type="button" class="pillbtn bordered" data-task-form-trigger aria-label="Project" onclick={event => showMenu('project', event)}><span class="pdot" style={`--c:${PCOLORS[selectedProject?.color] || 'var(--gray)'};border-radius:50%;width:8px;height:8px`}></span><span class="trunc">{selectedProject?.name || 'Project'}</span></button>
