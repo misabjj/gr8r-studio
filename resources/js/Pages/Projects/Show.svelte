@@ -21,7 +21,7 @@
   import { ic } from '@/src/core/icons.js';
   import { toast } from '@/src/ui/toast.js';
   import { LABELS, PCOLORS, PSTAT, TEAMS_SEED } from '@/src/core/constants.js';
-  import { FT, filePrev, fileType as getFileType, fsize, lbl, prIcon, stIcon } from '@/src/ui/helpers.js';
+  import { FT, empty, filePrev, fileType as getFileType, fsize, lbl, prIcon, stIcon } from '@/src/ui/helpers.js';
 
   const httpRequest = useHttpRequest();
   let { project, projects = [], workspaceData = {}, activeTab = 'board' } = $props();
@@ -1431,7 +1431,7 @@
             </div>
           {/if}
           {#if projectFiles.length === 0}
-            <section class="panel"><div class="empty"><span class="empty-ic">{@html ic(fileQuery || fileType !== 'all' ? 'search-x' : 'folder-open', 20)}</span><h2>{fileQuery || fileType !== 'all' ? 'No results found' : 'No files yet'}</h2><p>{fileQuery || fileType !== 'all' ? 'No files match your search.' : 'Upload designs, documents, and assets to share them with the project.'}</p></div></section>
+            {@html empty(fileQuery || fileType !== 'all' ? 'search-x' : 'folder-open', fileQuery || fileType !== 'all' ? 'No results found' : 'No files yet', fileQuery || fileType !== 'all' ? 'No files match your search.' : 'Upload designs, documents, and assets to share them with the project.')}
           {:else if fileView === 'grid'}
             <div class="fgrid">
               {#each projectFiles as file (file.id)}
