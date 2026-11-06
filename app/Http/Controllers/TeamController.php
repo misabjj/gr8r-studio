@@ -8,7 +8,6 @@ use App\Actions\Teams\UpdateTeam;
 use App\Actions\Workspace\GetWorkspaceDemoData;
 use App\Enums\TeamColor;
 use App\Enums\TeamIcon;
-use App\Http\Requests\DeleteTeamRequest;
 use App\Http\Requests\StoreTeamRequest;
 use App\Http\Requests\UpdateTeamRequest;
 use App\Models\Team;
@@ -48,8 +47,10 @@ class TeamController extends Controller
         return response()->json($updatedTeam);
     }
 
-    public function destroy(DeleteTeamRequest $request, Team $team, DeleteTeam $deleteTeam): JsonResponse
+    public function destroy(Team $team, DeleteTeam $deleteTeam): JsonResponse
     {
+        $this->authorize('delete', $team);
+
         $deleteTeam->handle(team: $team);
 
         return response()->json(status: 204);

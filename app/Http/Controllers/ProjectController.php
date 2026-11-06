@@ -14,9 +14,6 @@ use App\Enums\ProjectIcon;
 use App\Enums\ProjectStatus;
 use App\Enums\ProjectTemplate;
 use App\Http\Requests\StoreProjectRequest;
-use App\Http\Requests\DeleteProjectRequest;
-use App\Http\Requests\DuplicateProjectRequest;
-use App\Http\Requests\ToggleProjectFavoriteRequest;
 use App\Http\Requests\UpdateProjectMembersRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Project;
@@ -93,15 +90,20 @@ class ProjectController extends Controller
         return response()->json($updatedProject);
     }
 
-    public function destroy(Project $project, DeleteProjectRequest $request, DeleteProject $deleteProject): JsonResponse
+    public function destroy(Project $project, DeleteProject $deleteProject): JsonResponse
     {
+        $this->authorize('delete', $project);
+
         $deleteProject->handle(project: $project);
 
         return response()->json(status: 204);
     }
 
-    public function duplicate(Project $project, DuplicateProjectRequest $request, DuplicateProject $duplicateProject): JsonResponse
+    public function duplicate(Project $project, Request $request, DuplicateProject $duplicateProject): JsonResponse
     {
+        $this->authorize('update', $project);
+        $this->authorize('create', Project::class);
+
         $copy = $duplicateProject->handle(project: $project, owner: $request->user());
 
         return response()->json($copy, 201);
@@ -137,8 +139,10 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function toggleFavorite(Project $project, ToggleProjectFavoriteRequest $request, ToggleProjectFavorite $toggleProjectFavorite): JsonResponse
+    public function toggleFavorite(Project $project, ToggleProjectFavorite $toggleProjectFavorite): JsonResponse
     {
+        $this->authorize('update', $project);
+
         return response()->json($toggleProjectFavorite->handle($project));
     }
 }

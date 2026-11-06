@@ -10,10 +10,7 @@ use App\Actions\Tasks\UpdateTask;
 use App\Data\Tasks\UpdateTaskData;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
-use App\Http\Requests\ArchiveTaskRequest;
-use App\Http\Requests\DeleteTaskRequest;
 use App\Http\Requests\StoreTaskRequest;
-use App\Http\Requests\ToggleTaskFavoriteRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Project;
 use App\Models\Task;
@@ -22,20 +19,26 @@ use Illuminate\Http\RedirectResponse;
 
 class TaskController extends Controller
 {
-    public function archive(Task $task, ArchiveTaskRequest $request, ArchiveTask $archiveTask): JsonResponse
+    public function archive(Task $task, ArchiveTask $archiveTask): JsonResponse
     {
+        $this->authorize('archive', $task);
+
         return response()->json($archiveTask->handle($task));
     }
 
-    public function destroy(Task $task, DeleteTaskRequest $request, DeleteTask $deleteTask): JsonResponse
+    public function destroy(Task $task, DeleteTask $deleteTask): JsonResponse
     {
+        $this->authorize('delete', $task);
+
         $deleteTask->handle($task);
 
         return response()->json(status: 204);
     }
 
-    public function toggleFavorite(Task $task, ToggleTaskFavoriteRequest $request, ToggleTaskFavorite $toggleTaskFavorite): JsonResponse
+    public function toggleFavorite(Task $task, ToggleTaskFavorite $toggleTaskFavorite): JsonResponse
     {
+        $this->authorize('update', $task);
+
         return response()->json($toggleTaskFavorite->handle($task));
     }
 

@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Actions\Workspace\MarkAllWorkspaceNotificationsRead;
 use App\Actions\Workspace\SetWorkspaceNotificationRead;
-use App\Http\Requests\MarkAllWorkspaceNotificationsReadRequest;
 use App\Http\Requests\SetWorkspaceNotificationReadRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class WorkspaceNotificationReadStateController extends Controller
 {
@@ -26,7 +26,7 @@ class WorkspaceNotificationReadStateController extends Controller
     }
 
     public function markAllRead(
-        MarkAllWorkspaceNotificationsReadRequest $request,
+        Request $request,
         MarkAllWorkspaceNotificationsRead $markAllWorkspaceNotificationsRead,
     ): JsonResponse {
         $count = $markAllWorkspaceNotificationsRead->handle($request->user());
