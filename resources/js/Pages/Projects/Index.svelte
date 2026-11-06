@@ -423,7 +423,7 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
           {#if errors.form}<div class="alert danger" role="alert">{errors.form}</div>{/if}
           <div class="row" style="gap:10px;align-items:flex-start">
             <span class="picon lg" style={`--c:${PCOLORS[color]};cursor:default;flex-shrink:0;margin-top:22px`}>{@html ic(icon, 18)}</span>
-            <div class="field grow"><Label for="project-name">Project name</Label><Input class={errors.name ? 'is-error' : ''} id="project-name" bind:element={projectNameInput} bind:value={name} maxlength="120" required aria-invalid={!!errors.name} placeholder="e.g. Website Redesign" />{#if errors.name}<span class="err" role="alert">{errors.name[0]}</span>{/if}</div>
+            <div class="field grow"><Label for="project-name">Project name</Label><Input error={!!errors.name} id="project-name" bind:element={projectNameInput} bind:value={name} maxlength="120" required aria-invalid={!!errors.name} placeholder="e.g. Website Redesign" />{#if errors.name}<span class="err" role="alert">{errors.name[0]}</span>{/if}</div>
           </div>
           <div class="field"><Label for="project-description">Description</Label><textarea class="textarea" id="project-description" bind:value={description} rows="2" maxlength="5000" placeholder="What is this project about?"></textarea></div>
           <div class="row" style="gap:16px;align-items:flex-start;flex-wrap:wrap">
