@@ -1,298 +1,359 @@
 <script>
-  import Select from "../../Components/Select.svelte";
-  import Dropdown from "../../Components/Dropdown.svelte";
-  import Button from "../../Components/Button.svelte";
-  import ErrorMessage from "../../Components/ErrorMessage.svelte";
-  import Label from "../../Components/Label.svelte";
-  import Input from "../../Components/Input.svelte";
-  import Textarea from "../../Components/Textarea.svelte";
-  import { fade, scale } from 'svelte/transition';
-  import { onMount, tick } from 'svelte';
-  import { Link, router, usePage } from '@inertiajs/svelte';
-  import AppLayout from '../../Layouts/AppLayout.svelte';
-  import { show as memberShow } from '../../routes/members';
-  import { index as tasksIndex } from '../../routes/tasks';
-  import { consumeNavigationIntent, setNavigationIntent } from '../../lib/navigation-intents.js';
-  import { show as teamShow } from '../../routes/teams';
-  import TeamEditDialog from '../../Components/TeamEditDialog.svelte';
-  import { ago, minsAgo, uid } from '@/src/core/utils.js';
-  import { ic } from '@/src/core/icons.js';
-  import { ROLES } from '@/src/core/constants.js';
-  import { D, save } from '@/src/core/store.js';
+import Select from "../../Components/Select.svelte";
+import Dropdown from "../../Components/Dropdown.svelte";
+import Button from "../../Components/Button.svelte";
+import ErrorMessage from "../../Components/ErrorMessage.svelte";
+import Label from "../../Components/Label.svelte";
+import Input from "../../Components/Input.svelte";
+import Textarea from "../../Components/Textarea.svelte";
+import { fade, scale } from "svelte/transition";
+import { onMount, tick } from "svelte";
+import { Link, router, usePage } from "@inertiajs/svelte";
+import AppLayout from "../../Layouts/AppLayout.svelte";
+import { show as memberShow } from "../../routes/members";
+import { index as tasksIndex } from "../../routes/tasks";
+import {
+	consumeNavigationIntent,
+	setNavigationIntent,
+} from "../../lib/navigation-intents.js";
+import { show as teamShow } from "../../routes/teams";
+import TeamEditDialog from "../../Components/TeamEditDialog.svelte";
+import { ago, minsAgo, uid } from "@/src/core/utils.js";
+import { ic } from "@/src/core/icons.js";
+import { ROLES } from "@/src/core/constants.js";
+import { D, save } from "@/src/core/store.js";
 
-  let { workspaceData = {}, teams = [] } = $props();
-  const page = usePage();
-  let query = $state('');
-  let role = $state('all');
-  let tab = $state('members');
-  let roleMenuMemberId = $state(null);
-  let roleMenuPosition = $state({ left: 8, top: 8 });
-  let memberMenuId = $state(null);
-  let memberMenuPosition = $state({ left: 8, top: 8 });
-  let roleOverrides = $state(Object.fromEntries(D().members.map(member => [member.id, member.role])));
-  let localOnlyMembers = $state(D().members.filter(member => !(workspaceData.members || []).some(sourceMember => sourceMember.id === member.id)));
-  let removedMemberIds = $state([]);
-  let removeCandidate = $state(null);
-  let inviteOpen = $state(false);
-  let inviteDraft = $state('');
-  let inviteRole = $state('Member');
-  let inviteTeam = $state('');
-  let inviteError = $state('');
-  let inviteBusy = $state(false);
-  let inviteEmailInput = $state(null);
-  let teamDialogOpen = $state(false);
+let { workspaceData = {}, teams = [] } = $props();
+const page = usePage();
+let query = $state("");
+let role = $state("all");
+let tab = $state("members");
+let roleMenuMemberId = $state(null);
+let roleMenuPosition = $state({ left: 8, top: 8 });
+let memberMenuId = $state(null);
+let memberMenuPosition = $state({ left: 8, top: 8 });
+let roleOverrides = $state(
+	Object.fromEntries(D().members.map((member) => [member.id, member.role])),
+);
+let localOnlyMembers = $state(
+	D().members.filter(
+		(member) =>
+			!(workspaceData.members || []).some(
+				(sourceMember) => sourceMember.id === member.id,
+			),
+	),
+);
+let removedMemberIds = $state([]);
+let removeCandidate = $state(null);
+let inviteOpen = $state(false);
+let inviteDraft = $state("");
+let inviteRole = $state("Member");
+let inviteTeam = $state("");
+let inviteError = $state("");
+let inviteBusy = $state(false);
+let inviteEmailInput = $state(null);
+let teamDialogOpen = $state(false);
 
-  $effect(() => {
-    const localMemberIds = new Set(D().members.map(member => member.id));
-    removedMemberIds = (workspaceData.members || []).filter(member => !localMemberIds.has(member.id)).map(member => member.id);
-  });
+$effect(() => {
+	const localMemberIds = new Set(D().members.map((member) => member.id));
+	removedMemberIds = (workspaceData.members || [])
+		.filter((member) => !localMemberIds.has(member.id))
+		.map((member) => member.id);
+});
 
-  let members = $derived([...(workspaceData.members || []), ...localOnlyMembers].filter(member => !removedMemberIds.includes(member.id)));
-  let projects = $derived(workspaceData.projects || []);
-  let tasks = $derived(workspaceData.tasks || []);
-  let teamById = $derived(new Map(teams.map(team => [team.id, team])));
-  let isAdmin = $derived(['Owner', 'Admin'].includes(page.props.auth?.user?.role));
-  let filteredMembers = $derived(members.filter(member =>
-    (role === 'all' || memberRole(member) === role)
-      && (!query.trim() || member.name.toLowerCase().includes(query.trim().toLowerCase()) || member.email.toLowerCase().includes(query.trim().toLowerCase())),
-  ));
+let members = $derived(
+	[...(workspaceData.members || []), ...localOnlyMembers].filter(
+		(member) => !removedMemberIds.includes(member.id),
+	),
+);
+let projects = $derived(workspaceData.projects || []);
+let tasks = $derived(workspaceData.tasks || []);
+let teamById = $derived(new Map(teams.map((team) => [team.id, team])));
+let isAdmin = $derived(
+	["Owner", "Admin"].includes(page.props.auth?.user?.role),
+);
+let filteredMembers = $derived(
+	members.filter(
+		(member) =>
+			(role === "all" || memberRole(member) === role) &&
+			(!query.trim() ||
+				member.name.toLowerCase().includes(query.trim().toLowerCase()) ||
+				member.email.toLowerCase().includes(query.trim().toLowerCase())),
+	),
+);
 
-  const permissions = [
-    ['View projects & tasks', 1, 1, 1, 1],
-    ['Comment on tasks', 1, 1, 1, 1],
-    ['Create and edit tasks', 1, 1, 1, 0],
-    ['Create projects', 1, 1, 1, 0],
-    ['Invite members', 1, 1, 0, 0],
-    ['Manage roles', 1, 1, 0, 0],
-    ['Workspace settings', 1, 1, 0, 0],
-    ['Billing', 1, 0, 0, 0],
-    ['Delete workspace', 1, 0, 0, 0],
-  ];
+const permissions = [
+	["View projects & tasks", 1, 1, 1, 1],
+	["Comment on tasks", 1, 1, 1, 1],
+	["Create and edit tasks", 1, 1, 1, 0],
+	["Create projects", 1, 1, 1, 0],
+	["Invite members", 1, 1, 0, 0],
+	["Manage roles", 1, 1, 0, 0],
+	["Workspace settings", 1, 1, 0, 0],
+	["Billing", 1, 0, 0, 0],
+	["Delete workspace", 1, 0, 0, 0],
+];
 
-  function assignTaskToMember(memberId) {
-    memberMenuId = null;
-    setNavigationIntent({ type: 'create-task', assigneeSourceKey: memberId });
-    router.visit(tasksIndex().url);
-  }
+function assignTaskToMember(memberId) {
+	memberMenuId = null;
+	setNavigationIntent({ type: "create-task", assigneeSourceKey: memberId });
+	router.visit(tasksIndex().url);
+}
 
-  async function openInviteDialog() {
-    inviteDraft = '';
-    inviteError = '';
-    inviteRole = 'Member';
-    inviteTeam = String(teams[0]?.id || '');
-    inviteOpen = true;
-    await tick();
-    inviteEmailInput?.focus();
-  }
+async function openInviteDialog() {
+	inviteDraft = "";
+	inviteError = "";
+	inviteRole = "Member";
+	inviteTeam = String(teams[0]?.id || "");
+	inviteOpen = true;
+	await tick();
+	inviteEmailInput?.focus();
+}
 
-  function closeInviteDialog() {
-    inviteOpen = false;
-    inviteError = '';
-  }
+function closeInviteDialog() {
+	inviteOpen = false;
+	inviteError = "";
+}
 
-  function showToast(message) {
-    const host = document.querySelector('#toasts');
-    if (!host) return;
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.setAttribute('role', 'status');
-    toast.textContent = message;
-    host.append(toast);
-    window.setTimeout(() => toast.remove(), 3000);
-  }
+function showToast(message) {
+	const host = document.querySelector("#toasts");
+	if (!host) return;
+	const toast = document.createElement("div");
+	toast.className = "toast";
+	toast.setAttribute("role", "status");
+	toast.textContent = message;
+	host.append(toast);
+	window.setTimeout(() => toast.remove(), 3000);
+}
 
-  async function copyInviteLink() {
-    const url = `https://gr8rstudio.com/join/${workspaceData.ws?.url || 'gr8r'}-7f3k2`;
-    try {
-      await navigator.clipboard.writeText(url);
-      showToast('Invite link copied');
-    } catch {
-      showToast('Could not copy invite link');
-    }
-  }
+async function copyInviteLink() {
+	const url = `https://gr8rstudio.com/join/${workspaceData.ws?.url || "gr8r"}-7f3k2`;
+	try {
+		await navigator.clipboard.writeText(url);
+		showToast("Invite link copied");
+	} catch {
+		showToast("Could not copy invite link");
+	}
+}
 
-  function submitInvites(event) {
-    event.preventDefault();
-    const emails = inviteDraft.split(/[\s,;]+/).map(email => email.trim()).filter(Boolean);
-    const invalidEmail = emails.find(email => !/^\S+@\S+\.\S+$/.test(email));
-    if (!emails.length) {
-      inviteError = 'Enter at least one email address';
-      return;
-    }
-    if (invalidEmail) {
-      inviteError = `${invalidEmail} isn't a valid email address`;
-      return;
-    }
+function submitInvites(event) {
+	event.preventDefault();
+	const emails = inviteDraft
+		.split(/[\s,;]+/)
+		.map((email) => email.trim())
+		.filter(Boolean);
+	const invalidEmail = emails.find((email) => !/^\S+@\S+\.\S+$/.test(email));
+	if (!emails.length) {
+		inviteError = "Enter at least one email address";
+		return;
+	}
+	if (invalidEmail) {
+		inviteError = `${invalidEmail} isn't a valid email address`;
+		return;
+	}
 
-    inviteError = '';
-    inviteBusy = true;
-    window.setTimeout(() => {
-      const newMembers = [];
-      for (const email of emails) {
-        if (D().members.some(member => member.email === email)) continue;
-        const member = {
-          id: uid('m'),
-          name: email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, character => character.toUpperCase()),
-          email,
-          role: inviteRole,
-          team: inviteTeam,
-          title: inviteRole,
-          c: '#6B7280',
-          status: 'invited',
-          last: null,
-          tz: '—',
-        };
-        D().members.push(member);
-        newMembers.push(member);
-      }
-      save();
-      localOnlyMembers = [...localOnlyMembers, ...newMembers];
-      inviteBusy = false;
-      inviteOpen = false;
-      showToast(`${emails.length} invitation${emails.length > 1 ? 's' : ''} sent`);
-    }, 600);
-  }
+	inviteError = "";
+	inviteBusy = true;
+	window.setTimeout(() => {
+		const newMembers = [];
+		for (const email of emails) {
+			if (D().members.some((member) => member.email === email)) continue;
+			const member = {
+				id: uid("m"),
+				name: email
+					.split("@")[0]
+					.replace(/[._-]+/g, " ")
+					.replace(/\b\w/g, (character) => character.toUpperCase()),
+				email,
+				role: inviteRole,
+				team: inviteTeam,
+				title: inviteRole,
+				c: "#6B7280",
+				status: "invited",
+				last: null,
+				tz: "—",
+			};
+			D().members.push(member);
+			newMembers.push(member);
+		}
+		save();
+		localOnlyMembers = [...localOnlyMembers, ...newMembers];
+		inviteBusy = false;
+		inviteOpen = false;
+		showToast(
+			`${emails.length} invitation${emails.length > 1 ? "s" : ""} sent`,
+		);
+	}, 600);
+}
 
-  function initials(name) {
-    return name.split(' ').map(part => part[0]).join('').slice(0, 2);
-  }
+function initials(name) {
+	return name
+		.split(" ")
+		.map((part) => part[0])
+		.join("")
+		.slice(0, 2);
+}
 
-  function memberRole(member) {
-    return roleOverrides[member.id] || member.role;
-  }
+function memberRole(member) {
+	return roleOverrides[member.id] || member.role;
+}
 
-  function openCreateTeamDialog() {
-    tab = 'teams';
-    teamDialogOpen = true;
-  }
+function openCreateTeamDialog() {
+	tab = "teams";
+	teamDialogOpen = true;
+}
 
-  onMount(() => {
-    if (consumeNavigationIntent('create-team')) openCreateTeamDialog();
-    const requestedTab = new URL(page.url, window.location.origin).searchParams.get('tab');
-    if (requestedTab === 'teams') tab = 'teams';
+onMount(() => {
+	if (consumeNavigationIntent("create-team")) openCreateTeamDialog();
+	const requestedTab = new URL(
+		page.url,
+		window.location.origin,
+	).searchParams.get("tab");
+	if (requestedTab === "teams") tab = "teams";
 
-    const onPointerDown = event => {
-      if (!event.target.closest('.member-role-control')) roleMenuMemberId = null;
-      if (!event.target.closest('.member-options-control')) memberMenuId = null;
-    };
-    const onKeyDown = event => {
-      if (event.key === 'Escape') {
-        roleMenuMemberId = null;
-        memberMenuId = null;
-        if (inviteOpen) closeInviteDialog();
-      }
-    };
-    window.addEventListener('gr8r:create-team', openCreateTeamDialog);
-    document.addEventListener('pointerdown', onPointerDown, true);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown, true);
-      document.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('gr8r:create-team', openCreateTeamDialog);
-    };
-  });
+	const onPointerDown = (event) => {
+		if (!event.target.closest(".member-role-control")) roleMenuMemberId = null;
+		if (!event.target.closest(".member-options-control")) memberMenuId = null;
+	};
+	const onKeyDown = (event) => {
+		if (event.key === "Escape") {
+			roleMenuMemberId = null;
+			memberMenuId = null;
+			if (inviteOpen) closeInviteDialog();
+		}
+	};
+	window.addEventListener("gr8r:create-team", openCreateTeamDialog);
+	document.addEventListener("pointerdown", onPointerDown, true);
+	document.addEventListener("keydown", onKeyDown);
+	return () => {
+		document.removeEventListener("pointerdown", onPointerDown, true);
+		document.removeEventListener("keydown", onKeyDown);
+		window.removeEventListener("gr8r:create-team", openCreateTeamDialog);
+	};
+});
 
-  async function toggleRoleMenu(event, member) {
-    if (roleMenuMemberId === member.id) {
-      roleMenuMemberId = null;
-      return;
-    }
+async function toggleRoleMenu(event, member) {
+	if (roleMenuMemberId === member.id) {
+		roleMenuMemberId = null;
+		return;
+	}
 
-    const trigger = event.currentTarget.getBoundingClientRect();
-    roleMenuMemberId = member.id;
-    roleMenuPosition = { left: trigger.left, top: trigger.bottom + 4 };
-    await tick();
-    const menu = document.querySelector('#member-role-menu');
-    if (!menu) return;
-    const bounds = menu.getBoundingClientRect();
-    const left = bounds.right > innerWidth - 8 ? Math.max(8, trigger.right - bounds.width) : trigger.left;
-    const top = bounds.bottom > innerHeight - 8 ? Math.max(8, trigger.top - 4 - bounds.height) : trigger.bottom + 4;
-    roleMenuPosition = { left, top };
-  }
+	const trigger = event?.currentTarget?.getBoundingClientRect?.() ?? event;
+	if (!trigger) return;
+	roleMenuMemberId = member.id;
+	roleMenuPosition = { left: trigger.left, top: trigger.bottom + 4 };
+	await tick();
+	const menu = document.querySelector("#member-role-menu");
+	if (!menu) return;
+	const bounds = menu.getBoundingClientRect();
+	const left =
+		bounds.right > innerWidth - 8
+			? Math.max(8, trigger.right - bounds.width)
+			: trigger.left;
+	const top =
+		bounds.bottom > innerHeight - 8
+			? Math.max(8, trigger.top - 4 - bounds.height)
+			: trigger.bottom + 4;
+	roleMenuPosition = { left, top };
+}
 
-  async function toggleMemberMenu(event, member) {
-    if (memberMenuId === member.id) {
-      memberMenuId = null;
-      return;
-    }
+async function toggleMemberMenu(event, member) {
+	if (memberMenuId === member.id) {
+		memberMenuId = null;
+		return;
+	}
 
-    const trigger = event.currentTarget.getBoundingClientRect();
-    memberMenuId = member.id;
-    memberMenuPosition = { left: trigger.left, top: trigger.bottom + 4 };
-    await tick();
-    const menu = document.querySelector('#member-options-menu');
-    if (!menu) return;
-    const bounds = menu.getBoundingClientRect();
-    const left = bounds.right > innerWidth - 8 ? Math.max(8, trigger.right - bounds.width) : trigger.left;
-    const top = bounds.bottom > innerHeight - 8 ? Math.max(8, trigger.top - 4 - bounds.height) : trigger.bottom + 4;
-    memberMenuPosition = { left, top };
-  }
+	const trigger = event.currentTarget.getBoundingClientRect();
+	memberMenuId = member.id;
+	memberMenuPosition = { left: trigger.left, top: trigger.bottom + 4 };
+	await tick();
+	const menu = document.querySelector("#member-options-menu");
+	if (!menu) return;
+	const bounds = menu.getBoundingClientRect();
+	const left =
+		bounds.right > innerWidth - 8
+			? Math.max(8, trigger.right - bounds.width)
+			: trigger.left;
+	const top =
+		bounds.bottom > innerHeight - 8
+			? Math.max(8, trigger.top - 4 - bounds.height)
+			: trigger.bottom + 4;
+	memberMenuPosition = { left, top };
+}
 
-  function chooseRole(member, selectedRole) {
-    const localMember = D().members.find(item => item.id === member.id);
-    if (localMember) {
-      localMember.role = selectedRole;
-      save();
-    }
-    roleOverrides = { ...roleOverrides, [member.id]: selectedRole };
-    roleMenuMemberId = null;
-  }
+function chooseRole(member, selectedRole) {
+	const localMember = D().members.find((item) => item.id === member.id);
+	if (localMember) {
+		localMember.role = selectedRole;
+		save();
+	}
+	roleOverrides = { ...roleOverrides, [member.id]: selectedRole };
+	roleMenuMemberId = null;
+}
 
-  function requestRemove(member) {
-    removeCandidate = member;
-    memberMenuId = null;
-  }
+function requestRemove(member) {
+	removeCandidate = member;
+	memberMenuId = null;
+}
 
-  function confirmRemoveMember() {
-    if (!removeCandidate) return;
-    const memberId = removeCandidate.id;
-    D().members = D().members.filter(member => member.id !== memberId);
-    D().tasks.forEach(task => {
-      if (task.assignee === memberId) task.assignee = null;
-    });
-    D().projects.forEach(project => {
-      project.members = project.members.filter(id => id !== memberId);
-    });
-    save();
-    removedMemberIds = [...removedMemberIds, memberId];
-    removeCandidate = null;
-  }
+function confirmRemoveMember() {
+	if (!removeCandidate) return;
+	const memberId = removeCandidate.id;
+	D().members = D().members.filter((member) => member.id !== memberId);
+	D().tasks.forEach((task) => {
+		if (task.assignee === memberId) task.assignee = null;
+	});
+	D().projects.forEach((project) => {
+		project.members = project.members.filter((id) => id !== memberId);
+	});
+	save();
+	removedMemberIds = [...removedMemberIds, memberId];
+	removeCandidate = null;
+}
 
-  function resendInvite(member) {
-    memberMenuId = null;
-    const host = document.querySelector('#toasts');
-    if (!host) return;
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.setAttribute('role', 'status');
-    toast.textContent = `Invite resent to ${member.email}`;
-    host.append(toast);
-    window.setTimeout(() => toast.remove(), 3000);
-  }
+function resendInvite(member) {
+	memberMenuId = null;
+	const host = document.querySelector("#toasts");
+	if (!host) return;
+	const toast = document.createElement("div");
+	toast.className = "toast";
+	toast.setAttribute("role", "status");
+	toast.textContent = `Invite resent to ${member.email}`;
+	host.append(toast);
+	window.setTimeout(() => toast.remove(), 3000);
+}
 
-  async function copyEmail(member) {
-    await navigator.clipboard.writeText(member.email);
-    memberMenuId = null;
-  }
+async function copyEmail(member) {
+	await navigator.clipboard.writeText(member.email);
+	memberMenuId = null;
+}
 
-  function activeProjects(memberId) {
-    return projects.filter(project => !project.archived && project.status !== 'complete' && project.members?.includes(memberId)).length;
-  }
+function activeProjects(memberId) {
+	return projects.filter(
+		(project) =>
+			!project.archived &&
+			project.status !== "complete" &&
+			project.members?.includes(memberId),
+	).length;
+}
 
-  function openTasks(memberId) {
-    return tasks.filter(task => !task.archived && task.assignee === memberId && task.status !== 'done').length;
-  }
+function openTasks(memberId) {
+	return tasks.filter(
+		(task) =>
+			!task.archived && task.assignee === memberId && task.status !== "done",
+	).length;
+}
 
-  function lastActive(member) {
-    if (member.last == null) return '—';
-    if (member.last < 5) return 'Online';
-    return ago(minsAgo(member.last));
-  }
+function lastActive(member) {
+	if (member.last == null) return "—";
+	if (member.last < 5) return "Online";
+	return ago(minsAgo(member.last));
+}
 
-  function handleTeamCreated() {
-    teamDialogOpen = false;
-    router.reload({ preserveScroll: true, preserveState: true });
-  }
+function handleTeamCreated() {
+	teamDialogOpen = false;
+	router.reload({ preserveScroll: true, preserveState: true });
+}
 </script>
 
 <svelte:head><title>Members</title></svelte:head>
@@ -332,12 +393,40 @@
                       <div class="member-role-control">
                         <button class="pillbtn bordered" type="button" aria-haspopup="menu" aria-expanded={roleMenuMemberId === member.id} onclick={event => toggleRoleMenu(event, member)}>{memberRole(member)}{@html ic('chevron-down', 12)}</button>
                         {#if roleMenuMemberId === member.id}
-                          <Dropdown class="pop floating enter" id="member-role-menu" role="menu" aria-label={`Role for ${member.name}`} style={`left:${roleMenuPosition.left}px;top:${roleMenuPosition.top}px;width:300px`}>
-                            <div class="mh">Role for {member.name}</div>
-                            {#each ['Admin', 'Member', 'Guest'] as option}
-                              <button class="mi" type="button" role="menuitemradio" aria-checked={memberRole(member) === option} style="height:auto;padding:7px 8px;align-items:flex-start" onclick={() => chooseRole(member, option)}><span class="grow" style="white-space:normal"><span style="font-weight:500">{option}</span><span class="faint" style="font-size:11.5px;display:block">{option === 'Admin' ? 'Manage members, settings, and all projects' : option === 'Member' ? 'Create projects and work on tasks' : 'Only sees projects they are invited to'}</span></span>{#if memberRole(member) === option}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>
-                            {/each}
-                          </Dropdown>
+                          <Dropdown
+                            config={{
+                              className: 'pop floating enter',
+                              id: 'member-role-menu',
+                              role: 'menu',
+                              label: `Role for ${member.name}`,
+                              style: `left:${roleMenuPosition.left}px;top:${roleMenuPosition.top}px;width:300px`,
+                              items: [
+                                { id: 'member-role-heading', type: 'heading', label: `Role for ${member.name}` },
+                                ...['Admin', 'Member', 'Guest'].map(option => ({
+                                  id: `member-role-${option.toLowerCase()}`,
+                                  type: 'element',
+                                  tag: 'button',
+                                  elementType: 'button',
+                                  className: 'mi',
+                                  role: 'menuitemradio',
+                                  ariaChecked: memberRole(member) === option,
+                                  style: 'height:auto;padding:7px 8px;align-items:flex-start',
+                                  payload: option,
+                                  events: { click: 'choose-role' },
+                                  items: [
+                                    { id: `member-role-copy-${option}`, type: 'element', tag: 'span', className: 'grow', style: 'white-space:normal', items: [
+                                      { id: `member-role-name-${option}`, type: 'element', tag: 'span', style: 'font-weight:500', text: option },
+                                      { id: `member-role-description-${option}`, type: 'element', tag: 'span', className: 'faint', style: 'font-size:11.5px;display:block', text: option === 'Admin' ? 'Manage members, settings, and all projects' : option === 'Member' ? 'Create projects and work on tasks' : 'Only sees projects they are invited to' },
+                                    ] },
+                                    ...(memberRole(member) === option ? [{ id: `member-role-selected-${option}`, type: 'element', tag: 'span', className: 'ck', icon: 'check', iconSize: 14 }] : []),
+                                  ],
+                                })),
+                              ],
+                            }}
+                            onAction={(action, item) => {
+                              if (action === 'choose-role' && typeof item.payload === 'string') chooseRole(member, item.payload);
+                            }}
+                          />
                         {/if}
                       </div>
                     {:else}
@@ -350,18 +439,38 @@
                   <td style="text-align:left">{#if member.status === 'invited'}<span class="badge amber"><span class="dot"></span>Invited</span>{:else if member.status === 'deactivated'}<span class="badge gray">Deactivated</span>{:else}<span class="badge green"><span class="dot"></span>Active</span>{/if}</td>
                   <td><div class="member-options-control"><button class="ibtn ibtn-sm" type="button" aria-label={`Options for ${member.name}`} aria-haspopup="menu" aria-expanded={memberMenuId === member.id} onclick={event => toggleMemberMenu(event, member)}>{@html ic('ellipsis', 14)}</button>
                     {#if memberMenuId === member.id}
-                      <Dropdown class="pop floating enter" id="member-options-menu" role="menu" aria-label={`Options for ${member.name}`} style={`left:${memberMenuPosition.left}px;top:${memberMenuPosition.top}px;width:220px`}>
-                        <Link class="mi" role="menuitem" href={memberShow(member.id).url} onclick={() => memberMenuId = null}>{@html ic('user', 15)}View profile</Link>
-                        <button class="mi" type="button" role="menuitem" onclick={() => assignTaskToMember(member.id)}>{@html ic('plus', 15)}Assign a task</button>
-                        <button class="mi" type="button" role="menuitem" onclick={() => copyEmail(member)}>{@html ic('mail', 15)}Copy email</button>
-                        {#if isAdmin && memberRole(member) !== 'Owner' && member.id !== workspaceData.me}
-                          <div class="msep"></div>
-                          <button class="mi" type="button" role="menuitem" onclick={event => { memberMenuId = null; toggleRoleMenu(event, member); }}>{@html ic('shield', 15)}Change role…</button>
-                          {#if member.status === 'invited'}<button class="mi" type="button" role="menuitem" onclick={() => resendInvite(member)}>{@html ic('send', 15)}Resend invite</button>{/if}
-                          <div class="msep"></div>
-                          <button class="mi danger" type="button" role="menuitem" onclick={() => requestRemove(member)}>{@html ic('user-minus', 15)}Remove from workspace</button>
-                        {/if}
-                      </Dropdown>
+                      <Dropdown
+                        config={{
+                          className: 'pop floating enter',
+                          id: 'member-options-menu',
+                          role: 'menu',
+                          label: `Options for ${member.name}`,
+                          style: `left:${memberMenuPosition.left}px;top:${memberMenuPosition.top}px;width:220px`,
+                          items: [
+                            { id: 'member-view-profile', type: 'link', label: 'View profile', href: memberShow(member.id).url, icon: 'user', action: 'close' },
+                            { id: 'member-assign-task', type: 'action', action: 'assign-task', label: 'Assign a task', icon: 'plus' },
+                            { id: 'member-copy-email', type: 'action', action: 'copy-email', label: 'Copy email', icon: 'mail' },
+                            ...(isAdmin && memberRole(member) !== 'Owner' && member.id !== workspaceData.me ? [
+                              { id: 'member-change-role-separator', type: 'separator' },
+                              { id: 'member-change-role', type: 'action', action: 'change-role', label: 'Change role…', icon: 'shield', stopPropagation: true },
+                              ...(member.status === 'invited' ? [{ id: 'member-resend-invite', type: 'action', action: 'resend-invite', label: 'Resend invite', icon: 'send' }] : []),
+                              { id: 'member-remove-separator', type: 'separator' },
+                              { id: 'member-remove', type: 'action', action: 'remove-member', label: 'Remove from workspace', icon: 'user-minus', danger: true },
+                            ] : []),
+                          ],
+                        }}
+                        onAction={(action, _item, context) => {
+                          if (action === 'close') memberMenuId = null;
+                          if (action === 'assign-task') assignTaskToMember(member.id);
+                          if (action === 'copy-email') copyEmail(member);
+                          if (action === 'change-role') {
+                            memberMenuId = null;
+                            toggleRoleMenu(context?.targetBounds, member);
+                          }
+                          if (action === 'resend-invite') resendInvite(member);
+                          if (action === 'remove-member') requestRemove(member);
+                        }}
+                      />
                     {/if}
                   </div></td>
                 </tr>

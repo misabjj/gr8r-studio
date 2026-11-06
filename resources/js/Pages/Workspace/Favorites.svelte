@@ -1,232 +1,333 @@
 <script>
-  import Dropdown from "../../Components/Dropdown.svelte";
-  import Button from "../../Components/Button.svelte";
-  import Label from "../../Components/Label.svelte";
-  import Input from "../../Components/Input.svelte";
-  import { fade, scale } from 'svelte/transition';
-  import { router, usePage } from '@inertiajs/svelte';
-  import AppLayout from '../../Layouts/AppLayout.svelte';
-  import TaskDrawer from '../../Components/TaskDrawer.svelte';
-  import { destroy as projectDestroy, duplicate as projectDuplicate, index as projectsIndex, show as projectShow, favorite as projectFavorite, update as projectUpdate } from '../../routes/projects';
-  import { update as taskUpdate } from '../../routes/tasks';
-  import { useHttpRequest } from '../../lib/http.js';
-  import { setNavigationIntent } from '../../lib/navigation-intents.js';
-  import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
-  import { ago, fmtDate, minsAgo } from '@/src/core/utils.js';
-  import { ic } from '@/src/core/icons.js';
-  import { PCOLORS, PR, PSTAT, ST } from '@/src/core/constants.js';
-  import { prIcon, stIcon } from '@/src/ui/helpers.js';
-  import { dueHtml } from '@/src/ui/helpers.js';
-  import { toast } from '@/src/ui/toast.js';
+import Dropdown from "../../Components/Dropdown.svelte";
+import Button from "../../Components/Button.svelte";
+import Label from "../../Components/Label.svelte";
+import Input from "../../Components/Input.svelte";
+import { fade, scale } from "svelte/transition";
+import { router, usePage } from "@inertiajs/svelte";
+import AppLayout from "../../Layouts/AppLayout.svelte";
+import TaskDrawer from "../../Components/TaskDrawer.svelte";
+import {
+	destroy as projectDestroy,
+	duplicate as projectDuplicate,
+	index as projectsIndex,
+	show as projectShow,
+	favorite as projectFavorite,
+	update as projectUpdate,
+} from "../../routes/projects";
+import { update as taskUpdate } from "../../routes/tasks";
+import { useHttpRequest } from "../../lib/http.js";
+import { setNavigationIntent } from "../../lib/navigation-intents.js";
+import { S, save as saveWorkspaceStore } from "@/src/core/store.js";
+import { ago, fmtDate, minsAgo } from "@/src/core/utils.js";
+import { ic } from "@/src/core/icons.js";
+import { PCOLORS, PR, PSTAT, ST } from "@/src/core/constants.js";
+import { prIcon, stIcon } from "@/src/ui/helpers.js";
+import { dueHtml } from "@/src/ui/helpers.js";
+import { toast } from "@/src/ui/toast.js";
 
-  const httpRequest = useHttpRequest();
-  let { projects: initialProjects = [], tasks: initialTasks = [], workspaceData = {} } = $props();
-  const page = usePage();
-  let projects = $state([]);
-  let tasks = $state([]);
-  let errorMessage = $state('');
-  let previousStatuses = $state(new Map());
-  let drawerTaskId = $state(null);
-  let projectMenu = $state(null);
-  let projectConfirmation = $state(null);
-  let confirmationText = $state('');
-  let confirmationBusy = $state(false);
+const httpRequest = useHttpRequest();
+let {
+	projects: initialProjects = [],
+	tasks: initialTasks = [],
+	workspaceData = {},
+} = $props();
+const page = usePage();
+let projects = $state([]);
+let tasks = $state([]);
+let errorMessage = $state("");
+let previousStatuses = $state(new Map());
+let drawerTaskId = $state(null);
+let projectMenu = $state(null);
+let projectConfirmation = $state(null);
+let confirmationText = $state("");
+let confirmationBusy = $state(false);
 
-  $effect(() => { projects = [...initialProjects]; });
-  $effect(() => { tasks = [...initialTasks]; });
+$effect(() => {
+	projects = [...initialProjects];
+});
+$effect(() => {
+	tasks = [...initialTasks];
+});
 
-  let sourceProjects = $derived(workspaceData.projects || []);
-  let sourceTasks = $derived(workspaceData.tasks || []);
-  let sourceMembers = $derived(workspaceData.members || []);
-  let projectOrder = $derived(new Map(sourceProjects.map((project, index) => [String(project.database_id || project.id), index])));
-  let taskOrder = $derived(new Map(sourceTasks.map((task, index) => [String(task.database_id || task.id), index])));
-  let membersByDatabaseId = $derived(new Map(sourceMembers.map(member => [String(member.database_id), member])));
-  let projectsByDatabaseId = $derived(new Map(sourceProjects.map(project => [String(project.database_id), project])));
-  let favoriteProjects = $derived([...projects].sort((first, second) =>
-    (projectOrder.get(String(first.id)) ?? Number.MAX_SAFE_INTEGER) - (projectOrder.get(String(second.id)) ?? Number.MAX_SAFE_INTEGER)));
-  let favoriteTasks = $derived([...tasks].sort((first, second) =>
-    (taskOrder.get(String(first.id)) ?? Number.MAX_SAFE_INTEGER) - (taskOrder.get(String(second.id)) ?? Number.MAX_SAFE_INTEGER)));
-  let drawerTask = $derived(tasks.find(task => task.id === drawerTaskId) || null);
+let sourceProjects = $derived(workspaceData.projects || []);
+let sourceTasks = $derived(workspaceData.tasks || []);
+let sourceMembers = $derived(workspaceData.members || []);
+let projectOrder = $derived(
+	new Map(
+		sourceProjects.map((project, index) => [
+			String(project.database_id || project.id),
+			index,
+		]),
+	),
+);
+let taskOrder = $derived(
+	new Map(
+		sourceTasks.map((task, index) => [
+			String(task.database_id || task.id),
+			index,
+		]),
+	),
+);
+let membersByDatabaseId = $derived(
+	new Map(sourceMembers.map((member) => [String(member.database_id), member])),
+);
+let projectsByDatabaseId = $derived(
+	new Map(
+		sourceProjects.map((project) => [String(project.database_id), project]),
+	),
+);
+let favoriteProjects = $derived(
+	[...projects].sort(
+		(first, second) =>
+			(projectOrder.get(String(first.id)) ?? Number.MAX_SAFE_INTEGER) -
+			(projectOrder.get(String(second.id)) ?? Number.MAX_SAFE_INTEGER),
+	),
+);
+let favoriteTasks = $derived(
+	[...tasks].sort(
+		(first, second) =>
+			(taskOrder.get(String(first.id)) ?? Number.MAX_SAFE_INTEGER) -
+			(taskOrder.get(String(second.id)) ?? Number.MAX_SAFE_INTEGER),
+	),
+);
+let drawerTask = $derived(
+	tasks.find((task) => task.id === drawerTaskId) || null,
+);
 
-  function completionFor(project) {
-    return project.tasks_count ? Math.round((project.completed_tasks_count / project.tasks_count) * 100) : 0;
-  }
+function completionFor(project) {
+	return project.tasks_count
+		? Math.round((project.completed_tasks_count / project.tasks_count) * 100)
+		: 0;
+}
 
-  function memberInitials(name) {
-    return name.split(' ').map(part => part[0]).join('').slice(0, 2);
-  }
+function memberInitials(name) {
+	return name
+		.split(" ")
+		.map((part) => part[0])
+		.join("")
+		.slice(0, 2);
+}
 
-  function projectLastActivity(project) {
-    const sourceProject = projectsByDatabaseId.get(String(project.id));
-    return sourceProject?.last == null ? ago(new Date(project.updated_at).getTime()) : ago(minsAgo(sourceProject.last));
-  }
+function projectLastActivity(project) {
+	const sourceProject = projectsByDatabaseId.get(String(project.id));
+	return sourceProject?.last == null
+		? ago(new Date(project.updated_at).getTime())
+		: ago(minsAgo(sourceProject.last));
+}
 
-  function canSeeProject(project) {
-    return !project.is_private || project.members?.some(member => member.id === page.props.auth?.user?.id);
-  }
+function canSeeProject(project) {
+	return (
+		!project.is_private ||
+		project.members?.some((member) => member.id === page.props.auth?.user?.id)
+	);
+}
 
-  function openProject(project) {
-    router.visit(projectShow(project.id).url);
-  }
+function openProject(project) {
+	router.visit(projectShow(project.id).url);
+}
 
-  function openProjectMenu(event, projectId) {
-    event.stopPropagation();
-    if (projectMenu?.projectId === projectId) {
-      projectMenu = null;
-      return;
-    }
+function openProjectMenu(event, projectId) {
+	event.stopPropagation();
+	if (projectMenu?.projectId === projectId) {
+		projectMenu = null;
+		return;
+	}
 
-    const bounds = event.currentTarget.getBoundingClientRect();
-    projectMenu = {
-      projectId,
-      left: Math.max(8, Math.min(bounds.right - 220, window.innerWidth - 228)),
-      top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 390)),
-    };
-  }
+	const bounds = event.currentTarget.getBoundingClientRect();
+	projectMenu = {
+		projectId,
+		left: Math.max(8, Math.min(bounds.right - 220, window.innerWidth - 228)),
+		top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 390)),
+	};
+}
 
-  function closeProjectMenuOnWindowClick(event) {
-    if (!(event.target instanceof Element) || !event.target.closest('[data-project-menu]')) projectMenu = null;
-  }
+function closeProjectMenuOnWindowClick(event) {
+	if (
+		!(event.target instanceof Element) ||
+		!event.target.closest("[data-project-menu]")
+	)
+		projectMenu = null;
+}
 
-  function handleProjectMenuKeydown(event) {
-    if (event.key !== 'Escape') return;
-    if (projectConfirmation) projectConfirmation = null;
-    else projectMenu = null;
-  }
+function handleProjectMenuKeydown(event) {
+	if (event.key !== "Escape") return;
+	if (projectConfirmation) projectConfirmation = null;
+	else projectMenu = null;
+}
 
-  async function runProjectMenuAction(event, action) {
-    event.stopPropagation();
-    const selectedProject = projects.find(project => project.id === projectMenu?.projectId);
-    projectMenu = null;
-    if (!selectedProject) return;
+async function runProjectMenuAction(action) {
+	const selectedProject = projects.find(
+		(project) => project.id === projectMenu?.projectId,
+	);
+	projectMenu = null;
+	if (!selectedProject) return;
 
-    if (action === 'open') {
-      openProject(selectedProject);
-      return;
-    }
+	if (action === "open") {
+		openProject(selectedProject);
+		return;
+	}
 
-    if (action === 'favorite') {
-      errorMessage = '';
-      try {
-        const updatedProject = await httpRequest(projectFavorite(selectedProject.id).url, 'PATCH', {});
-        projects = projects.map(project => project.id === selectedProject.id
-          ? { ...project, is_favorite: updatedProject.is_favorite }
-          : project);
-        if (!updatedProject.is_favorite) projects = projects.filter(project => project.id !== selectedProject.id);
-      } catch (error) {
-        errorMessage = error.message;
-      }
-      return;
-    }
+	if (action === "favorite") {
+		errorMessage = "";
+		try {
+			const updatedProject = await httpRequest(
+				projectFavorite(selectedProject.id).url,
+				"PATCH",
+				{},
+			);
+			projects = projects.map((project) =>
+				project.id === selectedProject.id
+					? { ...project, is_favorite: updatedProject.is_favorite }
+					: project,
+			);
+			if (!updatedProject.is_favorite)
+				projects = projects.filter(
+					(project) => project.id !== selectedProject.id,
+				);
+		} catch (error) {
+			errorMessage = error.message;
+		}
+		return;
+	}
 
-    if (action === 'edit' || action === 'share') {
-      setNavigationIntent({ type: 'project-action', action });
-      router.visit(projectShow(selectedProject.id).url);
-      return;
-    }
+	if (action === "edit" || action === "share") {
+		setNavigationIntent({ type: "project-action", action });
+		router.visit(projectShow(selectedProject.id).url);
+		return;
+	}
 
-    if (action === 'duplicate') {
-      try {
-        const copy = await httpRequest(projectDuplicate(selectedProject.id).url, 'POST', {});
-        toast(`Duplicated ${selectedProject.name}`, {
-          action: 'Open',
-          onAction: () => router.visit(projectShow(copy.id).url),
-        });
-      } catch (error) {
-        errorMessage = error.message;
-      }
-      return;
-    }
+	if (action === "duplicate") {
+		try {
+			const copy = await httpRequest(
+				projectDuplicate(selectedProject.id).url,
+				"POST",
+				{},
+			);
+			toast(`Duplicated ${selectedProject.name}`, {
+				action: "Open",
+				onAction: () => router.visit(projectShow(copy.id).url),
+			});
+		} catch (error) {
+			errorMessage = error.message;
+		}
+		return;
+	}
 
-    if (action === 'move-up' || action === 'move-down') {
-      const order = S.data.projOrder || [];
-      const currentIndex = order.indexOf(selectedProject.source_key);
-      const nextIndex = action === 'move-up' ? currentIndex - 1 : currentIndex + 1;
-      if (currentIndex >= 0 && nextIndex >= 0 && nextIndex < order.length) {
-        const nextOrder = [...order];
-        [nextOrder[currentIndex], nextOrder[nextIndex]] = [nextOrder[nextIndex], nextOrder[currentIndex]];
-        S.data.projOrder = nextOrder;
-        saveWorkspaceStore();
-      }
-      return;
-    }
+	if (action === "move-up" || action === "move-down") {
+		const order = S.data.projOrder || [];
+		const currentIndex = order.indexOf(selectedProject.source_key);
+		const nextIndex =
+			action === "move-up" ? currentIndex - 1 : currentIndex + 1;
+		if (currentIndex >= 0 && nextIndex >= 0 && nextIndex < order.length) {
+			const nextOrder = [...order];
+			[nextOrder[currentIndex], nextOrder[nextIndex]] = [
+				nextOrder[nextIndex],
+				nextOrder[currentIndex],
+			];
+			S.data.projOrder = nextOrder;
+			saveWorkspaceStore();
+		}
+		return;
+	}
 
-    if (action === 'archive' || action === 'delete') {
-      confirmationText = '';
-      errorMessage = '';
-      projectConfirmation = { action, project: selectedProject };
-      return;
-    }
+	if (action === "archive" || action === "delete") {
+		confirmationText = "";
+		errorMessage = "";
+		projectConfirmation = { action, project: selectedProject };
+		return;
+	}
 
-    const link = `https://gr8rstudio.com/${S.data.ws.url}/project/${selectedProject.key.toLowerCase()}`;
-    try {
-      await navigator.clipboard.writeText(link);
-      toast('Link copied');
-    } catch {
-      errorMessage = `Copy isn't available here — ${link}`;
-    }
-  }
+	const link = `https://gr8rstudio.com/${S.data.ws.url}/project/${selectedProject.key.toLowerCase()}`;
+	try {
+		await navigator.clipboard.writeText(link);
+		toast("Link copied");
+	} catch {
+		errorMessage = `Copy isn't available here — ${link}`;
+	}
+}
 
-  async function confirmProjectAction() {
-    const confirmation = projectConfirmation;
-    if (!confirmation || confirmationBusy) return;
-    if (confirmation.action === 'delete' && confirmationText !== confirmation.project.name) return;
+async function confirmProjectAction() {
+	const confirmation = projectConfirmation;
+	if (!confirmation || confirmationBusy) return;
+	if (
+		confirmation.action === "delete" &&
+		confirmationText !== confirmation.project.name
+	)
+		return;
 
-    confirmationBusy = true;
-    errorMessage = '';
-    try {
-      if (confirmation.action === 'archive') {
-        await httpRequest(projectUpdate(confirmation.project.id).url, 'PATCH', { status: 'archived' });
-        toast(`Archived ${confirmation.project.name}`);
-      } else {
-        await httpRequest(projectDestroy(confirmation.project.id).url, 'DELETE', {});
-        toast(`Deleted ${confirmation.project.name}`);
-      }
-      projectConfirmation = null;
-      confirmationText = '';
-      router.reload({ preserveScroll: true });
-    } catch (error) {
-      errorMessage = error.message;
-    } finally {
-      confirmationBusy = false;
-    }
-  }
+	confirmationBusy = true;
+	errorMessage = "";
+	try {
+		if (confirmation.action === "archive") {
+			await httpRequest(projectUpdate(confirmation.project.id).url, "PATCH", {
+				status: "archived",
+			});
+			toast(`Archived ${confirmation.project.name}`);
+		} else {
+			await httpRequest(
+				projectDestroy(confirmation.project.id).url,
+				"DELETE",
+				{},
+			);
+			toast(`Deleted ${confirmation.project.name}`);
+		}
+		projectConfirmation = null;
+		confirmationText = "";
+		router.reload({ preserveScroll: true });
+	} catch (error) {
+		errorMessage = error.message;
+	} finally {
+		confirmationBusy = false;
+	}
+}
 
-  function openTaskRow(event, task) {
-    if (event.type === 'keydown') {
-      if (event.target !== event.currentTarget || !['Enter', ' '].includes(event.key)) return;
-      event.preventDefault();
-    } else if (event.target.closest('a, button, input, select, textarea')) {
-      return;
-    }
+function openTaskRow(event, task) {
+	if (event.type === "keydown") {
+		if (
+			event.target !== event.currentTarget ||
+			!["Enter", " "].includes(event.key)
+		)
+			return;
+		event.preventDefault();
+	} else if (event.target.closest("a, button, input, select, textarea")) {
+		return;
+	}
 
-    drawerTaskId = task.id;
-  }
+	drawerTaskId = task.id;
+}
 
-  function updateDrawerTask(updatedTask) {
-    if (!updatedTask.is_favorite) {
-      tasks = tasks.filter(task => task.id !== updatedTask.id);
-      drawerTaskId = null;
-      return;
-    }
+function updateDrawerTask(updatedTask) {
+	if (!updatedTask.is_favorite) {
+		tasks = tasks.filter((task) => task.id !== updatedTask.id);
+		drawerTaskId = null;
+		return;
+	}
 
-    tasks = tasks.map(task => task.id === updatedTask.id ? { ...task, ...updatedTask } : task);
-  }
+	tasks = tasks.map((task) =>
+		task.id === updatedTask.id ? { ...task, ...updatedTask } : task,
+	);
+}
 
-  async function toggleComplete(task) {
-    const status = task.status === 'done' ? previousStatuses.get(task.id) || 'todo' : 'done';
-    errorMessage = '';
-    try {
-      const updated = await httpRequest(taskUpdate(task.id).url, 'PATCH', { status });
-      tasks = tasks.map(item => item.id === updated.id ? { ...item, ...updated } : item);
-      const nextPreviousStatuses = new Map(previousStatuses);
-      if (status === 'done') nextPreviousStatuses.set(task.id, task.status);
-      else nextPreviousStatuses.delete(task.id);
-      previousStatuses = nextPreviousStatuses;
-    } catch (error) {
-      errorMessage = error.message;
-    }
-  }
+async function toggleComplete(task) {
+	const status =
+		task.status === "done" ? previousStatuses.get(task.id) || "todo" : "done";
+	errorMessage = "";
+	try {
+		const updated = await httpRequest(taskUpdate(task.id).url, "PATCH", {
+			status,
+		});
+		tasks = tasks.map((item) =>
+			item.id === updated.id ? { ...item, ...updated } : item,
+		);
+		const nextPreviousStatuses = new Map(previousStatuses);
+		if (status === "done") nextPreviousStatuses.set(task.id, task.status);
+		else nextPreviousStatuses.delete(task.id);
+		previousStatuses = nextPreviousStatuses;
+	} catch (error) {
+		errorMessage = error.message;
+	}
+}
 </script>
 
 <svelte:head><title>Favorites</title></svelte:head>
@@ -279,20 +380,33 @@
     {@const sidebarOrder = S.data.projOrder || []}
     {@const sidebarIndex = sidebarOrder.indexOf(selectedProject?.source_key)}
     {#if selectedProject}
-      <Dropdown class="pop enter" data-project-menu role="menu" tabindex="-1" aria-label={`${selectedProject.name} options`} style={`left:${projectMenu.left}px;top:${projectMenu.top}px;width:220px`}>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'open')}>{@html ic('arrow-up-right', 15)}Open</button>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'favorite')}>{@html ic('star', 15)}Remove from favorites</button>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'edit')}>{@html ic('pencil', 15)}Rename &amp; edit</button>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'share')}>{@html ic('share-2', 15)}Share</button>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'copy')}>{@html ic('link', 15)}Copy link</button>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'duplicate')}>{@html ic('copy', 15)}Duplicate</button>
-        <div class="msep"></div>
-        {#if sidebarIndex > 0}<button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'move-up')}>{@html ic('arrow-up', 15)}Move up in sidebar</button>{/if}
-        {#if sidebarIndex >= 0 && sidebarIndex < sidebarOrder.length - 1}<button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'move-down')}>{@html ic('arrow-down', 15)}Move down in sidebar</button>{/if}
-        <div class="msep"></div>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'archive')}>{@html ic('archive', 15)}{selectedProject.status === 'complete' ? 'Archive' : 'Archive project'}</button>
-        <button class="mi danger" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'delete')}>{@html ic('trash-2', 15)}Delete project</button>
-      </Dropdown>
+      <Dropdown
+        config={{
+          className: 'pop enter',
+          dataAttributes: { 'data-project-menu': true },
+          role: 'menu',
+          tabIndex: -1,
+          label: `${selectedProject.name} options`,
+          style: `left:${projectMenu.left}px;top:${projectMenu.top}px;width:220px`,
+          items: [
+            { id: 'project-open', type: 'action', action: 'project-menu-action', payload: 'open', label: 'Open', icon: 'arrow-up-right', stopPropagation: true },
+            { id: 'project-favorite', type: 'action', action: 'project-menu-action', payload: 'favorite', label: 'Remove from favorites', icon: 'star', stopPropagation: true },
+            { id: 'project-edit', type: 'action', action: 'project-menu-action', payload: 'edit', label: 'Rename & edit', icon: 'pencil', stopPropagation: true },
+            { id: 'project-share', type: 'action', action: 'project-menu-action', payload: 'share', label: 'Share', icon: 'share-2', stopPropagation: true },
+            { id: 'project-copy', type: 'action', action: 'project-menu-action', payload: 'copy', label: 'Copy link', icon: 'link', stopPropagation: true },
+            { id: 'project-duplicate', type: 'action', action: 'project-menu-action', payload: 'duplicate', label: 'Duplicate', icon: 'copy', stopPropagation: true },
+            { id: 'project-order-separator', type: 'separator' },
+            ...(sidebarIndex > 0 ? [{ id: 'project-move-up', type: 'action', action: 'project-menu-action', payload: 'move-up', label: 'Move up in sidebar', icon: 'arrow-up', stopPropagation: true }] : []),
+            ...(sidebarIndex >= 0 && sidebarIndex < sidebarOrder.length - 1 ? [{ id: 'project-move-down', type: 'action', action: 'project-menu-action', payload: 'move-down', label: 'Move down in sidebar', icon: 'arrow-down', stopPropagation: true }] : []),
+            { id: 'project-archive-separator', type: 'separator' },
+            { id: 'project-archive', type: 'action', action: 'project-menu-action', payload: 'archive', label: selectedProject.status === 'complete' ? 'Archive' : 'Archive project', icon: 'archive', stopPropagation: true },
+            { id: 'project-delete', type: 'action', action: 'project-menu-action', payload: 'delete', label: 'Delete project', icon: 'trash-2', danger: true, stopPropagation: true },
+          ],
+        }}
+        onAction={(action, item) => {
+          if (action === 'project-menu-action' && typeof item.payload === 'string') void runProjectMenuAction(item.payload);
+        }}
+      />
     {/if}
   {/if}
   {#if projectConfirmation}

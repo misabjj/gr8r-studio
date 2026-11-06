@@ -1,355 +1,864 @@
 <script>
-  import Select from "./Select.svelte";
-  import Dropdown from "./Dropdown.svelte";
-  import Button from "./Button.svelte";
-  import Input from "./Input.svelte";
-  import { Link } from '@inertiajs/svelte';
-  import { show as projectShow } from '../routes/projects';
-  import { ic } from '@/src/core/icons.js';
-  import { PCOLORS } from '@/src/core/constants.js';
-  import { addD, diffD, fmtDate, MONL, parse } from '@/src/core/utils.js';
-  import { S } from '@/src/core/store.js';
-  import { prIcon, stIcon } from '@/src/ui/helpers.js';
-  import { toast } from '@/src/ui/toast.js';
+import Select from "./Select.svelte";
+import Dropdown from "./Dropdown.svelte";
+import Button from "./Button.svelte";
+import Input from "./Input.svelte";
+import { Link } from "@inertiajs/svelte";
+import { show as projectShow } from "../routes/projects";
+import { ic } from "@/src/core/icons.js";
+import { PCOLORS } from "@/src/core/constants.js";
+import { addD, diffD, fmtDate, MONL, parse } from "@/src/core/utils.js";
+import { S } from "@/src/core/store.js";
+import { prIcon, stIcon } from "@/src/ui/helpers.js";
+import { toast } from "@/src/ui/toast.js";
 
-  let { tasks = [], projects = [], workspaceData = {}, project = null, showToolbar = true, legendProjectIds = [], onCreate, onTask, onReschedule } = $props();
-  let date = $state(parse(S.ui.calDate) || new Date());
-  let mode = $state(S.ui.calMode || 'month');
-  let query = $state('');
-  let filters = $state([]);
-  let sort = $state('manual');
-  let descending = $state(false);
-  let openMenu = $state('');
-  let menuPosition = $state({ left: 8, top: 8 });
-  let editingFilter = $state(-1);
-  let selectedEvent = $state(null);
-  let selectedDay = $state(null);
-  let dropDay = $state('');
-  let menuTrigger = $state(null);
-  const weekStart = Number(S.prefs.weekStart ?? 1);
-  const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const weekdays = Array.from({ length: 7 }, (_, index) => weekdayNames[(index + weekStart) % 7].slice(0, 3));
-  const statuses = [
-    { id: 'backlog', name: 'Backlog' }, { id: 'todo', name: 'To Do' },
-    { id: 'progress', name: 'In Progress' }, { id: 'review', name: 'Review' }, { id: 'done', name: 'Done' },
-  ];
-  const priorities = [
-    { id: 'urgent', name: 'Urgent' }, { id: 'high', name: 'High' }, { id: 'medium', name: 'Medium' },
-    { id: 'low', name: 'Low' }, { id: 'none', name: 'No priority' },
-  ];
-  const sortable = [
-    { id: 'manual', name: 'Manual' }, { id: 'title', name: 'Title' }, { id: 'due', name: 'Due date' },
-    { id: 'priority', name: 'Priority' }, { id: 'status', name: 'Status' }, { id: 'created', name: 'Created' },
-    { id: 'updated', name: 'Updated' }, { id: 'assignee', name: 'Assignee' }, { id: 'project', name: 'Project' },
-  ];
-  const filterFields = [
-    { id: 'status', name: 'Status', icon: 'circle-dot' }, { id: 'assignee', name: 'Assignee', icon: 'user' },
-    { id: 'priority', name: 'Priority', icon: 'signal-high' }, { id: 'due', name: 'Due date', icon: 'calendar' },
-    { id: 'project', name: 'Project', icon: 'folder' },
-  ];
+let {
+	tasks = [],
+	projects = [],
+	workspaceData = {},
+	project = null,
+	showToolbar = true,
+	legendProjectIds = [],
+	onCreate,
+	onTask,
+	onReschedule,
+} = $props();
+let date = $state(parse(S.ui.calDate) || new Date());
+let mode = $state(S.ui.calMode || "month");
+let query = $state("");
+let filters = $state([]);
+let sort = $state("manual");
+let descending = $state(false);
+let openMenu = $state("");
+let menuPosition = $state({ left: 8, top: 8 });
+let editingFilter = $state(-1);
+let selectedEvent = $state(null);
+let selectedDay = $state(null);
+let dropDay = $state("");
+let menuTrigger = $state(null);
+const weekStart = Number(S.prefs.weekStart ?? 1);
+const weekdayNames = [
+	"Sunday",
+	"Monday",
+	"Tuesday",
+	"Wednesday",
+	"Thursday",
+	"Friday",
+	"Saturday",
+];
+const weekdays = Array.from({ length: 7 }, (_, index) =>
+	weekdayNames[(index + weekStart) % 7].slice(0, 3),
+);
+const statuses = [
+	{ id: "backlog", name: "Backlog" },
+	{ id: "todo", name: "To Do" },
+	{ id: "progress", name: "In Progress" },
+	{ id: "review", name: "Review" },
+	{ id: "done", name: "Done" },
+];
+const priorities = [
+	{ id: "urgent", name: "Urgent" },
+	{ id: "high", name: "High" },
+	{ id: "medium", name: "Medium" },
+	{ id: "low", name: "Low" },
+	{ id: "none", name: "No priority" },
+];
+const sortable = [
+	{ id: "manual", name: "Manual" },
+	{ id: "title", name: "Title" },
+	{ id: "due", name: "Due date" },
+	{ id: "priority", name: "Priority" },
+	{ id: "status", name: "Status" },
+	{ id: "created", name: "Created" },
+	{ id: "updated", name: "Updated" },
+	{ id: "assignee", name: "Assignee" },
+	{ id: "project", name: "Project" },
+];
+const filterFields = [
+	{ id: "status", name: "Status", icon: "circle-dot" },
+	{ id: "assignee", name: "Assignee", icon: "user" },
+	{ id: "priority", name: "Priority", icon: "signal-high" },
+	{ id: "due", name: "Due date", icon: "calendar" },
+	{ id: "project", name: "Project", icon: "folder" },
+];
 
-  function iso(value) {
-    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
-  }
+function iso(value) {
+	return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+}
 
-  function addDays(value, count) {
-    const result = new Date(value);
-    result.setDate(result.getDate() + count);
-    return result;
-  }
+function addDays(value, count) {
+	const result = new Date(value);
+	result.setDate(result.getDate() + count);
+	return result;
+}
 
-  function startOfWeek(value) {
-    const start = new Date(value);
-    start.setDate(start.getDate() - ((start.getDay() - weekStart + 7) % 7));
-    start.setHours(0, 0, 0, 0);
-    return start;
-  }
+function startOfWeek(value) {
+	const start = new Date(value);
+	start.setDate(start.getDate() - ((start.getDay() - weekStart + 7) % 7));
+	start.setHours(0, 0, 0, 0);
+	return start;
+}
 
-  function formatDate(value) {
-    return fmtDate(iso(value));
-  }
+function formatDate(value) {
+	return fmtDate(iso(value));
+}
 
-  function formatLongDate(value) {
-    return value.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-  }
+function formatLongDate(value) {
+	return value.toLocaleDateString("en-US", {
+		weekday: "long",
+		month: "long",
+		day: "numeric",
+		year: "numeric",
+	});
+}
 
-  let days = $derived.by(() => {
-    const first = mode === 'month' ? new Date(date.getFullYear(), date.getMonth(), 1) : date;
-    const start = startOfWeek(first);
-    const cells = Array.from({ length: mode === 'month' ? 42 : 7 }, (_, index) => addDays(start, index));
-    return mode === 'month' && cells[35].getMonth() !== date.getMonth() ? cells.slice(0, 35) : cells;
-  });
+let days = $derived.by(() => {
+	const first =
+		mode === "month" ? new Date(date.getFullYear(), date.getMonth(), 1) : date;
+	const start = startOfWeek(first);
+	const cells = Array.from({ length: mode === "month" ? 42 : 7 }, (_, index) =>
+		addDays(start, index),
+	);
+	return mode === "month" && cells[35].getMonth() !== date.getMonth()
+		? cells.slice(0, 35)
+		: cells;
+});
 
-  let label = $derived(mode === 'month'
-    ? `${MONL[date.getMonth()]} ${date.getFullYear()}`
-    : `${fmtDate(iso(days[0]))} – ${fmtDate(iso(days[6]))}, ${days[6].getFullYear()}`);
+let label = $derived(
+	mode === "month"
+		? `${MONL[date.getMonth()]} ${date.getFullYear()}`
+		: `${fmtDate(iso(days[0]))} – ${fmtDate(iso(days[6]))}, ${days[6].getFullYear()}`,
+);
 
-  $effect(() => {
-    S.ui.calDate = iso(date);
-    S.ui.calMode = mode;
-  });
+$effect(() => {
+	S.ui.calDate = iso(date);
+	S.ui.calMode = mode;
+});
 
-  function move(amount) {
-    if (amount === 0) {
-      date = new Date();
-      return;
-    }
+function move(amount) {
+	if (amount === 0) {
+		date = new Date();
+		return;
+	}
 
-    if (mode === 'month') date = new Date(date.getFullYear(), date.getMonth() + amount, 1);
-    else date = addDays(date, amount * 7);
-  }
+	if (mode === "month")
+		date = new Date(date.getFullYear(), date.getMonth() + amount, 1);
+	else date = addDays(date, amount * 7);
+}
 
-  function sourceProject(sourceId) {
-    return (workspaceData.projects || []).find(item => String(item.id) === String(sourceId));
-  }
+function sourceProject(sourceId) {
+	return (workspaceData.projects || []).find(
+		(item) => String(item.id) === String(sourceId),
+	);
+}
 
-  function projectForSource(sourceId) {
-    const source = sourceProject(sourceId);
-    return projects.find(item => String(item.id) === String(source?.database_id)) || null;
-  }
+function projectForSource(sourceId) {
+	const source = sourceProject(sourceId);
+	return (
+		projects.find((item) => String(item.id) === String(source?.database_id)) ||
+		null
+	);
+}
 
-  let calendarEvents = $derived((workspaceData.events || [])
-    .map(event => ({ ...event, source: sourceProject(event.project), project: projectForSource(event.project) }))
-    .filter(event => event.project && (!project || String(event.project.id) === String(project.id))));
+let calendarEvents = $derived(
+	(workspaceData.events || [])
+		.map((event) => ({
+			...event,
+			source: sourceProject(event.project),
+			project: projectForSource(event.project),
+		}))
+		.filter(
+			(event) =>
+				event.project &&
+				(!project || String(event.project.id) === String(project.id)),
+		),
+);
 
-  function sourceProjectForTask(task) {
-    return (workspaceData.projects || []).find(item => String(item.database_id) === String(task.project_id));
-  }
+function sourceProjectForTask(task) {
+	return (workspaceData.projects || []).find(
+		(item) => String(item.database_id) === String(task.project_id),
+	);
+}
 
-  function taskIsVisible(task) {
-    const source = sourceProjectForTask(task);
-    if (!source) return true;
-    if (['complete', 'completed', 'archived'].includes(source.status)) return false;
-    if (source.private && !source.members?.includes(workspaceData.me)) return false;
-    return true;
-  }
+function taskIsVisible(task) {
+	const source = sourceProjectForTask(task);
+	if (!source) return true;
+	if (["complete", "completed", "archived"].includes(source.status))
+		return false;
+	if (source.private && !source.members?.includes(workspaceData.me))
+		return false;
+	return true;
+}
 
-  function taskOrder(task) {
-    const sourceTask = (workspaceData.tasks || []).find(item => String(item.id) === String(task.source_key));
-    return sourceTask?.order ?? task.order ?? 0;
-  }
+function taskOrder(task) {
+	const sourceTask = (workspaceData.tasks || []).find(
+		(item) => String(item.id) === String(task.source_key),
+	);
+	return sourceTask?.order ?? task.order ?? 0;
+}
 
-  let visibleTasks = $derived.by(() => {
-    let result = tasks.filter(task => {
-      if (!taskIsVisible(task)) return false;
-      const search = query.trim().toLowerCase();
-      if (search && !`${task.title} ${task.key || task.source_key || ''}`.toLowerCase().includes(search)) return false;
-      return filters.every(filter => matchesFilter(task, filter));
-    });
+let visibleTasks = $derived.by(() => {
+	let result = tasks.filter((task) => {
+		if (!taskIsVisible(task)) return false;
+		const search = query.trim().toLowerCase();
+		if (
+			search &&
+			!`${task.title} ${task.key || task.source_key || ""}`
+				.toLowerCase()
+				.includes(search)
+		)
+			return false;
+		return filters.every((filter) => matchesFilter(task, filter));
+	});
 
-    const priorityRank = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 };
-    const statusRank = Object.fromEntries(statuses.map((item, index) => [item.id, index]));
-    const value = task => ({
-      manual: taskOrder(task),
-      title: task.title?.toLowerCase() || '',
-      due: task.due_date || '9999-99-99',
-      priority: priorityRank[task.priority] ?? 4,
-      status: statusRank[task.status] ?? 9,
-      created: task.created_at || '',
-      updated: task.updated_at || '',
-      assignee: task.assignee?.name?.toLowerCase() || 'zzz',
-      project: task.project?.name?.toLowerCase() || 'zzz',
-    })[sort];
-    result = [...result].sort((first, second) => {
-      const left = value(first);
-      const right = value(second);
-      const comparison = left > right ? 1 : left < right ? -1 : 0;
-      return descending ? -comparison : comparison;
-    });
-    return result;
-  });
+	const priorityRank = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 };
+	const statusRank = Object.fromEntries(
+		statuses.map((item, index) => [item.id, index]),
+	);
+	const value = (task) =>
+		({
+			manual: taskOrder(task),
+			title: task.title?.toLowerCase() || "",
+			due: task.due_date || "9999-99-99",
+			priority: priorityRank[task.priority] ?? 4,
+			status: statusRank[task.status] ?? 9,
+			created: task.created_at || "",
+			updated: task.updated_at || "",
+			assignee: task.assignee?.name?.toLowerCase() || "zzz",
+			project: task.project?.name?.toLowerCase() || "zzz",
+		})[sort];
+	result = [...result].sort((first, second) => {
+		const left = value(first);
+		const right = value(second);
+		const comparison = left > right ? 1 : left < right ? -1 : 0;
+		return descending ? -comparison : comparison;
+	});
+	return result;
+});
 
-  let legendProjects = $derived.by(() => {
-    if (legendProjectIds.length) {
-      return [...new Set(legendProjectIds)]
-        .map(id => projects.find(item => String(item.id) === String(id)))
-        .filter(Boolean);
-    }
+let legendProjects = $derived.by(() => {
+	if (legendProjectIds.length) {
+		return [...new Set(legendProjectIds)]
+			.map((id) => projects.find((item) => String(item.id) === String(id)))
+			.filter(Boolean);
+	}
 
-    return (workspaceData.projects || [])
-      .filter(source => visibleTasks.some(task => String(task.project_id) === String(source.database_id)))
-      .map(source => projects.find(item => String(item.id) === String(source.database_id)))
-      .filter(Boolean);
-  });
+	return (workspaceData.projects || [])
+		.filter((source) =>
+			visibleTasks.some(
+				(task) => String(task.project_id) === String(source.database_id),
+			),
+		)
+		.map((source) =>
+			projects.find((item) => String(item.id) === String(source.database_id)),
+		)
+		.filter(Boolean);
+});
 
-  function matchesFilter(task, filter) {
-    if (!filter.values.length) return true;
-    let hit = false;
-    if (filter.field === 'due') {
-      const due = task.due_date?.slice(0, 10);
-      const today = iso(new Date());
-      hit = filter.values.some(value => {
-        if (value === 'nodate') return !due;
-        if (!due) return false;
-        if (value === 'overdue') return due < today && task.status !== 'done';
-        if (value === 'today') return due === today;
-        if (value === 'week') return due >= today && due <= iso(addDays(new Date(), 7));
-        return due > iso(addDays(new Date(), 7));
-      });
-    } else if (filter.field === 'assignee') {
-      hit = filter.values.includes(String(task.assignee_id || 'none'));
-    } else if (filter.field === 'project') {
-      hit = filter.values.includes(String(task.project_id));
-    } else {
-      hit = filter.values.includes(String(task[filter.field] || 'none'));
-    }
-    return filter.operator === 'not' ? !hit : hit;
-  }
+function matchesFilter(task, filter) {
+	if (!filter.values.length) return true;
+	let hit = false;
+	if (filter.field === "due") {
+		const due = task.due_date?.slice(0, 10);
+		const today = iso(new Date());
+		hit = filter.values.some((value) => {
+			if (value === "nodate") return !due;
+			if (!due) return false;
+			if (value === "overdue") return due < today && task.status !== "done";
+			if (value === "today") return due === today;
+			if (value === "week")
+				return due >= today && due <= iso(addDays(new Date(), 7));
+			return due > iso(addDays(new Date(), 7));
+		});
+	} else if (filter.field === "assignee") {
+		hit = filter.values.includes(String(task.assignee_id || "none"));
+	} else if (filter.field === "project") {
+		hit = filter.values.includes(String(task.project_id));
+	} else {
+		hit = filter.values.includes(String(task[filter.field] || "none"));
+	}
+	return filter.operator === "not" ? !hit : hit;
+}
 
-  function filterOptions(field) {
-    if (field === 'status') return statuses;
-    if (field === 'priority') return priorities;
-    if (field === 'project') return projects.filter(item => !item.is_private).map(item => ({ id: String(item.id), name: item.name }));
-    if (field === 'assignee') {
-      const members = new Map(tasks.filter(task => task.assignee).map(task => [String(task.assignee.id), task.assignee.name]));
-      return [{ id: 'none', name: 'Unassigned' }, ...[...members].map(([id, name]) => ({ id, name }))];
-    }
-    return [
-      { id: 'overdue', name: 'Overdue' }, { id: 'today', name: 'Today' },
-      { id: 'week', name: 'Next 7 days' }, { id: 'later', name: 'Later' }, { id: 'nodate', name: 'No due date' },
-    ];
-  }
+function filterOptions(field) {
+	if (field === "status") return statuses;
+	if (field === "priority") return priorities;
+	if (field === "project")
+		return projects
+			.filter((item) => !item.is_private)
+			.map((item) => ({ id: String(item.id), name: item.name }));
+	if (field === "assignee") {
+		const members = new Map(
+			tasks
+				.filter((task) => task.assignee)
+				.map((task) => [String(task.assignee.id), task.assignee.name]),
+		);
+		return [
+			{ id: "none", name: "Unassigned" },
+			...[...members].map(([id, name]) => ({ id, name })),
+		];
+	}
+	return [
+		{ id: "overdue", name: "Overdue" },
+		{ id: "today", name: "Today" },
+		{ id: "week", name: "Next 7 days" },
+		{ id: "later", name: "Later" },
+		{ id: "nodate", name: "No due date" },
+	];
+}
 
-  function showMenu(menu, event) {
-    menuTrigger = event.currentTarget;
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const width = menu === 'filter' ? 440 : 200;
-    menuPosition = {
-      left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
-      top: Math.min(bounds.bottom + 4, window.innerHeight - 340),
-    };
-    openMenu = openMenu === menu ? '' : menu;
-  }
+function showMenu(menu, event) {
+	menuTrigger = event.currentTarget;
+	const bounds = event.currentTarget.getBoundingClientRect();
+	const width = menu === "filter" ? 440 : 200;
+	menuPosition = {
+		left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
+		top: Math.min(bounds.bottom + 4, window.innerHeight - 340),
+	};
+	openMenu = openMenu === menu ? "" : menu;
+}
 
-  function closeMenu() {
-    openMenu = '';
-    editingFilter = -1;
-  }
+function closeMenu() {
+	openMenu = "";
+	editingFilter = -1;
+}
 
-  function addFilter(field) {
-    filters = [...filters, { field, operator: 'is', values: [] }];
-    editingFilter = filters.length - 1;
-  }
+function addFilter(field) {
+	filters = [...filters, { field, operator: "is", values: [] }];
+	editingFilter = filters.length - 1;
+}
 
-  function changeFilter(index, patch) {
-    filters = filters.map((filter, filterIndex) => filterIndex === index ? { ...filter, ...patch } : filter);
-  }
+function changeFilter(index, patch) {
+	filters = filters.map((filter, filterIndex) =>
+		filterIndex === index ? { ...filter, ...patch } : filter,
+	);
+}
 
-  function toggleFilterValue(index, value) {
-    const current = filters[index].values;
-    changeFilter(index, { values: current.includes(String(value)) ? current.filter(item => item !== String(value)) : [...current, String(value)] });
-  }
+function toggleFilterValue(index, value) {
+	const current = filters[index].values;
+	changeFilter(index, {
+		values: current.includes(String(value))
+			? current.filter((item) => item !== String(value))
+			: [...current, String(value)],
+	});
+}
 
-  function filterSummary(filter) {
-    const field = filterFields.find(item => item.id === filter.field);
-    const names = filter.values.map(value => filterOptions(filter.field).find(item => String(item.id) === value)?.name || value);
-    return `${field?.name || filter.field} ${filter.operator === 'not' ? 'is not' : 'is'} ${names.length ? names.length > 2 ? `${names.length} selected` : names.join(', ') : 'any'}`;
-  }
+function filterSummary(filter) {
+	const field = filterFields.find((item) => item.id === filter.field);
+	const names = filter.values.map(
+		(value) =>
+			filterOptions(filter.field).find((item) => String(item.id) === value)
+				?.name || value,
+	);
+	return `${field?.name || filter.field} ${filter.operator === "not" ? "is not" : "is"} ${names.length ? (names.length > 2 ? `${names.length} selected` : names.join(", ")) : "any"}`;
+}
 
-  function changeSort(value) {
-    if (sort === value) descending = !descending;
-    else {
-      sort = value;
-      descending = false;
-    }
-  }
+function changeSort(value) {
+	if (sort === value) descending = !descending;
+	else {
+		sort = value;
+		descending = false;
+	}
+}
 
-  function eventFor(item) {
-    return item.type === 'event' ? item.value : null;
-  }
+function calendarElement(id, tag, options = {}) {
+	return { id, type: "element", tag, ...options };
+}
 
-  function itemsOn(value) {
-    const dateKey = iso(value);
-    const events = calendarEvents.filter(event => event.date === dateKey).map(event => ({ type: 'event', value: event }));
-    const dayTasks = visibleTasks
-      .filter(task => task.due_date?.slice(0, 10) === dateKey)
-      .sort((first, second) => taskOrder(first) - taskOrder(second))
-      .map(task => ({ type: 'task', value: task }));
-    return [...events, ...dayTasks];
-  }
+function calendarAction(id, action, payload, label, options = {}) {
+	return { id, type: "action", action, payload, label, ...options };
+}
 
-  function startTaskDrag(event, task) {
-    if (!task.due_date) return;
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', String(task.id));
-  }
+function filterDropdownItems() {
+	const items = [
+		calendarElement("filter-heading", "div", {
+			className: "mh fb-h",
+			items: [
+				calendarElement("filter-heading-label", "span", { text: "Filter by" }),
+				...(filters.length
+					? [
+							calendarElement("filter-clear-all", "button", {
+								className: "btn btn-ghost btn-sm",
+								text: "Clear all",
+								events: { click: "clear-filters" },
+							}),
+						]
+					: []),
+			],
+		}),
+	];
 
-  function dragOverDay(event, value) {
-    event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
-    dropDay = iso(value);
-  }
+	if (filters.length) {
+		items.push(
+			calendarElement("filter-rows", "div", {
+				className: "fb-rows",
+				items: filters.flatMap((filter, index) => {
+					const editing = editingFilter === index;
+					const options = filterOptions(filter.field);
+					return [
+						calendarElement(`filter-row-${index}`, "div", {
+							className: "frow",
+							items: [
+								calendarElement(`filter-conjunction-${index}`, "span", {
+									className: "conj",
+									text: index ? "and" : "Where",
+								}),
+								calendarElement(`filter-field-${index}`, "select", {
+									className: "select",
+									ariaLabel: "Field",
+									value: filter.field,
+									payload: index,
+									events: { change: "set-filter-field" },
+									items: filterFields.map((field) =>
+										calendarElement(
+											`filter-field-option-${index}-${field.id}`,
+											"option",
+											{ value: field.id, text: field.name },
+										),
+									),
+								}),
+								calendarElement(`filter-operator-${index}`, "select", {
+									className: "select",
+									ariaLabel: "Operator",
+									value: filter.operator,
+									payload: index,
+									events: { change: "set-filter-operator" },
+									items: [
+										calendarElement(`operator-is-${index}`, "option", {
+											value: "is",
+											text: "is",
+										}),
+										calendarElement(`operator-not-${index}`, "option", {
+											value: "not",
+											text: "is not",
+										}),
+									],
+								}),
+								calendarElement(`filter-values-toggle-${index}`, "button", {
+									className: "valbtn",
+									ariaExpanded: editing,
+									payload: index,
+									events: { click: "toggle-filter-editor" },
+									items: [
+										calendarElement(`filter-values-label-${index}`, "span", {
+											className: "trunc grow",
+											text: filter.values.length
+												? filterSummary(filter).split(" ").slice(2).join(" ")
+												: "Select…",
+										}),
+										calendarElement(`filter-values-icon-${index}`, "span", {
+											icon: "chevron-down",
+											iconSize: 12,
+										}),
+									],
+								}),
+								calendarElement(`filter-remove-${index}`, "button", {
+									className: "ibtn ibtn-xs",
+									ariaLabel: "Remove filter",
+									payload: index,
+									icon: "trash-2",
+									iconSize: 13,
+									events: { click: "remove-filter" },
+								}),
+							],
+						}),
+						...(editing
+							? [
+									calendarElement(`filter-options-${index}`, "div", {
+										style:
+											"margin-left:50px;border:1px solid var(--border);border-radius:var(--r);padding:4px;max-height:200px;overflow:auto",
+										items: options.map((option) =>
+											calendarElement(
+												`filter-option-${index}-${option.id}`,
+												"label",
+												{
+													className: "mi",
+													style: "cursor:pointer;min-height:28px",
+													items: [
+														calendarElement(
+															`filter-option-input-${index}-${option.id}`,
+															"input",
+															{
+																elementType: "checkbox",
+																className: "check",
+																checked: filter.values.includes(
+																	String(option.id),
+																),
+																payload: `${index}|${option.id}`,
+																events: { change: "toggle-filter-value" },
+															},
+														),
+														calendarElement(
+															`filter-option-label-${index}-${option.id}`,
+															"span",
+															{ text: option.name },
+														),
+													],
+												},
+											),
+										),
+									}),
+								]
+							: []),
+					];
+				}),
+			}),
+		);
+	} else {
+		items.push(
+			calendarElement("filter-empty", "p", {
+				className: "fb-empty",
+				text: "No filters applied. Combine filters to narrow the task list, e.g. Status is In Progress and Assignee is Sarah.",
+			}),
+		);
+	}
 
-  async function dropTask(event, value) {
-    event.preventDefault();
-    const targetDate = iso(value);
-    dropDay = '';
-    const taskId = event.dataTransfer?.getData('text/plain');
-    const task = tasks.find(item => String(item.id) === taskId);
-    const currentDueDate = String(task?.due_date || '').slice(0, 10);
-    if (!task || !currentDueDate || currentDueDate === targetDate || !onReschedule) return;
+	items.push({ id: "filter-separator", type: "separator" });
+	items.push(
+		calendarElement("filter-add", "div", {
+			className: "fb-add",
+			items: [
+				calendarElement("filter-add-label", "span", {
+					className: "faint",
+					text: "Add filter:",
+				}),
+				...filterFields.map((field) =>
+					calendarElement(`add-filter-${field.id}`, "button", {
+						className: "badge",
+						style: "cursor:pointer",
+						icon: field.icon,
+						iconSize: 11,
+						text: field.name,
+						payload: field.id,
+						events: { click: "add-filter" },
+					}),
+				),
+			],
+		}),
+	);
+	return items;
+}
 
-    const startDate = String(task.start_date || '').slice(0, 10);
-    const duration = startDate ? diffD(parse(currentDueDate), parse(startDate)) : null;
-    const changes = {
-      due_date: targetDate,
-      ...(duration != null ? { start_date: iso(addD(parse(targetDate), -duration)) } : {}),
-    };
+function sortDropdownItems() {
+	return [
+		calendarElement("sort-heading", "div", {
+			className: "mh",
+			text: "Sort by",
+		}),
+		...sortable.map((item) =>
+			calendarAction(`sort-${item.id}`, "set-sort", item.id, item.name, {
+				icon: sort === item.id ? "check" : "arrow-up-down",
+				role: "menuitemradio",
+				checked: sort === item.id,
+			}),
+		),
+		{ id: "sort-separator", type: "separator" },
+		calendarAction(
+			"sort-direction",
+			"toggle-sort-direction",
+			null,
+			descending ? "Descending" : "Ascending",
+			{
+				icon: descending ? "arrow-down-wide-narrow" : "arrow-up-narrow-wide",
+			},
+		),
+	];
+}
 
-    try {
-      const saved = await onReschedule(task, changes);
-      if (saved !== false) toast(`Rescheduled “${task.title}” to ${fmtDate(targetDate)}`, { ms: 2200 });
-    } catch (error) {
-      toast(error.message || 'Unable to reschedule task', { kind: 'err' });
-    }
-  }
+function eventDropdownItems(event) {
+	return [
+		calendarElement("event-summary", "div", {
+			style: "padding:10px 10px 6px",
+			items: [
+				calendarElement("event-title-row", "div", {
+					className: "row",
+					style: "gap:8px;margin-bottom:6px",
+					items: [
+						calendarElement("event-project-dot", "span", {
+							className: "pdot",
+							style: `--c:${projectColor(event.project)};border-radius:50%`,
+						}),
+						calendarElement("event-title", "b", {
+							style: "font-size:14px;font-weight:600",
+							text: event.title,
+						}),
+					],
+				}),
+				calendarElement("event-details", "div", {
+					className: "muted",
+					style: "font-size:12.5px;display:flex;flex-direction:column;gap:4px",
+					items: [
+						calendarElement("event-date-row", "span", {
+							className: "row",
+							style: "gap:6px",
+							icon: "calendar",
+							iconSize: 13,
+							text: `${formatLongDate(new Date(`${event.date}T00:00:00`))} · ${event.time}`,
+						}),
+						calendarElement("event-project-row", "span", {
+							className: "row",
+							style: "gap:6px",
+							icon: "folder",
+							iconSize: 13,
+							text: event.project.name,
+						}),
+					],
+				}),
+			],
+		}),
+		{ id: "event-separator", type: "separator" },
+		{
+			id: "event-open-project",
+			type: "link",
+			href: projectShow(event.project.id).url,
+			icon: "arrow-up-right",
+			label: "Open project",
+		},
+	];
+}
 
-  function memberFor(task) {
-    return (workspaceData.members || []).find(member => member.name === task.assignee?.name);
-  }
+function selectedDayDropdownItems(value) {
+	return [
+		calendarElement("selected-day-heading", "div", {
+			className: "mh",
+			text: formatLongDate(value),
+		}),
+		...itemsOn(value).map((item) =>
+			item.type === "event"
+				? calendarElement(`selected-event-${item.value.id}`, "button", {
+						className: "mi",
+						payload: item.value.id,
+						events: { click: "open-day-event" },
+						items: [
+							calendarElement(`event-icon-${item.value.id}`, "span", {
+								icon: "clock",
+								iconSize: 14,
+							}),
+							calendarElement(`event-title-${item.value.id}`, "span", {
+								className: "trunc",
+								text: item.value.title,
+							}),
+							calendarElement(`event-time-${item.value.id}`, "span", {
+								className: "r",
+								text: item.value.time,
+							}),
+						],
+					})
+				: calendarElement(`selected-task-${item.value.id}`, "button", {
+						className: "mi",
+						payload: item.value.id,
+						events: { click: "open-day-task" },
+						items: [
+							calendarElement(`task-status-${item.value.id}`, "span", {
+								graphic: { type: "status", value: item.value.status },
+							}),
+							calendarElement(`task-title-${item.value.id}`, "span", {
+								className: "trunc",
+								text: item.value.title,
+							}),
+							calendarElement(`task-priority-${item.value.id}`, "span", {
+								graphic: {
+									type: "priority",
+									value: item.value.priority,
+									size: 13,
+								},
+								className: "r",
+							}),
+						],
+					}),
+		),
+	];
+}
 
-  function initials(name) {
-    return name?.split(' ').map(part => part[0]).join('').slice(0, 2) || '';
-  }
+function handleCalendarDropdownAction(action, item, context) {
+	if (action === "clear-filters") filters = [];
+	if (action === "add-filter" && typeof item.payload === "string")
+		addFilter(item.payload);
+	if (
+		action === "set-filter-field" &&
+		typeof item.payload === "number" &&
+		typeof context?.value === "string"
+	) {
+		changeFilter(item.payload, { field: context.value, values: [] });
+		editingFilter = item.payload;
+	}
+	if (
+		action === "set-filter-operator" &&
+		typeof item.payload === "number" &&
+		typeof context?.value === "string"
+	) {
+		changeFilter(item.payload, { operator: context.value });
+	}
+	if (action === "toggle-filter-editor" && typeof item.payload === "number")
+		editingFilter = editingFilter === item.payload ? -1 : item.payload;
+	if (action === "remove-filter" && typeof item.payload === "number")
+		filters = filters.filter((_, index) => index !== item.payload);
+	if (action === "toggle-filter-value" && typeof item.payload === "string") {
+		const [index, value] = item.payload.split("|");
+		toggleFilterValue(Number(index), value);
+	}
+	if (action === "set-sort" && typeof item.payload === "string")
+		changeSort(item.payload);
+	if (action === "toggle-sort-direction") descending = !descending;
+	if (action === "open-day-event" && typeof item.payload === "string") {
+		const event = calendarEvents.find(
+			(candidate) => String(candidate.id) === item.payload,
+		);
+		if (event && context?.targetBounds)
+			showEventAt(event, context.targetBounds);
+	}
+	if (action === "open-day-task" && typeof item.payload === "string") {
+		const task = tasks.find(
+			(candidate) => String(candidate.id) === item.payload,
+		);
+		selectedDay = null;
+		if (task) onTask?.(task);
+	}
+	if (
+		action === "show-selected-day" &&
+		typeof item.payload === "string" &&
+		context?.targetBounds
+	) {
+		showDayAt(parse(item.payload), context.targetBounds);
+	}
+}
 
-  function taskColor(task) {
-    return projectColor(task.project);
-  }
+function eventFor(item) {
+	return item.type === "event" ? item.value : null;
+}
 
-  function projectColor(project) {
-    return PCOLORS[project?.color] || PCOLORS.slate;
-  }
+function itemsOn(value) {
+	const dateKey = iso(value);
+	const events = calendarEvents
+		.filter((event) => event.date === dateKey)
+		.map((event) => ({ type: "event", value: event }));
+	const dayTasks = visibleTasks
+		.filter((task) => task.due_date?.slice(0, 10) === dateKey)
+		.sort((first, second) => taskOrder(first) - taskOrder(second))
+		.map((task) => ({ type: "task", value: task }));
+	return [...events, ...dayTasks];
+}
 
-  function showEvent(event, target) {
-    const bounds = target.getBoundingClientRect();
-    selectedEvent = event;
-    selectedDay = null;
-    menuPosition = { left: Math.max(8, Math.min(bounds.left, window.innerWidth - 278)), top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 220)) };
-  }
+function startTaskDrag(event, task) {
+	if (!task.due_date) return;
+	event.dataTransfer.effectAllowed = "move";
+	event.dataTransfer.setData("text/plain", String(task.id));
+}
 
-  function showDay(value, target) {
-    const bounds = target.getBoundingClientRect();
-    selectedDay = value;
-    selectedEvent = null;
-    menuPosition = { left: Math.max(8, Math.min(bounds.left, window.innerWidth - 288)), top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 330)) };
-  }
+function dragOverDay(event, value) {
+	event.preventDefault();
+	if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+	dropDay = iso(value);
+}
 
-  function handleWindowPointerdown(event) {
-    const target = event.target;
-    if (!(target instanceof Element)) return;
-    if (target.closest('[data-calendar-menu], [data-calendar-trigger], [data-calendar-event], [data-calendar-more]')) return;
-    closeMenu();
-    selectedDay = null;
-    selectedEvent = null;
-  }
+async function dropTask(event, value) {
+	event.preventDefault();
+	const targetDate = iso(value);
+	dropDay = "";
+	const taskId = event.dataTransfer?.getData("text/plain");
+	const task = tasks.find((item) => String(item.id) === taskId);
+	const currentDueDate = String(task?.due_date || "").slice(0, 10);
+	if (
+		!task ||
+		!currentDueDate ||
+		currentDueDate === targetDate ||
+		!onReschedule
+	)
+		return;
 
-  function handleKeydown(event) {
-    if (event.key === 'Escape') {
-      closeMenu();
-      selectedDay = null;
-      selectedEvent = null;
-    }
-  }
+	const startDate = String(task.start_date || "").slice(0, 10);
+	const duration = startDate
+		? diffD(parse(currentDueDate), parse(startDate))
+		: null;
+	const changes = {
+		due_date: targetDate,
+		...(duration != null
+			? { start_date: iso(addD(parse(targetDate), -duration)) }
+			: {}),
+	};
+
+	try {
+		const saved = await onReschedule(task, changes);
+		if (saved !== false)
+			toast(`Rescheduled “${task.title}” to ${fmtDate(targetDate)}`, {
+				ms: 2200,
+			});
+	} catch (error) {
+		toast(error.message || "Unable to reschedule task", { kind: "err" });
+	}
+}
+
+function memberFor(task) {
+	return (workspaceData.members || []).find(
+		(member) => member.name === task.assignee?.name,
+	);
+}
+
+function initials(name) {
+	return (
+		name
+			?.split(" ")
+			.map((part) => part[0])
+			.join("")
+			.slice(0, 2) || ""
+	);
+}
+
+function taskColor(task) {
+	return projectColor(task.project);
+}
+
+function projectColor(project) {
+	return PCOLORS[project?.color] || PCOLORS.slate;
+}
+
+function showEvent(event, target) {
+	showEventAt(event, target.getBoundingClientRect());
+}
+
+function showEventAt(event, bounds) {
+	selectedEvent = event;
+	selectedDay = null;
+	menuPosition = {
+		left: Math.max(8, Math.min(bounds.left, window.innerWidth - 278)),
+		top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 220)),
+	};
+}
+
+function showDay(value, target) {
+	showDayAt(value, target.getBoundingClientRect());
+}
+
+function showDayAt(value, bounds) {
+	selectedDay = value;
+	selectedEvent = null;
+	menuPosition = {
+		left: Math.max(8, Math.min(bounds.left, window.innerWidth - 288)),
+		top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 330)),
+	};
+}
+
+function handleWindowPointerdown(event) {
+	const target = event.target;
+	if (!(target instanceof Element)) return;
+	if (
+		target.closest(
+			"[data-calendar-menu], [data-calendar-trigger], [data-calendar-event], [data-calendar-more]",
+		)
+	)
+		return;
+	closeMenu();
+	selectedDay = null;
+	selectedEvent = null;
+}
+
+function handleKeydown(event) {
+	if (event.key === "Escape") {
+		closeMenu();
+		selectedDay = null;
+		selectedEvent = null;
+	}
+}
 </script>
 
 <svelte:window onpointerdown={handleWindowPointerdown} onkeydown={handleKeydown} />
@@ -426,38 +935,26 @@
 </div>
 
 {#if openMenu === 'filter'}
-  <Dropdown class="pop fbuild enter" data-calendar-menu role="dialog" aria-label="Filter by" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;max-width:560px`}>
-    <div class="mh fb-h">Filter by{#if filters.length}<Button variant="ghost" size="sm" onclick={() => filters = []}>Clear all</Button>{/if}</div>
-    {#if filters.length}
-      <div class="fb-rows">
-        {#each filters as filter, index (index)}
-          <div class="frow"><span class="conj">{index ? 'and' : 'Where'}</span><Select class="select" value={filter.field} aria-label="Field" onchange={event => { changeFilter(index, { field: event.currentTarget.value, values: [] }); editingFilter = index; }}><option value="status">Status</option><option value="assignee">Assignee</option><option value="priority">Priority</option><option value="due">Due date</option><option value="project">Project</option></Select><Select class="select" value={filter.operator} aria-label="Operator" onchange={event => changeFilter(index, { operator: event.currentTarget.value })}><option value="is">is</option><option value="not">is not</option></Select><button class="valbtn" onclick={() => editingFilter = editingFilter === index ? -1 : index}><span class="trunc grow">{filter.values.length ? filterSummary(filter).split(' ').slice(2).join(' ') : 'Select…'}</span>{@html ic('chevron-down', 12)}</button><button class="ibtn ibtn-xs" aria-label="Remove filter" onclick={() => filters = filters.filter((_, filterIndex) => filterIndex !== index)}>{@html ic('trash-2', 13)}</button></div>
-          {#if editingFilter === index}<div style="margin-left:50px;border:1px solid var(--border);border-radius:var(--r);padding:4px;max-height:200px;overflow:auto">{#each filterOptions(filter.field) as option (option.id)}<label class="mi" style="cursor:pointer;min-height:28px"><input type="checkbox" class="check" checked={filter.values.includes(String(option.id))} onchange={() => toggleFilterValue(index, option.id)} />{option.name}</label>{/each}</div>{/if}
-        {/each}
-      </div>
-    {:else}
-      <p class="fb-empty">No filters applied. Combine filters to narrow the task list, e.g. Status is In Progress and Assignee is Sarah.</p>
-    {/if}
-    <div class="msep"></div><div class="fb-add"><span class="faint">Add filter:</span>{#each filterFields as field (field.id)}<button class="badge" style="cursor:pointer" onclick={() => addFilter(field.id)}>{@html ic(field.icon, 11)}{field.name}</button>{/each}</div>
-  </Dropdown>
+  <Dropdown
+    config={{ className: 'pop fbuild enter', dataAttributes: { 'data-calendar-menu': true }, role: 'dialog', label: 'Filter by', style: `left:${menuPosition.left}px;top:${menuPosition.top}px;max-width:560px`, items: filterDropdownItems() }}
+    onAction={handleCalendarDropdownAction}
+  />
 {:else if openMenu === 'sort'}
-  <Dropdown class="pop enter" data-calendar-menu role="menu" aria-label="Sort tasks" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:220px`}>
-    <div class="mh">Sort by</div>{#each sortable as option (option.id)}<button class="mi" role="menuitemradio" aria-checked={sort === option.id} onclick={() => changeSort(option.id)}>{@html ic(sort === option.id ? 'check' : 'arrow-up-down', 13)}{option.name}{#if sort === option.id}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
-    <div class="msep"></div><button class="mi" onclick={() => descending = !descending}>{@html ic(descending ? 'arrow-down-wide-narrow' : 'arrow-up-narrow-wide', 14)}{descending ? 'Descending' : 'Ascending'}</button>
-  </Dropdown>
+  <Dropdown
+    config={{ className: 'pop enter', dataAttributes: { 'data-calendar-menu': true }, role: 'menu', label: 'Sort tasks', style: `left:${menuPosition.left}px;top:${menuPosition.top}px;width:220px`, items: sortDropdownItems() }}
+    onAction={handleCalendarDropdownAction}
+  />
 {/if}
 
 {#if selectedEvent}
-  <Dropdown class="pop enter" data-calendar-menu role="dialog" aria-label={selectedEvent.title} style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:270px`}>
-    <div style="padding:10px 10px 6px"><div class="row" style="gap:8px;margin-bottom:6px"><span class="pdot" style={`--c:${projectColor(selectedEvent.project)};border-radius:50%`}></span><b style="font-size:14px;font-weight:600">{selectedEvent.title}</b></div><div class="muted" style="font-size:12.5px;display:flex;flex-direction:column;gap:4px"><span class="row" style="gap:6px">{@html ic('calendar', 13)}{formatLongDate(new Date(`${selectedEvent.date}T00:00:00`))} · {selectedEvent.time}</span><span class="row" style="gap:6px">{@html ic('folder', 13)}{selectedEvent.project.name}</span></div></div><div class="msep"></div><Link class="mi" href={projectShow(selectedEvent.project.id).url}>{@html ic('arrow-up-right', 14)}Open project</Link>
-  </Dropdown>
+  <Dropdown
+    config={{ className: 'pop enter', dataAttributes: { 'data-calendar-menu': true }, role: 'dialog', label: selectedEvent.title, style: `left:${menuPosition.left}px;top:${menuPosition.top}px;width:270px`, items: eventDropdownItems(selectedEvent) }}
+    onAction={handleCalendarDropdownAction}
+  />
 {:else if selectedDay}
   {@const moreItems = itemsOn(selectedDay)}
-  <Dropdown class="pop enter" data-calendar-menu role="dialog" aria-label={formatLongDate(selectedDay)} style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:280px`}>
-    <div class="mh">{formatLongDate(selectedDay)}</div>
-    {#each moreItems as item (`${item.type}-${item.value.id}`)}
-      {#if item.type === 'event'}<button class="mi" onclick={() => showEvent(item.value, menuTrigger)}>{@html ic('clock', 14)}<span class="trunc">{item.value.title}</span><span class="r">{item.value.time}</span></button>
-      {:else}<button class="mi" onclick={() => { selectedDay = null; onTask?.(item.value); }}>{@html stIcon(item.value.status)}<span class="trunc">{item.value.title}</span><span class="r">{@html prIcon(item.value.priority, 13)}</span></button>{/if}
-    {/each}
-  </Dropdown>
+  <Dropdown
+    config={{ className: 'pop enter', dataAttributes: { 'data-calendar-menu': true }, role: 'dialog', label: formatLongDate(selectedDay), style: `left:${menuPosition.left}px;top:${menuPosition.top}px;width:280px`, items: selectedDayDropdownItems(selectedDay) }}
+    onAction={handleCalendarDropdownAction}
+  />
 {/if}

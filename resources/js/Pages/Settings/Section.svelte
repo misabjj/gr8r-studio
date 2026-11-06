@@ -1,435 +1,519 @@
 <script>
-  import Select from "../../Components/Select.svelte";
-  import Dropdown from "../../Components/Dropdown.svelte";
-  import Button from "../../Components/Button.svelte";
-  import ErrorMessage from "../../Components/ErrorMessage.svelte";
-  import Label from "../../Components/Label.svelte";
-  import Input from "../../Components/Input.svelte";
-  import Textarea from "../../Components/Textarea.svelte";
-  import { onMount, tick } from 'svelte';
-  import { fade } from 'svelte/transition';
-  import { Link, router } from '@inertiajs/svelte';
-  import AppLayout from '../../Layouts/AppLayout.svelte';
-  import * as settingsRoutes from '../../routes/settings';
-  import { index as membersIndex, show as memberShow } from '../../routes/members';
-  import { index as tasksIndex } from '../../routes/tasks';
-  import { index as projectsIndex } from '../../routes/projects';
-  import { show as teamShow } from '../../routes/teams';
-  import { setNavigationIntent } from '../../lib/navigation-intents.js';
-  import { seed } from '@/src/data/seed.js';
-  import { S, save, teamsList } from '@/src/core/store.js';
-  import { applyPrefs } from '@/src/core/theme.js';
-  import { uid } from '@/src/core/utils.js';
-  import { ic } from '@/src/core/icons.js';
+import Select from "../../Components/Select.svelte";
+import Dropdown from "../../Components/Dropdown.svelte";
+import Button from "../../Components/Button.svelte";
+import ErrorMessage from "../../Components/ErrorMessage.svelte";
+import Label from "../../Components/Label.svelte";
+import Input from "../../Components/Input.svelte";
+import Textarea from "../../Components/Textarea.svelte";
+import { onMount, tick } from "svelte";
+import { fade } from "svelte/transition";
+import { Link, router } from "@inertiajs/svelte";
+import AppLayout from "../../Layouts/AppLayout.svelte";
+import * as settingsRoutes from "../../routes/settings";
+import {
+	index as membersIndex,
+	show as memberShow,
+} from "../../routes/members";
+import { index as tasksIndex } from "../../routes/tasks";
+import { index as projectsIndex } from "../../routes/projects";
+import { show as teamShow } from "../../routes/teams";
+import { setNavigationIntent } from "../../lib/navigation-intents.js";
+import { seed } from "@/src/data/seed.js";
+import { S, save, teamsList } from "@/src/core/store.js";
+import { applyPrefs } from "@/src/core/theme.js";
+import { uid } from "@/src/core/utils.js";
+import { ic } from "@/src/core/icons.js";
 
-  let { section: routeSection = 'appearance' } = $props();
-  let section = $state('appearance');
-  const settingsUrl = (key) => {
-    const routeKey = key.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-    const route = key === '2fa' ? settingsRoutes.method2fa : settingsRoutes[routeKey];
-    return route.url();
-  };
-  let settingsModule = $state(null);
-  let inviteOpen = $state(false);
-  let inviteDraft = $state('');
-  let inviteRole = $state('Member');
-  let inviteTeam = $state('');
-  let inviteError = $state('');
-  let inviteBusy = $state(false);
-  let inviteEmailInput = $state(null);
-  let memberPopup = $state(null);
-  let removeCandidate = $state(null);
-  let confirmation = $state(null);
-  let confirmationText = $state('');
-  let navigation = $derived(settingsModule?.SET_NAV || []);
-  let revision = $state(0);
-  let content = $derived.by(() => {
-    revision;
-    if (!settingsModule) return '';
-    const item = navigation.flatMap(([, items]) => items).find(([key]) => key === section);
-    return settingsModule.settingsBody(section, item?.[1] || 'Appearance');
-  });
+let { section: routeSection = "appearance" } = $props();
+let section = $state("appearance");
+const settingsUrl = (key) => {
+	const routeKey = key.replace(/-([a-z])/g, (_, letter) =>
+		letter.toUpperCase(),
+	);
+	const route =
+		key === "2fa" ? settingsRoutes.method2fa : settingsRoutes[routeKey];
+	return route.url();
+};
+let settingsModule = $state(null);
+let inviteOpen = $state(false);
+let inviteDraft = $state("");
+let inviteRole = $state("Member");
+let inviteTeam = $state("");
+let inviteError = $state("");
+let inviteBusy = $state(false);
+let inviteEmailInput = $state(null);
+let memberPopup = $state(null);
+let removeCandidate = $state(null);
+let confirmation = $state(null);
+let confirmationText = $state("");
+let navigation = $derived(settingsModule?.SET_NAV || []);
+let revision = $state(0);
+let content = $derived.by(() => {
+	revision;
+	if (!settingsModule) return "";
+	const item = navigation
+		.flatMap(([, items]) => items)
+		.find(([key]) => key === section);
+	return settingsModule.settingsBody(section, item?.[1] || "Appearance");
+});
 
-  $effect(() => {
-    section = routeSection;
-  });
+$effect(() => {
+	section = routeSection;
+});
 
-  onMount(() => {
-    applyPrefs();
-    const root = document.querySelector('#settings-body');
-    root?.addEventListener('click', handleClick);
-    root?.addEventListener('change', handleChange);
-    root?.addEventListener('input', handleInput);
-    root?.addEventListener('submit', handleSubmit);
-    const onPointerDown = event => {
-      if (!event.target.closest('.settings-popup, [data-a="pop"], [data-a="ctxBtn"]')) memberPopup = null;
-    };
-    const onKeyDown = event => {
-      if (event.key === 'Escape') {
-        memberPopup = null;
-        inviteOpen = false;
-        removeCandidate = null;
-        confirmation = null;
-      }
-    };
-    window.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('keydown', onKeyDown);
-    import('@/src/pages/settings.js').then(module => {
-      settingsModule = module;
-    });
+onMount(() => {
+	applyPrefs();
+	const root = document.querySelector("#settings-body");
+	root?.addEventListener("click", handleClick);
+	root?.addEventListener("change", handleChange);
+	root?.addEventListener("input", handleInput);
+	root?.addEventListener("submit", handleSubmit);
+	const onPointerDown = (event) => {
+		if (
+			!event.target.closest(
+				'.settings-popup, [data-a="pop"], [data-a="ctxBtn"]',
+			)
+		)
+			memberPopup = null;
+	};
+	const onKeyDown = (event) => {
+		if (event.key === "Escape") {
+			memberPopup = null;
+			inviteOpen = false;
+			removeCandidate = null;
+			confirmation = null;
+		}
+	};
+	window.addEventListener("pointerdown", onPointerDown);
+	window.addEventListener("keydown", onKeyDown);
+	import("@/src/pages/settings.js").then((module) => {
+		settingsModule = module;
+	});
 
-    return () => {
-      root?.removeEventListener('click', handleClick);
-      root?.removeEventListener('change', handleChange);
-      root?.removeEventListener('input', handleInput);
-      root?.removeEventListener('submit', handleSubmit);
-      window.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  });
+	return () => {
+		root?.removeEventListener("click", handleClick);
+		root?.removeEventListener("change", handleChange);
+		root?.removeEventListener("input", handleInput);
+		root?.removeEventListener("submit", handleSubmit);
+		window.removeEventListener("pointerdown", onPointerDown);
+		window.removeEventListener("keydown", onKeyDown);
+	};
+});
 
-  function refresh() {
-    revision += 1;
-  }
+function refresh() {
+	revision += 1;
+}
 
-  function showToast(message, kind = 'ok', duration = 3000) {
-    const host = document.querySelector('#toasts');
-    if (!host) return;
-    const item = document.createElement('div');
-    item.className = 'toast';
-    item.setAttribute('role', 'status');
-    const icon = document.createElement('span');
-    icon.innerHTML = ic(kind === 'err' ? 'circle-alert' : kind === 'info' ? 'info' : 'circle-check', 15);
-    const text = document.createElement('span');
-    text.className = 'grow';
-    text.textContent = message;
-    item.append(icon, text);
-    host.append(item);
-    window.setTimeout(() => item.remove(), duration);
-  }
+function showToast(message, kind = "ok", duration = 3000) {
+	const host = document.querySelector("#toasts");
+	if (!host) return;
+	const item = document.createElement("div");
+	item.className = "toast";
+	item.setAttribute("role", "status");
+	const icon = document.createElement("span");
+	icon.innerHTML = ic(
+		kind === "err" ? "circle-alert" : kind === "info" ? "info" : "circle-check",
+		15,
+	);
+	const text = document.createElement("span");
+	text.className = "grow";
+	text.textContent = message;
+	item.append(icon, text);
+	host.append(item);
+	window.setTimeout(() => item.remove(), duration);
+}
 
-  function setPreference(key, value) {
-    S.prefs[key] = key === 'weekStart' ? Number(value) : value;
-    save();
-    applyPrefs();
-    refresh();
-  }
+function setPreference(key, value) {
+	S.prefs[key] = key === "weekStart" ? Number(value) : value;
+	save();
+	applyPrefs();
+	refresh();
+}
 
-  async function openInviteDialog() {
-    inviteDraft = '';
-    inviteRole = 'Member';
-    inviteTeam = String(teamsList()[0]?.id || '');
-    inviteError = '';
-    inviteOpen = true;
-    await tick();
-    inviteEmailInput?.focus();
-  }
+async function openInviteDialog() {
+	inviteDraft = "";
+	inviteRole = "Member";
+	inviteTeam = String(teamsList()[0]?.id || "");
+	inviteError = "";
+	inviteOpen = true;
+	await tick();
+	inviteEmailInput?.focus();
+}
 
-  function closeInviteDialog() {
-    inviteOpen = false;
-    inviteError = '';
-  }
+function closeInviteDialog() {
+	inviteOpen = false;
+	inviteError = "";
+}
 
-  async function copyInviteLink() {
-    const link = `https://gr8rstudio.com/join/${S.data.ws.url}-7f3k2`;
-    try {
-      await navigator.clipboard.writeText(link);
-      showToast('Invite link copied');
-    } catch {
-      showToast(`Invite link: ${link}`, 'info', 6000);
-    }
-  }
+async function copyInviteLink() {
+	const link = `https://gr8rstudio.com/join/${S.data.ws.url}-7f3k2`;
+	try {
+		await navigator.clipboard.writeText(link);
+		showToast("Invite link copied");
+	} catch {
+		showToast(`Invite link: ${link}`, "info", 6000);
+	}
+}
 
-  function submitInvites(event) {
-    event.preventDefault();
-    const emails = inviteDraft.split(/[\s,;]+/).map(email => email.trim()).filter(Boolean);
-    const invalidEmail = emails.find(email => !/^\S+@\S+\.\S+$/.test(email));
-    if (!emails.length) {
-      inviteError = 'Enter at least one email address';
-      return;
-    }
-    if (invalidEmail) {
-      inviteError = `${invalidEmail} isn't a valid email address`;
-      return;
-    }
+function submitInvites(event) {
+	event.preventDefault();
+	const emails = inviteDraft
+		.split(/[\s,;]+/)
+		.map((email) => email.trim())
+		.filter(Boolean);
+	const invalidEmail = emails.find((email) => !/^\S+@\S+\.\S+$/.test(email));
+	if (!emails.length) {
+		inviteError = "Enter at least one email address";
+		return;
+	}
+	if (invalidEmail) {
+		inviteError = `${invalidEmail} isn't a valid email address`;
+		return;
+	}
 
-    inviteError = '';
-    inviteBusy = true;
-    window.setTimeout(() => {
-      for (const email of emails) {
-        if (S.data.members.some(member => member.email === email)) continue;
-        S.data.members.push({
-          id: uid('m'),
-          name: email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, character => character.toUpperCase()),
-          email,
-          role: inviteRole,
-          team: inviteTeam,
-          title: inviteRole,
-          c: '#6B7280',
-          status: 'invited',
-          last: null,
-          tz: '—',
-        });
-      }
-      save();
-      refresh();
-      inviteBusy = false;
-      closeInviteDialog();
-      showToast(`${emails.length} invitation${emails.length > 1 ? 's' : ''} sent`);
-    }, 600);
-  }
+	inviteError = "";
+	inviteBusy = true;
+	window.setTimeout(() => {
+		for (const email of emails) {
+			if (S.data.members.some((member) => member.email === email)) continue;
+			S.data.members.push({
+				id: uid("m"),
+				name: email
+					.split("@")[0]
+					.replace(/[._-]+/g, " ")
+					.replace(/\b\w/g, (character) => character.toUpperCase()),
+				email,
+				role: inviteRole,
+				team: inviteTeam,
+				title: inviteRole,
+				c: "#6B7280",
+				status: "invited",
+				last: null,
+				tz: "—",
+			});
+		}
+		save();
+		refresh();
+		inviteBusy = false;
+		closeInviteDialog();
+		showToast(
+			`${emails.length} invitation${emails.length > 1 ? "s" : ""} sent`,
+		);
+	}, 600);
+}
 
-  function openMemberPopup(control, kind) {
-    const bounds = control.getBoundingClientRect();
-    memberPopup = {
-      kind,
-      memberId: control.dataset.id,
-      left: Math.max(8, Math.min(bounds.left, window.innerWidth - 208)),
-      top: Math.max(8, bounds.bottom + 4),
-    };
-  }
+function openMemberPopup(control, kind) {
+	const bounds = control.getBoundingClientRect();
+	memberPopup = {
+		kind,
+		memberId: control.dataset.id,
+		left: Math.max(8, Math.min(bounds.left, window.innerWidth - 208)),
+		top: Math.max(8, bounds.bottom + 4),
+	};
+}
 
-  function changeMemberRole(role) {
-    const member = S.data.members.find(item => item.id === memberPopup?.memberId);
-    if (!member) return;
-    member.role = role;
-    member.title = role;
-    save();
-    memberPopup = null;
-    refresh();
-    showToast(`${member.name} is now ${role === 'Admin' ? 'an' : 'a'} ${role}`);
-  }
+function changeMemberRole(role) {
+	const member = S.data.members.find(
+		(item) => item.id === memberPopup?.memberId,
+	);
+	if (!member) return;
+	member.role = role;
+	member.title = role;
+	save();
+	memberPopup = null;
+	refresh();
+	showToast(`${member.name} is now ${role === "Admin" ? "an" : "a"} ${role}`);
+}
 
-  function runMemberAction(action) {
-    const popup = memberPopup;
-    const member = S.data.members.find(item => item.id === popup?.memberId);
-    if (!member) return;
-    memberPopup = null;
+function runMemberAction(action) {
+	const popup = memberPopup;
+	const member = S.data.members.find((item) => item.id === popup?.memberId);
+	if (!member) return;
+	memberPopup = null;
 
-    if (action === 'view') {
-      router.visit(memberShow(member.id).url);
-    } else if (action === 'assign') {
-      setNavigationIntent({ type: 'create-task', assigneeSourceKey: member.id });
-      router.visit(tasksIndex().url);
-    } else if (action === 'copy') {
-      navigator.clipboard.writeText(member.email).then(() => showToast('Email copied')).catch(() => showToast(member.email, 'info', 6000));
-    } else if (action === 'role') {
-      memberPopup = { ...popup, kind: 'role' };
-    } else if (action === 'resend') {
-      showToast(`Invite resent to ${member.email}`);
-    } else if (action === 'remove') {
-      removeCandidate = member;
-    }
-  }
+	if (action === "view") {
+		router.visit(memberShow(member.id).url);
+	} else if (action === "assign") {
+		setNavigationIntent({ type: "create-task", assigneeSourceKey: member.id });
+		router.visit(tasksIndex().url);
+	} else if (action === "copy") {
+		navigator.clipboard
+			.writeText(member.email)
+			.then(() => showToast("Email copied"))
+			.catch(() => showToast(member.email, "info", 6000));
+	} else if (action === "role") {
+		memberPopup = { ...popup, kind: "role" };
+	} else if (action === "resend") {
+		showToast(`Invite resent to ${member.email}`);
+	} else if (action === "remove") {
+		removeCandidate = member;
+	}
+}
 
-  function removeMember() {
-    const member = removeCandidate;
-    if (!member) return;
-    S.data.members = S.data.members.filter(item => item.id !== member.id);
-    S.data.tasks.forEach(task => { if (task.assignee === member.id) task.assignee = null; });
-    S.data.projects.forEach(project => { project.members = project.members.filter(id => id !== member.id); });
-    save();
-    removeCandidate = null;
-    refresh();
-    showToast(`Removed ${member.name}`);
-  }
+function removeMember() {
+	const member = removeCandidate;
+	if (!member) return;
+	S.data.members = S.data.members.filter((item) => item.id !== member.id);
+	S.data.tasks.forEach((task) => {
+		if (task.assignee === member.id) task.assignee = null;
+	});
+	S.data.projects.forEach((project) => {
+		project.members = project.members.filter((id) => id !== member.id);
+	});
+	save();
+	removeCandidate = null;
+	refresh();
+	showToast(`Removed ${member.name}`);
+}
 
-  function askConfirmation(details) {
-    confirmationText = '';
-    confirmation = details;
-  }
+function askConfirmation(details) {
+	confirmationText = "";
+	confirmation = details;
+}
 
-  function confirmAction() {
-    if (!confirmation || (confirmation.typeName && confirmationText !== confirmation.typeName)) return;
-    const { action, value } = confirmation;
-    confirmation = null;
-    confirmationText = '';
+function confirmAction() {
+	if (
+		!confirmation ||
+		(confirmation.typeName && confirmationText !== confirmation.typeName)
+	)
+		return;
+	const { action, value } = confirmation;
+	confirmation = null;
+	confirmationText = "";
 
-    if (action === 'revokeAll') {
-      S.data.sessions = S.data.sessions.filter(session => session.cur);
-      save();
-      refresh();
-      showToast('Signed out of other sessions');
-    } else if (action === 'disable2fa') {
-      S.data.tfa = false;
-      save();
-      refresh();
-      showToast('Two-factor authentication turned off');
-    } else if (action === 'changePlan') {
-      S.data.plan = value;
-      save();
-      refresh();
-      showToast(`You're now on the ${value} plan`);
-    } else if (action === 'deleteWorkspace') {
-      S.data = seed();
-      S.views = {};
-      save();
-      refresh();
-      showToast('Workspace deleted. Demo data was restored for this prototype.', 'info', 5000);
-    }
-  }
+	if (action === "revokeAll") {
+		S.data.sessions = S.data.sessions.filter((session) => session.cur);
+		save();
+		refresh();
+		showToast("Signed out of other sessions");
+	} else if (action === "disable2fa") {
+		S.data.tfa = false;
+		save();
+		refresh();
+		showToast("Two-factor authentication turned off");
+	} else if (action === "changePlan") {
+		S.data.plan = value;
+		save();
+		refresh();
+		showToast(`You're now on the ${value} plan`);
+	} else if (action === "deleteWorkspace") {
+		S.data = seed();
+		S.views = {};
+		save();
+		refresh();
+		showToast(
+			"Workspace deleted. Demo data was restored for this prototype.",
+			"info",
+			5000,
+		);
+	}
+}
 
-  function handleClick(event) {
-    const control = event.target.closest('[data-a]');
-    if (!control) return;
+function handleClick(event) {
+	const control = event.target.closest("[data-a]");
+	if (!control) return;
 
-    const { a: action, k: key, v: value } = control.dataset;
+	const { a: action, k: key, v: value } = control.dataset;
 
-    if (action === 'invite') {
-      void openInviteDialog();
-    } else if (action === 'go' && control.dataset.r === 'members') {
-      router.visit(membersIndex().url);
-    } else if (action === 'go' && control.dataset.r === 'team') {
-      router.visit(teamShow(control.dataset.id).url);
-    } else if (action === 'go' && control.dataset.r === 'archive') {
-      router.visit(projectsIndex().url);
-    } else if (action === 'go' && control.dataset.r === 'settings') {
-      router.visit(settingsUrl(control.dataset.sec || 'appearance'));
-    } else if (action === 'pop' && control.dataset.pop === 'role') {
-      openMemberPopup(control, 'role');
-    } else if (action === 'ctxBtn' && control.dataset.ctx === 'member') {
-      openMemberPopup(control, 'member');
-    } else if (action === 'newTeam') {
-      setNavigationIntent({ type: 'create-team' });
-      router.visit(membersIndex({ query: { tab: 'teams' } }).url);
-    } else if (action === 'setup2fa') {
-      S.ui.tfaSetup = true;
-      S.ui.errors = {};
-      refresh();
-    } else if (action === 'cancel2fa') {
-      S.ui.tfaSetup = false;
-      refresh();
-    } else if (action === 'disable2fa') {
-      askConfirmation({ action: 'disable2fa', title: 'Turn off two-factor authentication?', body: 'Your account will be protected by your password only.', ok: 'Turn off', icon: 'shield-off', danger: true });
-    } else if (action === 'revokeSession') {
-      S.data.sessions = S.data.sessions.filter(session => session.id !== control.dataset.id);
-      save();
-      refresh();
-      showToast('Session signed out');
-    } else if (action === 'revokeAll') {
-      askConfirmation({ action: 'revokeAll', title: 'Sign out of all other sessions?', body: "You'll stay signed in on this device. Other devices will need to sign in again.", ok: 'Sign out others', icon: 'log-out', danger: true });
-    } else if (action === 'changePlan') {
-      const plan = value;
-      const price = { Free: 0, Team: 12, Business: 24 }[plan];
-      askConfirmation({ action: 'changePlan', value: plan, title: `${plan === 'Free' ? 'Downgrade' : 'Upgrade'} to ${plan}?`, body: `${S.data.members.length} members × $${price}/month = $${S.data.members.length * price}/month, prorated from today and billed to Visa ending 4242.`, ok: plan === 'Free' ? 'Downgrade' : `Upgrade to ${plan}`, icon: 'gem' });
-    } else if (action === 'delWorkspace') {
-      askConfirmation({ action: 'deleteWorkspace', title: `Delete ${S.data.ws.name}?`, body: 'Every project, task, file, and comment in this workspace will be permanently deleted for all members.', ok: 'Delete workspace', icon: 'trash-2', danger: true, typeName: S.data.ws.name });
-    } else if (action === 'setTheme') {
-      setPreference('theme', value);
-    } else if (action === 'setPref') {
-      setPreference(key, value);
-    } else if (action === 'wsColor') {
-      S.data.ws.c = value;
-      save();
-      refresh();
-    } else if (action === 'avColor') {
-      const member = S.data.members.find(item => item.id === S.data.me);
-      if (member) member.c = value;
-      save();
-      refresh();
-    } else if (action === 'toastInfo') {
-      showToast(control.dataset.msg || '', 'info');
-    }
-  }
+	if (action === "invite") {
+		void openInviteDialog();
+	} else if (action === "go" && control.dataset.r === "members") {
+		router.visit(membersIndex().url);
+	} else if (action === "go" && control.dataset.r === "team") {
+		router.visit(teamShow(control.dataset.id).url);
+	} else if (action === "go" && control.dataset.r === "archive") {
+		router.visit(projectsIndex().url);
+	} else if (action === "go" && control.dataset.r === "settings") {
+		router.visit(settingsUrl(control.dataset.sec || "appearance"));
+	} else if (action === "pop" && control.dataset.pop === "role") {
+		openMemberPopup(control, "role");
+	} else if (action === "ctxBtn" && control.dataset.ctx === "member") {
+		openMemberPopup(control, "member");
+	} else if (action === "newTeam") {
+		setNavigationIntent({ type: "create-team" });
+		router.visit(membersIndex({ query: { tab: "teams" } }).url);
+	} else if (action === "setup2fa") {
+		S.ui.tfaSetup = true;
+		S.ui.errors = {};
+		refresh();
+	} else if (action === "cancel2fa") {
+		S.ui.tfaSetup = false;
+		refresh();
+	} else if (action === "disable2fa") {
+		askConfirmation({
+			action: "disable2fa",
+			title: "Turn off two-factor authentication?",
+			body: "Your account will be protected by your password only.",
+			ok: "Turn off",
+			icon: "shield-off",
+			danger: true,
+		});
+	} else if (action === "revokeSession") {
+		S.data.sessions = S.data.sessions.filter(
+			(session) => session.id !== control.dataset.id,
+		);
+		save();
+		refresh();
+		showToast("Session signed out");
+	} else if (action === "revokeAll") {
+		askConfirmation({
+			action: "revokeAll",
+			title: "Sign out of all other sessions?",
+			body: "You'll stay signed in on this device. Other devices will need to sign in again.",
+			ok: "Sign out others",
+			icon: "log-out",
+			danger: true,
+		});
+	} else if (action === "changePlan") {
+		const plan = value;
+		const price = { Free: 0, Team: 12, Business: 24 }[plan];
+		askConfirmation({
+			action: "changePlan",
+			value: plan,
+			title: `${plan === "Free" ? "Downgrade" : "Upgrade"} to ${plan}?`,
+			body: `${S.data.members.length} members × $${price}/month = $${S.data.members.length * price}/month, prorated from today and billed to Visa ending 4242.`,
+			ok: plan === "Free" ? "Downgrade" : `Upgrade to ${plan}`,
+			icon: "gem",
+		});
+	} else if (action === "delWorkspace") {
+		askConfirmation({
+			action: "deleteWorkspace",
+			title: `Delete ${S.data.ws.name}?`,
+			body: "Every project, task, file, and comment in this workspace will be permanently deleted for all members.",
+			ok: "Delete workspace",
+			icon: "trash-2",
+			danger: true,
+			typeName: S.data.ws.name,
+		});
+	} else if (action === "setTheme") {
+		setPreference("theme", value);
+	} else if (action === "setPref") {
+		setPreference(key, value);
+	} else if (action === "wsColor") {
+		S.data.ws.c = value;
+		save();
+		refresh();
+	} else if (action === "avColor") {
+		const member = S.data.members.find((item) => item.id === S.data.me);
+		if (member) member.c = value;
+		save();
+		refresh();
+	} else if (action === "toastInfo") {
+		showToast(control.dataset.msg || "", "info");
+	}
+}
 
-  function handleChange(event) {
-    const control = event.target;
-    const { in: inputAction, k: key } = control.dataset;
+function handleChange(event) {
+	const control = event.target;
+	const { in: inputAction, k: key } = control.dataset;
 
-    if (inputAction === 'prefSel') {
-      setPreference(key, control.value);
-      showToast('Preference saved', 'ok', 1500);
-    } else if (inputAction === 'prefToggle') {
-      S.prefs[key] = control.checked;
-      save();
-      applyPrefs();
-    } else if (inputAction === 'npToggle') {
-      S.data.notifPrefs[key] = control.checked;
-      save();
-      showToast('Notification preferences saved', 'ok', 1500);
-    }
-  }
+	if (inputAction === "prefSel") {
+		setPreference(key, control.value);
+		showToast("Preference saved", "ok", 1500);
+	} else if (inputAction === "prefToggle") {
+		S.prefs[key] = control.checked;
+		save();
+		applyPrefs();
+	} else if (inputAction === "npToggle") {
+		S.data.notifPrefs[key] = control.checked;
+		save();
+		showToast("Notification preferences saved", "ok", 1500);
+	}
+}
 
-  function handleInput(event) {
-    const control = event.target;
-    if (control.dataset.in !== 'pwStrength') return;
+function handleInput(event) {
+	const control = event.target;
+	if (control.dataset.in !== "pwStrength") return;
 
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = settingsModule?.strengthMeter(control.value) || '';
-    const current = control.parentElement.querySelector('.strength');
-    if (current) current.parentElement.replaceWith(wrapper.firstElementChild || document.createTextNode(''));
-    else if (wrapper.firstElementChild) control.after(wrapper.firstElementChild);
-  }
+	const wrapper = document.createElement("div");
+	wrapper.innerHTML = settingsModule?.strengthMeter(control.value) || "";
+	const current = control.parentElement.querySelector(".strength");
+	if (current)
+		current.parentElement.replaceWith(
+			wrapper.firstElementChild || document.createTextNode(""),
+		);
+	else if (wrapper.firstElementChild) control.after(wrapper.firstElementChild);
+}
 
-  function handleSubmit(event) {
-    const form = event.target.closest('form[data-submit]');
-    if (!form) return;
-    event.preventDefault();
+function handleSubmit(event) {
+	const form = event.target.closest("form[data-submit]");
+	if (!form) return;
+	event.preventDefault();
 
-    if (form.dataset.submit === 'saveWorkspace') {
-      const name = form.querySelector('#ws-name').value.trim();
-      const url = form.querySelector('#ws-url').value.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-');
-      if (!name) {
-        showToast("Workspace name can't be empty", 'err');
-        return;
-      }
-      const previousName = S.data.ws.name;
-      S.data.ws.name = name;
-      S.data.ws.url = url || S.data.ws.url;
-      const workspace = S.data.workspaces.find(item => item.name === previousName);
-      if (workspace) workspace.name = name;
-      save();
-      refresh();
-      showToast('Workspace settings saved');
-    } else if (form.dataset.submit === 'saveProfile') {
-      const name = form.querySelector('#pf-name').value.trim();
-      if (!name) {
-        S.ui.errors.pname2 = 'Enter your name';
-        refresh();
-        return;
-      }
-      S.ui.errors.pname2 = null;
-      const member = S.data.members.find(item => item.id === S.data.me);
-      S.prefs.name = name;
-      S.prefs.title = form.querySelector('#pf-title').value.trim();
-      if (member) {
-        member.name = name;
-        member.title = S.prefs.title;
-      }
-      save();
-      refresh();
-      showToast('Profile updated');
-    } else if (form.dataset.submit === 'savePassword') {
-      const currentPassword = form.querySelector('#pw-cur').value;
-      const newPassword = form.querySelector('#pw-new').value;
-      const confirmation = form.querySelector('#pw-conf').value;
-      S.ui.errors = {};
-      if (!currentPassword) S.ui.errors.pwCur = 'Enter your current password';
-      if (newPassword.length < 10 || !/[0-9\W]/.test(newPassword)) S.ui.errors.pwNew = 'Use at least 10 characters, including a number or symbol';
-      if (newPassword !== confirmation) S.ui.errors.pwConf = "Passwords don't match";
-      if (Object.keys(S.ui.errors).length) {
-        refresh();
-        return;
-      }
-      S.ui.pwDone = true;
-      S.ui.pwNew = '';
-      refresh();
-      showToast('Password updated');
-    } else if (form.dataset.submit === 'verify2fa') {
-      const code = form.querySelector('#tfa-code').value.trim();
-      if (!/^\d{6}$/.test(code)) {
-        S.ui.errors.tfa = 'Enter the 6-digit code from your app';
-        refresh();
-        return;
-      }
-      S.ui.errors = {};
-      S.data.tfa = true;
-      S.ui.tfaSetup = false;
-      save();
-      refresh();
-      showToast('Two-factor authentication enabled');
-    }
-  }
+	if (form.dataset.submit === "saveWorkspace") {
+		const name = form.querySelector("#ws-name").value.trim();
+		const url = form
+			.querySelector("#ws-url")
+			.value.trim()
+			.toLowerCase()
+			.replace(/[^a-z0-9-]+/g, "-");
+		if (!name) {
+			showToast("Workspace name can't be empty", "err");
+			return;
+		}
+		const previousName = S.data.ws.name;
+		S.data.ws.name = name;
+		S.data.ws.url = url || S.data.ws.url;
+		const workspace = S.data.workspaces.find(
+			(item) => item.name === previousName,
+		);
+		if (workspace) workspace.name = name;
+		save();
+		refresh();
+		showToast("Workspace settings saved");
+	} else if (form.dataset.submit === "saveProfile") {
+		const name = form.querySelector("#pf-name").value.trim();
+		if (!name) {
+			S.ui.errors.pname2 = "Enter your name";
+			refresh();
+			return;
+		}
+		S.ui.errors.pname2 = null;
+		const member = S.data.members.find((item) => item.id === S.data.me);
+		S.prefs.name = name;
+		S.prefs.title = form.querySelector("#pf-title").value.trim();
+		if (member) {
+			member.name = name;
+			member.title = S.prefs.title;
+		}
+		save();
+		refresh();
+		showToast("Profile updated");
+	} else if (form.dataset.submit === "savePassword") {
+		const currentPassword = form.querySelector("#pw-cur").value;
+		const newPassword = form.querySelector("#pw-new").value;
+		const confirmation = form.querySelector("#pw-conf").value;
+		S.ui.errors = {};
+		if (!currentPassword) S.ui.errors.pwCur = "Enter your current password";
+		if (newPassword.length < 10 || !/[0-9\W]/.test(newPassword))
+			S.ui.errors.pwNew =
+				"Use at least 10 characters, including a number or symbol";
+		if (newPassword !== confirmation)
+			S.ui.errors.pwConf = "Passwords don't match";
+		if (Object.keys(S.ui.errors).length) {
+			refresh();
+			return;
+		}
+		S.ui.pwDone = true;
+		S.ui.pwNew = "";
+		refresh();
+		showToast("Password updated");
+	} else if (form.dataset.submit === "verify2fa") {
+		const code = form.querySelector("#tfa-code").value.trim();
+		if (!/^\d{6}$/.test(code)) {
+			S.ui.errors.tfa = "Enter the 6-digit code from your app";
+			refresh();
+			return;
+		}
+		S.ui.errors = {};
+		S.data.tfa = true;
+		S.ui.tfaSetup = false;
+		save();
+		refresh();
+		showToast("Two-factor authentication enabled");
+	}
+}
 </script>
 
 <svelte:head><title>Settings</title></svelte:head>
@@ -451,23 +535,43 @@
   {#if memberPopup}
     {@const member = S.data.members.find(item => item.id === memberPopup.memberId)}
     {#if member}
-      <Dropdown class="pop settings-popup enter" role="menu" tabindex="-1" style={`left:${memberPopup.left}px;top:${memberPopup.top}px;width:200px`} onpointerdown={event => event.stopPropagation()}>
-        {#if memberPopup.kind === 'role'}
-          {#each ['Admin', 'Member', 'Guest'] as role}
-            <button class="mi" type="button" role="menuitemradio" aria-checked={member.role === role} onclick={() => changeMemberRole(role)}>{@html ic('shield', 14)}<span>{role}</span>{#if member.role === role}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>
-          {/each}
-        {:else}
-          <button class="mi" type="button" role="menuitem" onclick={() => runMemberAction('view')}>{@html ic('user', 15)}View profile</button>
-          <button class="mi" type="button" role="menuitem" onclick={() => runMemberAction('assign')}>{@html ic('plus', 15)}Assign a task</button>
-          <button class="mi" type="button" role="menuitem" onclick={() => runMemberAction('copy')}>{@html ic('mail', 15)}Copy email</button>
-          {#if member.role !== 'Owner' && member.id !== S.data.me}
-            <button class="mi" type="button" role="menuitem" onclick={() => runMemberAction('role')}>{@html ic('shield', 15)}Change role…</button>
-            {#if member.status === 'invited'}<button class="mi" type="button" role="menuitem" onclick={() => runMemberAction('resend')}>{@html ic('send', 15)}Resend invite</button>{/if}
-            <div class="msep"></div>
-            <button class="mi danger" type="button" role="menuitem" onclick={() => runMemberAction('remove')}>{@html ic('user-minus', 15)}Remove from workspace</button>
-          {/if}
-        {/if}
-      </Dropdown>
+      <Dropdown
+        config={{
+          className: 'pop settings-popup enter',
+          role: 'menu',
+          tabIndex: -1,
+          stopPointerDownPropagation: true,
+          style: `left:${memberPopup.left}px;top:${memberPopup.top}px;width:200px`,
+          items: memberPopup.kind === 'role'
+            ? ['Admin', 'Member', 'Guest'].map(role => ({
+                id: `role-${role.toLowerCase()}`,
+                type: 'action',
+                action: 'change-role',
+                payload: role,
+                role: 'menuitemradio',
+                checked: member.role === role,
+                icon: 'shield',
+                label: role,
+              }))
+            : [
+                { id: 'view-profile', type: 'action', action: 'member-action', payload: 'view', icon: 'user', label: 'View profile' },
+                { id: 'assign-task', type: 'action', action: 'member-action', payload: 'assign', icon: 'plus', label: 'Assign a task' },
+                { id: 'copy-email', type: 'action', action: 'member-action', payload: 'copy', icon: 'mail', label: 'Copy email' },
+                ...(member.role !== 'Owner' && member.id !== S.data.me
+                  ? [
+                      { id: 'change-role', type: 'action', action: 'member-action', payload: 'role', icon: 'shield', label: 'Change role…' },
+                      ...(member.status === 'invited' ? [{ id: 'resend-invite', type: 'action', action: 'member-action', payload: 'resend', icon: 'send', label: 'Resend invite' }] : []),
+                      { id: 'member-remove-separator', type: 'separator' },
+                      { id: 'remove-member', type: 'action', action: 'member-action', payload: 'remove', icon: 'user-minus', label: 'Remove from workspace', danger: true },
+                    ]
+                  : []),
+              ],
+        }}
+        onAction={(action, item) => {
+          if (action === 'change-role' && typeof item.payload === 'string') changeMemberRole(item.payload);
+          if (action === 'member-action' && typeof item.payload === 'string') runMemberAction(item.payload);
+        }}
+      />
     {/if}
   {/if}
   {#if inviteOpen}

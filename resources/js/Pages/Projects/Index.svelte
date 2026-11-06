@@ -1,315 +1,496 @@
 <script>
-  import Dropdown from "../../Components/Dropdown.svelte";
-  import Select from "../../Components/Select.svelte";
-  import Button from "../../Components/Button.svelte";
-  import ErrorMessage from "../../Components/ErrorMessage.svelte";
-  import Label from "../../Components/Label.svelte";
-  import Input from "../../Components/Input.svelte";
-  import Textarea from "../../Components/Textarea.svelte";
-  import { tick } from 'svelte';
-  import { fade, scale } from 'svelte/transition';
-  import { onMount } from 'svelte';
-  import { Link, router, usePage } from '@inertiajs/svelte';
-  import AppLayout from '../../Layouts/AppLayout.svelte';
-import { destroy as projectDestroy, duplicate as projectDuplicate, favorite as projectFavorite, show as projectShow, store as projectStore, update as projectUpdate } from '../../routes/projects';
-  import { useHttpRequest } from '../../lib/http.js';
-  import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
-import { setNavigationIntent } from '../../lib/navigation-intents.js';
-  import { toast } from '@/src/ui/toast.js';
-import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
-  import { ic } from '@/src/core/icons.js';
-  import { PCOLORS, PICONS, PSTAT, TEAMS_SEED } from '@/src/core/constants.js';
-  import { ago, fmtDate } from '@/src/core/utils.js';
+import Dropdown from "../../Components/Dropdown.svelte";
+import Select from "../../Components/Select.svelte";
+import Button from "../../Components/Button.svelte";
+import ErrorMessage from "../../Components/ErrorMessage.svelte";
+import Label from "../../Components/Label.svelte";
+import Input from "../../Components/Input.svelte";
+import Textarea from "../../Components/Textarea.svelte";
+import { tick } from "svelte";
+import { fade, scale } from "svelte/transition";
+import { onMount } from "svelte";
+import { Link, router, usePage } from "@inertiajs/svelte";
+import AppLayout from "../../Layouts/AppLayout.svelte";
+import {
+	destroy as projectDestroy,
+	duplicate as projectDuplicate,
+	favorite as projectFavorite,
+	show as projectShow,
+	store as projectStore,
+	update as projectUpdate,
+} from "../../routes/projects";
+import { useHttpRequest } from "../../lib/http.js";
+import { consumeNavigationIntent } from "../../lib/navigation-intents.js";
+import { setNavigationIntent } from "../../lib/navigation-intents.js";
+import { toast } from "@/src/ui/toast.js";
+import { S, save as saveWorkspaceStore } from "@/src/core/store.js";
+import { ic } from "@/src/core/icons.js";
+import { PCOLORS, PICONS, PSTAT, TEAMS_SEED } from "@/src/core/constants.js";
+import { ago, fmtDate } from "@/src/core/utils.js";
 
-  const httpRequest = useHttpRequest();
-  let { projects: incomingProjects = [], teams = [], members = [] } = $props();
-  const page = usePage();
-  let projects = $state([]);
-  $effect(() => { projects = [...incomingProjects]; });
-  let activeMembers = $derived(members.filter(member => member.status === 'active'));
-  onMount(() => {
-    if (consumeNavigationIntent('create-project')) openCreateProjectForm();
-  });
-  let query = $state(S.ui.projQ || '');
-  let statusFilter = $state(S.ui.projStatus || 'all');
-  let sortBy = $state(S.ui.projSort || 'recent');
-  let view = $state(S.ui.projView || 'grid');
-  let modalOpen = $state(false);
-  let name = $state('');
-  let description = $state('');
-  let dueDate = $state('');
-  let icon = $state('folder');
-  let color = $state('indigo');
-  let teamId = $state('product');
-  let leadId = $state('');
-  let template = $state('blank');
-  let projectNameInput = $state(null);
-  let busy = $state(false);
-  let errors = $state({});
-  let projectMenu = $state(null);
-  let projectConfirmation = $state(null);
-  let confirmationText = $state('');
-  let confirmationBusy = $state(false);
-  const teamsById = new Map(TEAMS_SEED.map(team => [team.id, team]));
-  const templates = [
-    { id: 'blank', name: 'Blank project', icon: 'file', desc: 'Start from scratch', tasks: [] },
-    { id: 'product', name: 'Product Development', icon: 'target', desc: 'Discovery to launch', tasks: ['Define problem statement', 'User research plan', 'Write PRD', 'Design exploration', 'Build MVP', 'Beta launch'] },
-    { id: 'web', name: 'Website', icon: 'globe', desc: 'IA, design, build, launch', tasks: ['Sitemap & information architecture', 'Wireframes', 'Visual design', 'Build page templates', 'Content migration', 'QA & launch'] },
-    { id: 'mkt', name: 'Marketing Campaign', icon: 'megaphone', desc: 'Brief, assets, channels', tasks: ['Campaign brief', 'Audience research', 'Creative assets', 'Channel plan', 'Launch campaign', 'Performance report'] },
-    { id: 'design', name: 'Design Project', icon: 'palette', desc: 'Discovery to handoff', tasks: ['Discovery workshop', 'Moodboard', 'Concept directions', 'Refinement', 'Developer handoff'] },
-    { id: 'software', name: 'Software Development', icon: 'code', desc: 'Spec, build, ship', tasks: ['Technical spec', 'Set up repo & CI', 'Implement core API', 'Write tests', 'Code review', 'Deploy to staging'] },
-    { id: 'personal', name: 'Personal Project', icon: 'heart', desc: 'Plan your own goals', tasks: ['Brain dump ideas', 'Pick top 3 priorities', 'Schedule focus time', 'Weekly review'] },
-  ];
+const httpRequest = useHttpRequest();
+let { projects: incomingProjects = [], teams = [], members = [] } = $props();
+const page = usePage();
+let projects = $state([]);
+$effect(() => {
+	projects = [...incomingProjects];
+});
+let activeMembers = $derived(
+	members.filter((member) => member.status === "active"),
+);
+onMount(() => {
+	if (consumeNavigationIntent("create-project")) openCreateProjectForm();
+});
+let query = $state(S.ui.projQ || "");
+let statusFilter = $state(S.ui.projStatus || "all");
+let sortBy = $state(S.ui.projSort || "recent");
+let view = $state(S.ui.projView || "grid");
+let modalOpen = $state(false);
+let name = $state("");
+let description = $state("");
+let dueDate = $state("");
+let icon = $state("folder");
+let color = $state("indigo");
+let teamId = $state("product");
+let leadId = $state("");
+let template = $state("blank");
+let projectNameInput = $state(null);
+let busy = $state(false);
+let errors = $state({});
+let projectMenu = $state(null);
+let projectConfirmation = $state(null);
+let confirmationText = $state("");
+let confirmationBusy = $state(false);
+const teamsById = new Map(TEAMS_SEED.map((team) => [team.id, team]));
+const templates = [
+	{
+		id: "blank",
+		name: "Blank project",
+		icon: "file",
+		desc: "Start from scratch",
+		tasks: [],
+	},
+	{
+		id: "product",
+		name: "Product Development",
+		icon: "target",
+		desc: "Discovery to launch",
+		tasks: [
+			"Define problem statement",
+			"User research plan",
+			"Write PRD",
+			"Design exploration",
+			"Build MVP",
+			"Beta launch",
+		],
+	},
+	{
+		id: "web",
+		name: "Website",
+		icon: "globe",
+		desc: "IA, design, build, launch",
+		tasks: [
+			"Sitemap & information architecture",
+			"Wireframes",
+			"Visual design",
+			"Build page templates",
+			"Content migration",
+			"QA & launch",
+		],
+	},
+	{
+		id: "mkt",
+		name: "Marketing Campaign",
+		icon: "megaphone",
+		desc: "Brief, assets, channels",
+		tasks: [
+			"Campaign brief",
+			"Audience research",
+			"Creative assets",
+			"Channel plan",
+			"Launch campaign",
+			"Performance report",
+		],
+	},
+	{
+		id: "design",
+		name: "Design Project",
+		icon: "palette",
+		desc: "Discovery to handoff",
+		tasks: [
+			"Discovery workshop",
+			"Moodboard",
+			"Concept directions",
+			"Refinement",
+			"Developer handoff",
+		],
+	},
+	{
+		id: "software",
+		name: "Software Development",
+		icon: "code",
+		desc: "Spec, build, ship",
+		tasks: [
+			"Technical spec",
+			"Set up repo & CI",
+			"Implement core API",
+			"Write tests",
+			"Code review",
+			"Deploy to staging",
+		],
+	},
+	{
+		id: "personal",
+		name: "Personal Project",
+		icon: "heart",
+		desc: "Plan your own goals",
+		tasks: [
+			"Brain dump ideas",
+			"Pick top 3 priorities",
+			"Schedule focus time",
+			"Weekly review",
+		],
+	},
+];
 
-  $effect(() => {
-    S.ui.projQ = query;
-    S.ui.projStatus = statusFilter;
-    S.ui.projSort = sortBy;
-    S.ui.projView = view;
-  });
+$effect(() => {
+	S.ui.projQ = query;
+	S.ui.projStatus = statusFilter;
+	S.ui.projSort = sortBy;
+	S.ui.projView = view;
+});
 
-  let activeCount = $derived(projects.filter(project => !['complete', 'completed', 'archived'].includes(project.status)).length);
-  let completedCount = $derived(projects.filter(project => ['complete', 'completed'].includes(project.status)).length);
-  let visibleProjects = $derived.by(() => {
-    const filtered = projects.filter(project => {
-      const matchesQuery = !query || `${project.name} ${project.description || ''}`.toLowerCase().includes(query.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
-      return matchesQuery && matchesStatus;
-    });
-    return filtered.sort((first, second) => {
-      if (sortBy === 'name') return first.name.localeCompare(second.name);
-      if (sortBy === 'due') return (first.due_date || '9999-12-31').localeCompare(second.due_date || '9999-12-31');
-      if (sortBy === 'progress') return completionFor(second) - completionFor(first);
-      return new Date(second.updated_at || 0) - new Date(first.updated_at || 0);
-    });
-  });
+let activeCount = $derived(
+	projects.filter(
+		(project) =>
+			!["complete", "completed", "archived"].includes(project.status),
+	).length,
+);
+let completedCount = $derived(
+	projects.filter((project) =>
+		["complete", "completed"].includes(project.status),
+	).length,
+);
+let visibleProjects = $derived.by(() => {
+	const filtered = projects.filter((project) => {
+		const matchesQuery =
+			!query ||
+			`${project.name} ${project.description || ""}`
+				.toLowerCase()
+				.includes(query.toLowerCase());
+		const matchesStatus =
+			statusFilter === "all" || project.status === statusFilter;
+		return matchesQuery && matchesStatus;
+	});
+	return filtered.sort((first, second) => {
+		if (sortBy === "name") return first.name.localeCompare(second.name);
+		if (sortBy === "due")
+			return (first.due_date || "9999-12-31").localeCompare(
+				second.due_date || "9999-12-31",
+			);
+		if (sortBy === "progress")
+			return completionFor(second) - completionFor(first);
+		return new Date(second.updated_at || 0) - new Date(first.updated_at || 0);
+	});
+});
 
-  function statusName(status) {
-    return ({ active: 'In Progress', planning: 'Planning', risk: 'At Risk', hold: 'On Hold', complete: 'Completed', paused: 'On Hold', completed: 'Completed', archived: 'Archived' })[status] || status;
-  }
+function statusName(status) {
+	return (
+		{
+			active: "In Progress",
+			planning: "Planning",
+			risk: "At Risk",
+			hold: "On Hold",
+			complete: "Completed",
+			paused: "On Hold",
+			completed: "Completed",
+			archived: "Archived",
+		}[status] || status
+	);
+}
 
-  function statusDetails(status) {
-    return PSTAT[status] || { name: statusName(status), c: 'var(--gray)' };
-  }
+function statusDetails(status) {
+	return PSTAT[status] || { name: statusName(status), c: "var(--gray)" };
+}
 
-  function projectIsLocked(project) {
-    const userId = page.props.auth?.user?.id;
-    return project.is_private && !project.members?.some(member => member.id === userId);
-  }
+function projectIsLocked(project) {
+	const userId = page.props.auth?.user?.id;
+	return (
+		project.is_private &&
+		!project.members?.some((member) => member.id === userId)
+	);
+}
 
-  function memberInitials(member) {
-    return member.name.split(' ').map(part => part[0]).join('').slice(0, 2);
-  }
+function memberInitials(member) {
+	return member.name
+		.split(" ")
+		.map((part) => part[0])
+		.join("")
+		.slice(0, 2);
+}
 
-  function projectProgressClass(project) {
-    if (project.status === 'complete') return 'green';
-    if (project.status === 'risk') return 'red';
-    return '';
-  }
+function projectProgressClass(project) {
+	if (project.status === "complete") return "green";
+	if (project.status === "risk") return "red";
+	return "";
+}
 
-  function formatDate(value) {
-    return (typeof value === 'string' ? fmtDate(value.slice(0, 10)) : fmtDate(value)) || '—';
-  }
+function formatDate(value) {
+	return (
+		(typeof value === "string"
+			? fmtDate(value.slice(0, 10))
+			: fmtDate(value)) || "—"
+	);
+}
 
-  function completionFor(project) {
-    return project.tasks_count ? Math.round((project.completed_tasks_count / project.tasks_count) * 100) : 0;
-  }
+function completionFor(project) {
+	return project.tasks_count
+		? Math.round((project.completed_tasks_count / project.tasks_count) * 100)
+		: 0;
+}
 
-  function makeKey(value) {
-    let key = value.trim().split(/\s+/).map(word => word[0] || '').join('').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
-    if (key.length < 2) key = value.replace(/[^a-z]/gi, '').slice(0, 3).toUpperCase() || 'PRJ';
-    while (projects.some(project => project.key === key)) key += 'X';
-    return key;
-  }
+function makeKey(value) {
+	let key = value
+		.trim()
+		.split(/\s+/)
+		.map((word) => word[0] || "")
+		.join("")
+		.toUpperCase()
+		.replace(/[^A-Z]/g, "")
+		.slice(0, 3);
+	if (key.length < 2)
+		key =
+			value
+				.replace(/[^a-z]/gi, "")
+				.slice(0, 3)
+				.toUpperCase() || "PRJ";
+	while (projects.some((project) => project.key === key)) key += "X";
+	return key;
+}
 
-  function selectProjectTemplate(templateId) {
-    template = templateId;
-    const selectedTemplate = templates.find(item => item.id === templateId);
-    if (icon === 'folder' && selectedTemplate) icon = selectedTemplate.icon === 'file' ? 'folder' : selectedTemplate.icon;
-  }
+function selectProjectTemplate(templateId) {
+	template = templateId;
+	const selectedTemplate = templates.find((item) => item.id === templateId);
+	if (icon === "folder" && selectedTemplate)
+		icon = selectedTemplate.icon === "file" ? "folder" : selectedTemplate.icon;
+}
 
-  function activateProjectCard(event, projectId) {
-    if (event.type === 'keydown') {
-      if (event.target !== event.currentTarget) return;
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-    }
-    router.visit(projectShow(projectId).url);
-  }
+function activateProjectCard(event, projectId) {
+	if (event.type === "keydown") {
+		if (event.target !== event.currentTarget) return;
+		if (event.key !== "Enter" && event.key !== " ") return;
+		event.preventDefault();
+	}
+	router.visit(projectShow(projectId).url);
+}
 
-  async function openProjectMenu(event, projectId) {
-    event.stopPropagation();
-    if (projectMenu?.projectId === projectId) {
-      projectMenu = null;
-      return;
-    }
+async function openProjectMenu(event, projectId) {
+	event.stopPropagation();
+	if (projectMenu?.projectId === projectId) {
+		projectMenu = null;
+		return;
+	}
 
-    const bounds = event.currentTarget.getBoundingClientRect();
-    projectMenu = {
-      projectId,
-      left: Math.max(8, Math.min(bounds.right - 220, window.innerWidth - 228)),
-      top: Math.max(8, bounds.bottom + 4),
-    };
-    await tick();
-    const menu = document.querySelector('[data-project-menu]');
-    if (!menu) return;
-    const height = menu.getBoundingClientRect().height;
-    projectMenu = {
-      ...projectMenu,
-      top: bounds.bottom + height > window.innerHeight - 8 ? Math.max(8, bounds.top - height - 4) : bounds.bottom + 4,
-    };
-  }
+	const bounds = event.currentTarget.getBoundingClientRect();
+	projectMenu = {
+		projectId,
+		left: Math.max(8, Math.min(bounds.right - 220, window.innerWidth - 228)),
+		top: Math.max(8, bounds.bottom + 4),
+	};
+	await tick();
+	const menu = document.querySelector("[data-project-menu]");
+	if (!menu) return;
+	const height = menu.getBoundingClientRect().height;
+	projectMenu = {
+		...projectMenu,
+		top:
+			bounds.bottom + height > window.innerHeight - 8
+				? Math.max(8, bounds.top - height - 4)
+				: bounds.bottom + 4,
+	};
+}
 
-  function closeProjectMenuOnWindowClick(event) {
-    if (!event.target.closest('[data-project-menu]')) projectMenu = null;
-  }
+function closeProjectMenuOnWindowClick(event) {
+	if (!event.target.closest("[data-project-menu]")) projectMenu = null;
+}
 
-  function handleProjectMenuKeydown(event) {
-    if (event.key !== 'Escape') return;
-    if (modalOpen) {
-      modalOpen = false;
-      return;
-    }
-    projectMenu = null;
-  }
+function handleProjectMenuKeydown(event) {
+	if (event.key !== "Escape") return;
+	if (modalOpen) {
+		modalOpen = false;
+		return;
+	}
+	projectMenu = null;
+}
 
-  async function runProjectMenuAction(event, action) {
-    event.stopPropagation();
-    const selectedProject = projects.find(project => project.id === projectMenu?.projectId);
-    projectMenu = null;
-    if (!selectedProject) return;
+async function runProjectMenuAction(action) {
+	const selectedProject = projects.find(
+		(project) => project.id === projectMenu?.projectId,
+	);
+	projectMenu = null;
+	if (!selectedProject) return;
 
-    if (action === 'open') {
-      router.visit(projectShow(selectedProject.id).url);
-      return;
-    }
+	if (action === "open") {
+		router.visit(projectShow(selectedProject.id).url);
+		return;
+	}
 
-    if (action === 'edit' || action === 'share') {
-      setNavigationIntent({ type: 'project-action', action });
-      router.visit(projectShow(selectedProject.id).url);
-      return;
-    }
+	if (action === "edit" || action === "share") {
+		setNavigationIntent({ type: "project-action", action });
+		router.visit(projectShow(selectedProject.id).url);
+		return;
+	}
 
-    if (action === 'favorite') {
-      try {
-        const updatedProject = await httpRequest(projectFavorite(selectedProject.id).url, 'PATCH', {});
-        projects = projects.map(project => project.id === selectedProject.id
-          ? { ...project, is_favorite: updatedProject.is_favorite }
-          : project);
-      } catch (error) {
-        errors = { ...errors, form: error.message };
-      }
-      return;
-    }
+	if (action === "favorite") {
+		try {
+			const updatedProject = await httpRequest(
+				projectFavorite(selectedProject.id).url,
+				"PATCH",
+				{},
+			);
+			projects = projects.map((project) =>
+				project.id === selectedProject.id
+					? { ...project, is_favorite: updatedProject.is_favorite }
+					: project,
+			);
+		} catch (error) {
+			errors = { ...errors, form: error.message };
+		}
+		return;
+	}
 
-    if (action === 'duplicate') {
-      try {
-        const copy = await httpRequest(projectDuplicate(selectedProject.id).url, 'POST', {});
-        toast(`Duplicated ${selectedProject.name}`, {
-          action: 'Open',
-          onAction: () => router.visit(projectShow(copy.id).url),
-        });
-        router.reload({ preserveScroll: true });
-      } catch (error) {
-        errors = { ...errors, form: error.message };
-      }
-      return;
-    }
+	if (action === "duplicate") {
+		try {
+			const copy = await httpRequest(
+				projectDuplicate(selectedProject.id).url,
+				"POST",
+				{},
+			);
+			toast(`Duplicated ${selectedProject.name}`, {
+				action: "Open",
+				onAction: () => router.visit(projectShow(copy.id).url),
+			});
+			router.reload({ preserveScroll: true });
+		} catch (error) {
+			errors = { ...errors, form: error.message };
+		}
+		return;
+	}
 
-    if (action === 'archive' || action === 'delete') {
-      confirmationText = '';
-      projectConfirmation = { action, project: selectedProject };
-      return;
-    }
+	if (action === "archive" || action === "delete") {
+		confirmationText = "";
+		projectConfirmation = { action, project: selectedProject };
+		return;
+	}
 
-    if (action === 'move-up' || action === 'move-down') {
-      const sourceProjectId = selectedProject.source_key;
-      const order = S.data.projOrder || [];
-      const currentIndex = order.indexOf(sourceProjectId);
-      const nextIndex = action === 'move-up' ? currentIndex - 1 : currentIndex + 1;
-      if (currentIndex >= 0 && nextIndex >= 0 && nextIndex < order.length) {
-        const nextOrder = [...order];
-        [nextOrder[currentIndex], nextOrder[nextIndex]] = [nextOrder[nextIndex], nextOrder[currentIndex]];
-        S.data.projOrder = nextOrder;
-        saveWorkspaceStore();
-      }
-      return;
-    }
+	if (action === "move-up" || action === "move-down") {
+		const sourceProjectId = selectedProject.source_key;
+		const order = S.data.projOrder || [];
+		const currentIndex = order.indexOf(sourceProjectId);
+		const nextIndex =
+			action === "move-up" ? currentIndex - 1 : currentIndex + 1;
+		if (currentIndex >= 0 && nextIndex >= 0 && nextIndex < order.length) {
+			const nextOrder = [...order];
+			[nextOrder[currentIndex], nextOrder[nextIndex]] = [
+				nextOrder[nextIndex],
+				nextOrder[currentIndex],
+			];
+			S.data.projOrder = nextOrder;
+			saveWorkspaceStore();
+		}
+		return;
+	}
 
-    try {
-      await navigator.clipboard.writeText(`https://gr8rstudio.com/${S.data.ws.url}/project/${selectedProject.key.toLowerCase()}`);
-    } catch {
-      errors = { ...errors, form: 'Could not copy the project link.' };
-    }
-  }
+	try {
+		await navigator.clipboard.writeText(
+			`https://gr8rstudio.com/${S.data.ws.url}/project/${selectedProject.key.toLowerCase()}`,
+		);
+	} catch {
+		errors = { ...errors, form: "Could not copy the project link." };
+	}
+}
 
-  async function confirmProjectAction() {
-    const confirmation = projectConfirmation;
-    if (!confirmation || confirmationBusy) return;
-    if (confirmation.action === 'delete' && confirmationText !== confirmation.project.name) return;
+async function confirmProjectAction() {
+	const confirmation = projectConfirmation;
+	if (!confirmation || confirmationBusy) return;
+	if (
+		confirmation.action === "delete" &&
+		confirmationText !== confirmation.project.name
+	)
+		return;
 
-    confirmationBusy = true;
-    errors = { ...errors, form: '' };
+	confirmationBusy = true;
+	errors = { ...errors, form: "" };
 
-    try {
-      if (confirmation.action === 'archive') {
-        await httpRequest(projectUpdate(confirmation.project.id).url, 'PATCH', { status: 'archived' });
-        toast(`Archived ${confirmation.project.name}`);
-      } else {
-        await httpRequest(projectDestroy(confirmation.project.id).url, 'DELETE', {});
-        toast(`Deleted ${confirmation.project.name}`);
-      }
-      projectConfirmation = null;
-      confirmationText = '';
-      router.reload({ preserveScroll: true });
-    } catch (error) {
-      errors = { ...errors, form: error.message };
-    } finally {
-      confirmationBusy = false;
-    }
-  }
+	try {
+		if (confirmation.action === "archive") {
+			await httpRequest(projectUpdate(confirmation.project.id).url, "PATCH", {
+				status: "archived",
+			});
+			toast(`Archived ${confirmation.project.name}`);
+		} else {
+			await httpRequest(
+				projectDestroy(confirmation.project.id).url,
+				"DELETE",
+				{},
+			);
+			toast(`Deleted ${confirmation.project.name}`);
+		}
+		projectConfirmation = null;
+		confirmationText = "";
+		router.reload({ preserveScroll: true });
+	} catch (error) {
+		errors = { ...errors, form: error.message };
+	} finally {
+		confirmationBusy = false;
+	}
+}
 
-  async function openCreateProjectForm() {
-    name = '';
-    description = '';
-    const target = new Date();
-    target.setDate(target.getDate() + 30);
-    dueDate = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
-    icon = 'folder';
-    color = 'indigo';
-    teamId = teamsById.has(page.props.auth?.user?.team) ? page.props.auth.user.team : teams[0]?.id || 'product';
-    leadId = String(page.props.auth?.user?.id || members[0]?.id || '');
-    template = 'blank';
-    errors = {};
-    modalOpen = true;
-    await tick();
-    projectNameInput?.focus();
-  }
+async function openCreateProjectForm() {
+	name = "";
+	description = "";
+	const target = new Date();
+	target.setDate(target.getDate() + 30);
+	dueDate = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}-${String(target.getDate()).padStart(2, "0")}`;
+	icon = "folder";
+	color = "indigo";
+	teamId = teamsById.has(page.props.auth?.user?.team)
+		? page.props.auth.user.team
+		: teams[0]?.id || "product";
+	leadId = String(page.props.auth?.user?.id || members[0]?.id || "");
+	template = "blank";
+	errors = {};
+	modalOpen = true;
+	await tick();
+	projectNameInput?.focus();
+}
 
-  async function createProject(event) {
-    event.preventDefault();
-    busy = true;
-    errors = {};
-    try {
-      const project = await httpRequest(projectStore().url, 'POST', {
-        name: name.trim(),
-        key: makeKey(name),
-        description: description.trim() || null,
-        icon,
-        color,
-        team: teamId,
-        lead_id: Number(leadId),
-        due_date: dueDate || null,
-        template,
-      });
-      modalOpen = false;
-      router.visit(`${projectShow(project.id).url}${template === 'blank' ? '?tab=overview' : ''}`);
-    } catch (error) {
-      errors = error.errors || { form: error.message };
-    } finally {
-      busy = false;
-    }
-  }
+async function createProject(event) {
+	event.preventDefault();
+	busy = true;
+	errors = {};
+	try {
+		const project = await httpRequest(projectStore().url, "POST", {
+			name: name.trim(),
+			key: makeKey(name),
+			description: description.trim() || null,
+			icon,
+			color,
+			team: teamId,
+			lead_id: Number(leadId),
+			due_date: dueDate || null,
+			template,
+		});
+		modalOpen = false;
+		router.visit(
+			`${projectShow(project.id).url}${template === "blank" ? "?tab=overview" : ""}`,
+		);
+	} catch (error) {
+		errors = error.errors || { form: error.message };
+	} finally {
+		busy = false;
+	}
+}
 </script>
 
 <svelte:head><title>Projects</title></svelte:head>
@@ -390,20 +571,33 @@ import { S, save as saveWorkspaceStore } from '@/src/core/store.js';
   {#if projectMenu}
     {@const selectedProject = projects.find(project => project.id === projectMenu.projectId)}
     {#if selectedProject}
-      <Dropdown class="pop enter" data-project-menu role="menu" tabindex="-1" aria-label={`${selectedProject.name} options`} style={`left:${projectMenu.left}px;top:${projectMenu.top}px;width:220px`}>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'open')}>{@html ic('arrow-up-right', 15)}Open</button>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'favorite')}>{@html ic('star', 15)}{selectedProject.is_favorite ? 'Remove from favorites' : 'Add to favorites'}</button>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'edit')}>{@html ic('pencil', 15)}Rename &amp; edit</button>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'share')}>{@html ic('share-2', 15)}Share</button>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'copy')}>{@html ic('link', 15)}Copy link</button>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'duplicate')}>{@html ic('copy', 15)}Duplicate</button>
-        <div class="msep"></div>
-        {#if projects.findIndex(project => project.id === selectedProject.id) > 0}<button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'move-up')}>{@html ic('arrow-up', 15)}Move up in sidebar</button>{/if}
-        {#if projects.findIndex(project => project.id === selectedProject.id) < projects.length - 1}<button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'move-down')}>{@html ic('arrow-down', 15)}Move down in sidebar</button>{/if}
-        <div class="msep"></div>
-        <button class="mi" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'archive')}>{@html ic('archive', 15)}{selectedProject.status === 'complete' ? 'Archive' : 'Archive project'}</button>
-        <button class="mi danger" type="button" role="menuitem" onclick={event => runProjectMenuAction(event, 'delete')}>{@html ic('trash-2', 15)}Delete project</button>
-      </Dropdown>
+      <Dropdown
+        config={{
+          className: 'pop enter',
+          dataAttributes: { 'data-project-menu': true },
+          role: 'menu',
+          tabIndex: -1,
+          label: `${selectedProject.name} options`,
+          style: `left:${projectMenu.left}px;top:${projectMenu.top}px;width:220px`,
+          items: [
+            { id: 'project-open', type: 'action', action: 'project-menu-action', payload: 'open', label: 'Open', icon: 'arrow-up-right', stopPropagation: true },
+            { id: 'project-favorite', type: 'action', action: 'project-menu-action', payload: 'favorite', label: selectedProject.is_favorite ? 'Remove from favorites' : 'Add to favorites', icon: 'star', stopPropagation: true },
+            { id: 'project-edit', type: 'action', action: 'project-menu-action', payload: 'edit', label: 'Rename & edit', icon: 'pencil', stopPropagation: true },
+            { id: 'project-share', type: 'action', action: 'project-menu-action', payload: 'share', label: 'Share', icon: 'share-2', stopPropagation: true },
+            { id: 'project-copy', type: 'action', action: 'project-menu-action', payload: 'copy', label: 'Copy link', icon: 'link', stopPropagation: true },
+            { id: 'project-duplicate', type: 'action', action: 'project-menu-action', payload: 'duplicate', label: 'Duplicate', icon: 'copy', stopPropagation: true },
+            { id: 'project-order-separator', type: 'separator' },
+            ...(projects.findIndex(project => project.id === selectedProject.id) > 0 ? [{ id: 'project-move-up', type: 'action', action: 'project-menu-action', payload: 'move-up', label: 'Move up in sidebar', icon: 'arrow-up', stopPropagation: true }] : []),
+            ...(projects.findIndex(project => project.id === selectedProject.id) < projects.length - 1 ? [{ id: 'project-move-down', type: 'action', action: 'project-menu-action', payload: 'move-down', label: 'Move down in sidebar', icon: 'arrow-down', stopPropagation: true }] : []),
+            { id: 'project-archive-separator', type: 'separator' },
+            { id: 'project-archive', type: 'action', action: 'project-menu-action', payload: 'archive', label: selectedProject.status === 'complete' ? 'Archive' : 'Archive project', icon: 'archive', stopPropagation: true },
+            { id: 'project-delete', type: 'action', action: 'project-menu-action', payload: 'delete', label: 'Delete project', icon: 'trash-2', danger: true, stopPropagation: true },
+          ],
+        }}
+        onAction={(action, item) => {
+          if (action === 'project-menu-action' && typeof item.payload === 'string') void runProjectMenuAction(item.payload);
+        }}
+      />
     {/if}
   {/if}
 

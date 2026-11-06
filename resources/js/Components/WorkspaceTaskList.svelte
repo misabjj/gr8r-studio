@@ -1,202 +1,311 @@
 <script>
-  import Dropdown from "./Dropdown.svelte";
-  import Button from "./Button.svelte";
-  import { tick } from 'svelte';
-  import { ic } from '@/src/core/icons.js';
-  import { relDate } from '@/src/core/utils.js';
-  import { LABELS, PCOLORS } from '@/src/core/constants.js';
-  import { prIcon, stIcon } from '@/src/ui/helpers.js';
+import Dropdown from "./Dropdown.svelte";
+import Button from "./Button.svelte";
+import { tick } from "svelte";
+import { ic } from "@/src/core/icons.js";
+import { relDate } from "@/src/core/utils.js";
+import { LABELS, PCOLORS } from "@/src/core/constants.js";
+import { prIcon, stIcon } from "@/src/ui/helpers.js";
 
-  let {
-    groups = [],
-    projects = [],
-    members = [],
-    workspaceData = {},
-    selectedSort = 'manual',
-    selectedSortDirection = 1,
-    columns = ['status', 'assignee', 'priority', 'due', 'project'],
-    complete = false,
-    initialCollapsedGroups = [],
-    onOpen,
-    onUpdate,
-    onToggleComplete,
-    onSort,
-    onCreate,
-  } = $props();
+let {
+	groups = [],
+	projects = [],
+	members = [],
+	workspaceData = {},
+	selectedSort = "manual",
+	selectedSortDirection = 1,
+	columns = ["status", "assignee", "priority", "due", "project"],
+	complete = false,
+	initialCollapsedGroups = [],
+	onOpen,
+	onUpdate,
+	onToggleComplete,
+	onSort,
+	onCreate,
+} = $props();
 
-  let selectedIds = $state(new Set());
-  let toggledGroups = $state(new Set());
-  let expandedTasks = $state(new Set());
-  let activeMenu = $state(null);
-  let search = $state('');
-  let menuPosition = $state({ left: 0, top: 0 });
-  let composerGroup = $state(null);
-  let composerTitle = $state('');
-  let composerInput = $state(null);
+let selectedIds = $state(new Set());
+let toggledGroups = $state(new Set());
+let expandedTasks = $state(new Set());
+let activeMenu = $state(null);
+let search = $state("");
+let menuPosition = $state({ left: 0, top: 0 });
+let composerGroup = $state(null);
+let composerTitle = $state("");
+let composerInput = $state(null);
 
-  const statuses = [
-    { id: 'backlog', name: 'Backlog' },
-    { id: 'todo', name: 'To Do' },
-    { id: 'progress', name: 'In Progress' },
-    { id: 'review', name: 'Review' },
-    { id: 'done', name: 'Done' },
-  ];
-  const priorities = [
-    { id: 'urgent', name: 'Urgent' },
-    { id: 'high', name: 'High' },
-    { id: 'medium', name: 'Medium' },
-    { id: 'low', name: 'Low' },
-    { id: 'none', name: 'No priority' },
-  ];
-  const columnNames = { project: 'Project', status: 'Status', assignee: 'Assignee', priority: 'Priority', due: 'Due date', labels: 'Labels' };
-  const columnWidths = { project: '160px', status: '126px', assignee: '150px', priority: '108px', due: '104px', labels: '168px' };
-  let columnsStyle = $derived(`18px 30px minmax(220px,1fr) ${columns.map(column => columnWidths[column]).join(' ')} 40px`);
+const statuses = [
+	{ id: "backlog", name: "Backlog" },
+	{ id: "todo", name: "To Do" },
+	{ id: "progress", name: "In Progress" },
+	{ id: "review", name: "Review" },
+	{ id: "done", name: "Done" },
+];
+const priorities = [
+	{ id: "urgent", name: "Urgent" },
+	{ id: "high", name: "High" },
+	{ id: "medium", name: "Medium" },
+	{ id: "low", name: "Low" },
+	{ id: "none", name: "No priority" },
+];
+const columnNames = {
+	project: "Project",
+	status: "Status",
+	assignee: "Assignee",
+	priority: "Priority",
+	due: "Due date",
+	labels: "Labels",
+};
+const columnWidths = {
+	project: "160px",
+	status: "126px",
+	assignee: "150px",
+	priority: "108px",
+	due: "104px",
+	labels: "168px",
+};
+let columnsStyle = $derived(
+	`18px 30px minmax(220px,1fr) ${columns.map((column) => columnWidths[column]).join(" ")} 40px`,
+);
 
-  let taskIds = $derived(groups.flatMap(group => group.tasks.map(task => task.id)));
-  let selectedCount = $derived(taskIds.filter(id => selectedIds.has(id)).length);
-  let allSelected = $derived(taskIds.length > 0 && selectedCount === taskIds.length);
-  let visibleMembers = $derived(members.filter(member => member.name.toLowerCase().includes(search.trim().toLowerCase())));
-  let visibleProjects = $derived(projects
-    .filter(project => !['complete', 'completed', 'archived'].includes(project.status))
-    .filter(project => project.name.toLowerCase().includes(search.trim().toLowerCase())));
+let taskIds = $derived(
+	groups.flatMap((group) => group.tasks.map((task) => task.id)),
+);
+let selectedCount = $derived(
+	taskIds.filter((id) => selectedIds.has(id)).length,
+);
+let allSelected = $derived(
+	taskIds.length > 0 && selectedCount === taskIds.length,
+);
+let visibleMembers = $derived(
+	members.filter((member) =>
+		member.name.toLowerCase().includes(search.trim().toLowerCase()),
+	),
+);
+let visibleProjects = $derived(
+	projects
+		.filter(
+			(project) =>
+				!["complete", "completed", "archived"].includes(project.status),
+		)
+		.filter((project) =>
+			project.name.toLowerCase().includes(search.trim().toLowerCase()),
+		),
+);
 
-  function toggleSelected(id) {
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    selectedIds = next;
-  }
+function toggleSelected(id) {
+	const next = new Set(selectedIds);
+	if (next.has(id)) next.delete(id);
+	else next.add(id);
+	selectedIds = next;
+}
 
-  function toggleAll() {
-    selectedIds = allSelected ? new Set() : new Set(taskIds);
-  }
+function toggleAll() {
+	selectedIds = allSelected ? new Set() : new Set(taskIds);
+}
 
-  function toggleGroup(groupId) {
-    const next = new Set(toggledGroups);
-    if (next.has(groupId)) next.delete(groupId);
-    else next.add(groupId);
-    toggledGroups = next;
-  }
+function toggleGroup(groupId) {
+	const next = new Set(toggledGroups);
+	if (next.has(groupId)) next.delete(groupId);
+	else next.add(groupId);
+	toggledGroups = next;
+}
 
-  function isGroupCollapsed(groupId) {
-    const initiallyCollapsed = initialCollapsedGroups.includes(groupId);
-    return toggledGroups.has(groupId) ? !initiallyCollapsed : initiallyCollapsed;
-  }
+function isGroupCollapsed(groupId) {
+	const initiallyCollapsed = initialCollapsedGroups.includes(groupId);
+	return toggledGroups.has(groupId) ? !initiallyCollapsed : initiallyCollapsed;
+}
 
-  function toggleExpanded(taskId) {
-    const next = new Set(expandedTasks);
-    if (next.has(taskId)) next.delete(taskId);
-    else next.add(taskId);
-    expandedTasks = next;
-  }
+function toggleExpanded(taskId) {
+	const next = new Set(expandedTasks);
+	if (next.has(taskId)) next.delete(taskId);
+	else next.add(taskId);
+	expandedTasks = next;
+}
 
-  function sortColumn(column) {
-    if (!onSort) return;
-    onSort(column === 'project' ? 'project' : column);
-  }
+function sortColumn(column) {
+	if (!onSort) return;
+	onSort(column === "project" ? "project" : column);
+}
 
-  function openMenuFor(event, field, task = null) {
-    event.stopPropagation();
-    if (activeMenu?.field === field && activeMenu.task?.id === task?.id) {
-      activeMenu = null;
-      return;
-    }
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const width = field === 'due' ? 250 : 250;
-    const left = Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8));
-    menuPosition = { left, top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 360)) };
-    search = '';
-    activeMenu = { field, task };
-  }
+function openMenuFor(event, field, task = null) {
+	event.stopPropagation();
+	if (activeMenu?.field === field && activeMenu.task?.id === task?.id) {
+		activeMenu = null;
+		return;
+	}
+	const bounds = event.currentTarget.getBoundingClientRect();
+	const width = field === "due" ? 250 : 250;
+	const left = Math.max(
+		8,
+		Math.min(bounds.left, window.innerWidth - width - 8),
+	);
+	menuPosition = {
+		left,
+		top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 360)),
+	};
+	search = "";
+	activeMenu = { field, task };
+}
 
-  function closeMenu(event) {
-    if (!activeMenu) return;
-    const target = event.target;
-    if (target instanceof Element && target.closest('[data-task-list-menu], [data-task-list-trigger]')) return;
-    activeMenu = null;
-  }
+function closeMenu(event) {
+	if (!activeMenu) return;
+	const target = event.target;
+	if (
+		target instanceof Element &&
+		target.closest("[data-task-list-menu], [data-task-list-trigger]")
+	)
+		return;
+	activeMenu = null;
+}
 
-  function handleKeydown(event) {
-    if (event.key === 'Escape') {
-      if (activeMenu) activeMenu = null;
-      else if (composerGroup) cancelComposer();
-    }
-  }
+function handleKeydown(event) {
+	if (event.key === "Escape") {
+		if (activeMenu) activeMenu = null;
+		else if (composerGroup) cancelComposer();
+	}
+}
 
-  function dueLabel(task) {
-    if (!task.due_date) return 'Set date';
-    return relDate(String(task.due_date).slice(0, 10));
-  }
+function dueLabel(task) {
+	if (!task.due_date) return "Set date";
+	return relDate(String(task.due_date).slice(0, 10));
+}
 
-  function isoOffset(days) {
-    const date = new Date();
-    date.setHours(0, 0, 0, 0);
-    date.setDate(date.getDate() + days);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  }
+function isoOffset(days) {
+	const date = new Date();
+	date.setHours(0, 0, 0, 0);
+	date.setDate(date.getDate() + days);
+	return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
 
-  function initials(name = '') {
-    return name.split(' ').map(part => part[0]).join('').slice(0, 2);
-  }
+function initials(name = "") {
+	return name
+		.split(" ")
+		.map((part) => part[0])
+		.join("")
+		.slice(0, 2);
+}
 
-  function memberFor(task) {
-    return task.assignee || members.find(member => String(member.id) === String(task.assignee_id));
-  }
+function memberFor(task) {
+	return (
+		task.assignee ||
+		members.find((member) => String(member.id) === String(task.assignee_id))
+	);
+}
 
-  function commentsCount(task) {
-    return (workspaceData.comments || []).filter(comment => comment.task === task.source_key).length;
-  }
+function commentsCount(task) {
+	return (workspaceData.comments || []).filter(
+		(comment) => comment.task === task.source_key,
+	).length;
+}
 
-  function openTask(event, task) {
-    if (event.target.closest('button, input, a, select')) return;
-    if (event.type === 'keydown') {
-      if (!['Enter', ' '].includes(event.key)) return;
-      event.preventDefault();
-    }
-    onOpen(task);
-  }
+function openTask(event, task) {
+	if (event.target.closest("button, input, a, select")) return;
+	if (event.type === "keydown") {
+		if (!["Enter", " "].includes(event.key)) return;
+		event.preventDefault();
+	}
+	onOpen(task);
+}
 
-  async function updateOne(task, values) {
-    activeMenu = null;
-    await onUpdate(task, values);
-  }
+async function updateOne(task, values) {
+	activeMenu = null;
+	await onUpdate(task, values);
+}
 
-  async function toggleSubtask(task, subtask) {
-    const subtasks = task.subtasks.map(item => item.id === subtask.id ? { ...item, done: !item.done } : item);
-    await onUpdate(task, { subtasks });
-  }
+async function toggleSubtask(task, subtask) {
+	const subtasks = task.subtasks.map((item) =>
+		item.id === subtask.id ? { ...item, done: !item.done } : item,
+	);
+	await onUpdate(task, { subtasks });
+}
 
-  async function applyBulk(values) {
-    const selected = groups.flatMap(group => group.tasks).filter(task => selectedIds.has(task.id));
-    activeMenu = null;
-    await Promise.all(selected.map(task => onUpdate(task, values)));
-    selectedIds = new Set();
-  }
+async function applyBulk(values) {
+	const selected = groups
+		.flatMap((group) => group.tasks)
+		.filter((task) => selectedIds.has(task.id));
+	activeMenu = null;
+	await Promise.all(selected.map((task) => onUpdate(task, values)));
+	selectedIds = new Set();
+}
 
-  function setDate(value) {
-    if (activeMenu?.task) updateOne(activeMenu.task, { due_date: value || null });
-  }
+function setDate(value) {
+	if (activeMenu?.task) updateOne(activeMenu.task, { due_date: value || null });
+}
 
-  async function createFromComposer() {
-    const title = composerTitle.trim();
-    if (!title || !composerGroup) return;
-    await onCreate(title, composerGroup);
-    composerTitle = '';
-    composerGroup = null;
-  }
+function handleDropdownAction(action, item, context) {
+	if (action === "search-members") {
+		search = String(context?.value ?? "");
+		return;
+	}
 
-  async function beginComposer(group) {
-    composerGroup = group;
-    composerTitle = '';
-    await tick();
-    composerInput?.focus();
-  }
+	if (action === "set-status" && typeof item.payload === "string") {
+		const values = { status: item.payload };
+		if (activeMenu.task) void updateOne(activeMenu.task, values);
+		else void applyBulk(values);
+		return;
+	}
 
-  function cancelComposer() {
-    composerGroup = null;
-    composerTitle = '';
-  }
+	if (action === "set-priority" && typeof item.payload === "string") {
+		const values = { priority: item.payload };
+		if (activeMenu.task) void updateOne(activeMenu.task, values);
+		else void applyBulk(values);
+		return;
+	}
 
+	if (action === "set-assignee") {
+		const assigneeId = item.payload === null ? null : item.payload;
+		if (activeMenu.task)
+			void updateOne(activeMenu.task, { assignee_id: assigneeId });
+		else void applyBulk({ assignee_id: assigneeId });
+		return;
+	}
+
+	if (
+		action === "move-project" &&
+		typeof item.payload === "number" &&
+		activeMenu.task
+	) {
+		void updateOne(activeMenu.task, { project_id: item.payload });
+		return;
+	}
+
+	if (action === "set-date" && typeof item.payload === "string") {
+		setDate(item.payload);
+		return;
+	}
+
+	if (action === "set-date-input") {
+		setDate(String(context?.value ?? ""));
+		return;
+	}
+
+	if (action === "open-task" && activeMenu.task) {
+		const selectedTask = activeMenu.task;
+		activeMenu = null;
+		onOpen(selectedTask);
+	}
+}
+
+async function createFromComposer() {
+	const title = composerTitle.trim();
+	if (!title || !composerGroup) return;
+	await onCreate(title, composerGroup);
+	composerTitle = "";
+	composerGroup = null;
+}
+
+async function beginComposer(group) {
+	composerGroup = group;
+	composerTitle = "";
+	await tick();
+	composerInput?.focus();
+}
+
+function cancelComposer() {
+	composerGroup = null;
+	composerTitle = "";
+}
 </script>
 
 <svelte:window onpointerdown={closeMenu} onkeydown={handleKeydown} />
@@ -266,29 +375,97 @@
 {/if}
 
 {#if activeMenu}
-  <Dropdown class="pop enter" data-task-list-menu role="menu" style={`left:${menuPosition.left}px;top:${menuPosition.top}px;width:250px`}>
-    {#if activeMenu.field === 'status' || activeMenu.field === 'bulk-status'}
-      {#each statuses as item (item.id)}<button type="button" class="mi" role="menuitemradio" aria-checked={activeMenu.task?.status === item.id} onclick={() => activeMenu.task ? updateOne(activeMenu.task, { status: item.id }) : applyBulk({ status: item.id })}>{@html stIcon(item.id, 14)}<span>{item.name}</span>{#if activeMenu.task?.status === item.id}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
-    {:else if activeMenu.field === 'priority' || activeMenu.field === 'bulk-priority'}
-      {#each priorities as item (item.id)}<button type="button" class="mi" role="menuitemradio" aria-checked={activeMenu.task?.priority === item.id} onclick={() => activeMenu.task ? updateOne(activeMenu.task, { priority: item.id }) : applyBulk({ priority: item.id })}>{@html prIcon(item.id, 14)}<span>{item.name === 'none' ? 'No priority' : item.name[0].toUpperCase() + item.name.slice(1)}</span>{#if activeMenu.task?.priority === item.id}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
-    {:else if activeMenu.field === 'assignee' || activeMenu.field === 'bulk-assignee'}
-      <div class="pin"><input bind:value={search} placeholder="Assign to…" aria-label="Assign to…" /></div>
-      <button type="button" class="mi" role="menuitemradio" aria-checked={!activeMenu.task?.assignee_id} onclick={() => activeMenu.task ? updateOne(activeMenu.task, { assignee_id: null }) : applyBulk({ assignee_id: null })}>{@html ic('user-round', 14)}<span>Unassigned</span></button>
-      {#each visibleMembers as member (member.id)}<button type="button" class="mi" role="menuitemradio" aria-checked={String(activeMenu.task?.assignee_id || '') === String(member.id)} onclick={() => activeMenu.task ? updateOne(activeMenu.task, { assignee_id: member.id }) : applyBulk({ assignee_id: member.id })}><span class="av sm" style={`--c:${member.color || '#8A867E'}`}>{initials(member.name)}</span><span class="trunc">{member.name}</span></button>{/each}
-    {:else if activeMenu.field === 'project'}
-      <div class="pin"><input bind:value={search} placeholder="Move to project…" aria-label="Move to project…" /></div>
-      {#each visibleProjects as project (project.id)}<button type="button" class="mi" role="menuitemradio" aria-checked={String(activeMenu.task.project_id) === String(project.id)} onclick={() => updateOne(activeMenu.task, { project_id: project.id })}><span class="pdot" style={`--c:${PCOLORS[project.color] || PCOLORS.slate}`}></span><span class="trunc">{project.name}</span></button>{/each}
-    {:else if activeMenu.field === 'due'}
-      <div class="row" style="gap:4px;padding:4px;flex-wrap:wrap">
-        {#each [['Today', 0], ['Tomorrow', 1], ['Next week', 7], ['In 2 weeks', 14]] as [label, days] (label)}
-          <button type="button" class="badge" onclick={() => setDate(isoOffset(days))}>{label}</button>
-        {/each}
-        {#if activeMenu.task.due_date}<button type="button" class="badge" onclick={() => setDate('')}>Clear</button>{/if}
-      </div>
-      <div class="msep"></div>
-      <div class="pin"><input type="date" aria-label="Due date" value={activeMenu.task.due_date?.slice(0, 10) || ''} onchange={event => setDate(event.currentTarget.value)} /></div>
-    {:else if activeMenu.field === 'more'}
-      <button type="button" class="mi" onclick={() => { const task = activeMenu.task; activeMenu = null; onOpen(task); }}>{@html ic('panel-right', 14)}<span>Open task</span></button>
-    {/if}
-  </Dropdown>
+  <Dropdown
+    config={{
+      className: 'pop enter',
+      dataAttributes: { 'data-task-list-menu': true },
+      role: 'menu',
+      style: `left:${menuPosition.left}px;top:${menuPosition.top}px;width:250px`,
+      items: activeMenu.field === 'status' || activeMenu.field === 'bulk-status'
+        ? statuses.map(item => ({
+            id: `status-${item.id}`,
+            type: 'action',
+            action: 'set-status',
+            payload: item.id,
+            role: 'menuitemradio',
+            checked: activeMenu.task?.status === item.id,
+            graphic: { type: 'status', value: item.id, size: 14 },
+            label: item.name,
+          }))
+        : activeMenu.field === 'priority' || activeMenu.field === 'bulk-priority'
+          ? priorities.map(item => ({
+              id: `priority-${item.id}`,
+              type: 'action',
+              action: 'set-priority',
+              payload: item.id,
+              role: 'menuitemradio',
+              checked: activeMenu.task?.priority === item.id,
+              graphic: { type: 'priority', value: item.id, size: 14 },
+              label: item.name === 'none' ? 'No priority' : item.name[0].toUpperCase() + item.name.slice(1),
+            }))
+          : activeMenu.field === 'assignee' || activeMenu.field === 'bulk-assignee'
+            ? [
+                {
+                  id: 'member-search',
+                  type: 'element',
+                  tag: 'div',
+                  className: 'pin',
+                  items: [{ id: 'member-search-input', type: 'element', tag: 'input', ariaLabel: 'Assign to…', placeholder: 'Assign to…', value: search, events: { input: 'search-members' } }],
+                },
+                { id: 'unassigned', type: 'action', action: 'set-assignee', payload: null, icon: 'user-round', role: 'menuitemradio', checked: !activeMenu.task?.assignee_id, label: 'Unassigned' },
+                ...visibleMembers.map(member => ({
+                  id: `member-${member.id}`,
+                  type: 'action',
+                  action: 'set-assignee',
+                  payload: member.id,
+                  role: 'menuitemradio',
+                  checked: String(activeMenu.task?.assignee_id || '') === String(member.id),
+                  label: member.name,
+                  graphic: { type: 'avatar', initials: initials(member.name), color: member.color || '#8A867E' },
+                })),
+              ]
+            : activeMenu.field === 'project'
+              ? [
+                  {
+                    id: 'project-search',
+                    type: 'element',
+                    tag: 'div',
+                    className: 'pin',
+                    items: [{ id: 'project-search-input', type: 'element', tag: 'input', ariaLabel: 'Move to project…', placeholder: 'Move to project…', value: search, events: { input: 'search-members' } }],
+                  },
+                  ...visibleProjects.map(project => ({
+                    id: `project-${project.id}`,
+                    type: 'element',
+                    tag: 'button',
+                    className: 'mi',
+                    role: 'menuitemradio',
+                    ariaChecked: String(activeMenu.task.project_id) === String(project.id),
+                    payload: project.id,
+                    events: { click: 'move-project' },
+                    items: [
+                      { id: `project-dot-${project.id}`, type: 'element', tag: 'span', className: 'pdot', style: `--c:${PCOLORS[project.color] || PCOLORS.slate}` },
+                      { id: `project-name-${project.id}`, type: 'element', tag: 'span', className: 'trunc', text: project.name },
+                    ],
+                  })),
+                ]
+              : activeMenu.field === 'due'
+                ? [
+                    {
+                      id: 'due-shortcuts',
+                      type: 'element',
+                      tag: 'div',
+                      className: 'row',
+                      style: 'gap:4px;padding:4px;flex-wrap:wrap',
+                      items: [
+                        ...[['Today', 0], ['Tomorrow', 1], ['Next week', 7], ['In 2 weeks', 14]].map(([label, days]) => ({ id: `due-${days}`, type: 'element', tag: 'button', className: 'badge', text: label, payload: isoOffset(days), events: { click: 'set-date' } })),
+                        ...(activeMenu.task.due_date ? [{ id: 'due-clear', type: 'element', tag: 'button', className: 'badge', text: 'Clear', payload: '', events: { click: 'set-date' } }] : []),
+                      ],
+                    },
+                    { id: 'due-separator', type: 'separator' },
+                    { id: 'due-input-wrap', type: 'element', tag: 'div', className: 'pin', items: [{ id: 'due-input', type: 'element', tag: 'input', elementType: 'date', ariaLabel: 'Due date', value: activeMenu.task.due_date?.slice(0, 10) || '', events: { change: 'set-date-input' } }] },
+                  ]
+                : [{ id: 'open-task', type: 'action', action: 'open-task', icon: 'panel-right', label: 'Open task' }],
+    }}
+    onAction={handleDropdownAction}
+  />
 {/if}

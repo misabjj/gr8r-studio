@@ -1,1126 +1,2536 @@
 <script>
-  import Select from "../../Components/Select.svelte";
-  import Dropdown from "../../Components/Dropdown.svelte";
-  import Button from "../../Components/Button.svelte";
-  import ErrorMessage from "../../Components/ErrorMessage.svelte";
-  import Label from "../../Components/Label.svelte";
-  import Input from "../../Components/Input.svelte";
-  import Textarea from "../../Components/Textarea.svelte";
-  import { onMount, tick } from 'svelte';
-  import { fade, scale } from 'svelte/transition';
-  import { Link, router, usePage } from '@inertiajs/svelte';
-  import AppLayout from '../../Layouts/AppLayout.svelte';
-  import WorkspaceTaskForm from '../../Components/WorkspaceTaskForm.svelte';
-  import TaskDrawer from '../../Components/TaskDrawer.svelte';
-  import ProjectCalendar from '../../Components/ProjectCalendar.svelte';
-  import ProjectTimeline from '../../Components/ProjectTimeline.svelte';
-  import WorkspaceTaskList from '../../Components/WorkspaceTaskList.svelte';
-  import { update as taskUpdate } from '../../routes/tasks';
-  import { store as taskStore } from '../../routes/projects/tasks';
-  import { destroy as projectDestroy, duplicate as projectDuplicate, favorite as projectFavorite, index as projectsIndex, update as projectUpdate } from '../../routes/projects';
-  import { update as projectMembersUpdate } from '../../routes/projects/members';
-  import { show as teamShow } from '../../routes/teams';
-  import { useHttpRequest } from '../../lib/http.js';
-  import { consumeNavigationIntent } from '../../lib/navigation-intents.js';
-  import { ago, dayBucket, fmtDate, relDate, uid } from '@/src/core/utils.js';
-  import { save as saveWorkspaceStore } from '@/src/core/store.js';
-  import { S } from '@/src/core/store.js';
-  import { ic } from '@/src/core/icons.js';
-  import { toast } from '@/src/ui/toast.js';
-  import { LABELS, PCOLORS, PSTAT, TEAMS_SEED } from '@/src/core/constants.js';
-  import { FT, empty, filePrev, fileType as getFileType, fsize, lbl, prIcon, stIcon } from '@/src/ui/helpers.js';
-
-  const httpRequest = useHttpRequest();
-  let { project, projects = [], workspaceData = {}, activeTab = 'board' } = $props();
-  const page = usePage();
-  let tasks = $state([]);
-  $effect(() => { tasks = [...(project.tasks || [])]; });
-  function getInitialTab() {
-    return activeTab;
-  }
-  let tab = $state(getInitialTab());
-  let savedViewQuery = $state('');
-  let savedViewError = $state('');
-  let savedFilterOpen = $state(false);
-  let savedFilterEditIndex = $state(null);
-  let savedFilterPosition = $state({ left: 0, top: 0 });
-  let savedValueOpenIndex = $state(null);
-  let savedValuePosition = $state({ left: 0, top: 0 });
-  let projectViewFilters = $state([]);
-  let customSavedViews = $state([]);
-  let saveViewOpen = $state(false);
-  let saveViewName = $state('');
-  let saveViewNameInput = $state(null);
-  let saveViewType = $state('list');
-  let showTaskForm = $state(false);
-  let taskFormStatus = $state('todo');
-  let taskFormDueDate = $state('');
-  let errorMessage = $state('');
-  let isFavorite = $state(false);
-  let fileQuery = $state('');
-  let fileType = $state('all');
-  let fileSort = $state('date');
-  let fileView = $state('grid');
-  let selectedFile = $state(null);
-  let uploadingProjectFiles = $state([]);
-  let projectFileRecords = $state([]);
-  const projectUploadTimers = new Map();
-  let fileMenu = $state(null);
-  let fileMenuPosition = $state({ left: 8, top: 8 });
-  let fileRenameTarget = $state(null);
-  let fileRenameName = $state('');
-  let fileDeleteTarget = $state(null);
-  let statusMenu = $state(null);
-  let tableCellMenu = $state(null);
-  let tableCellQuery = $state('');
-  let tableTitleEditId = $state(null);
-  let tableTitleDraft = $state('');
-  let tableEstimateEditId = $state(null);
-  let tableEstimateDraft = $state('');
-  let projectStatusMenu = $state(null);
-  let projectMorePosition = $state({ left: 0, top: 0 });
-  let projectMoreOpen = $state(false);
-  let projectConfirmation = $state(null);
-  let projectConfirmationText = $state('');
-  let projectConfirmationBusy = $state(false);
-  let membersDialogOpen = $state(false);
-  let editDialogOpen = $state(false);
-  let projectDialogBusy = $state(false);
-  let projectDialogError = $state('');
-  let memberDialogError = $state('');
-  let memberQuery = $state('');
-  let selectedMemberIds = $state([]);
-  let projectForm = $state({ name: '', description: '', status: 'active', start_date: '', due_date: '' });
-  let drawerTaskId = $state(null);
-  let taskSearch = $state('');
-  let projectOverviewStatusFilter = $state('');
-  let projectListQuery = $state('');
-  let projectListGroup = $state('status');
-  let projectListSort = $state('manual');
-  let projectListSortDirection = $state(1);
-  let projectListMenu = $state(null);
-  let projectListMenuPosition = $state({ left: 8, top: 8 });
-  let projectListFilters = $state([]);
-  let projectListFilterEditIndex = $state(null);
-  let projectListValueOpenIndex = $state(null);
-  function getInitialProjectTablePreferences() {
-    const viewKey = `p:${project.source_key || project.id}`;
-    const savedView = S.views[viewKey];
-    return {
-      viewKey,
-      hidden: savedView?.hidden || ['start', 'deps', 'created', 'project'],
-      columnWidths: { ...(savedView?.colW || {}) },
-    };
-  }
-  const initialProjectTablePreferences = getInitialProjectTablePreferences();
-  const projectTableViewKey = initialProjectTablePreferences.viewKey;
-  let projectTableHidden = $state(initialProjectTablePreferences.hidden);
-  let projectTableColumnWidths = $state(initialProjectTablePreferences.columnWidths);
-  const projectTableColumnDefinitions = [
-    ['title', 'Task', 314], ['status', 'Status', 132], ['priority', 'Priority', 112],
-    ['assignee', 'Assignee', 156], ['due', 'Due date', 112], ['start', 'Start date', 112],
-    ['labels', 'Labels', 180], ['deps', 'Dependencies', 150], ['estimate', 'Estimate', 92],
-    ['created', 'Created', 112], ['project', 'Project', 156],
-  ];
-  let projectTableColumns = $derived(projectTableColumnDefinitions
-    .filter(([field]) => field === 'title' || !projectTableHidden.includes(field))
-    .map(([field, label, width]) => [field, label, projectTableColumnWidths[field] || width]));
-  let drawerTask = $derived.by(() => {
-    const selectedTask = tasks.find(task => task.id === drawerTaskId);
-    return selectedTask
-      ? {
-        ...selectedTask,
-        project: { id: project.id, name: project.name, key: project.key, color: project.color },
-        project_id: project.id,
-      }
-      : null;
-  });
-  let filteredBoardTasks = $derived(tasks.filter(task => !taskSearch.trim() || `${task.title} ${task.key || ''}`.toLowerCase().includes(taskSearch.trim().toLowerCase())));
-  let projectListTasks = $derived.by(() => {
-    const filtered = tasks.filter(task => (!projectOverviewStatusFilter || task.status === projectOverviewStatusFilter)
-      && (!projectListQuery.trim() || `${task.title} ${task.key || ''}`.toLowerCase().includes(projectListQuery.trim().toLowerCase()))
-      && projectListFilters.every(filter => matchesProjectListFilter(task, filter)));
-    if (projectListSort === 'manual') return filtered;
-    return filtered.sort((first, second) => {
-      if (projectListSort === 'title') return first.title.localeCompare(second.title);
-      if (projectListSort === 'due' || projectListSort === 'start') return String(first[projectListSort === 'due' ? 'due_date' : 'start_date'] || '9999-12-31').localeCompare(String(second[projectListSort === 'due' ? 'due_date' : 'start_date'] || '9999-12-31'));
-      if (projectListSort === 'priority') return ['urgent', 'high', 'medium', 'low', 'none'].indexOf(first.priority) - ['urgent', 'high', 'medium', 'low', 'none'].indexOf(second.priority);
-      if (projectListSort === 'status') return columns.findIndex(column => column.id === first.status) - columns.findIndex(column => column.id === second.status);
-      if (projectListSort === 'assignee') return (first.assignee?.name || '').localeCompare(second.assignee?.name || '');
-      if (projectListSort === 'project') return (first.project?.name || '').localeCompare(second.project?.name || '');
-      if (projectListSort === 'estimate') return Number(first.estimate || 0) - Number(second.estimate || 0);
-      return new Date(projectListSort === 'created' ? first.created_at : first.updated_at) - new Date(projectListSort === 'created' ? second.created_at : second.updated_at);
-    }).map((task, index, sorted) => projectListSortDirection > 0 ? task : sorted[sorted.length - index - 1]);
-  });
-  let projectListGroups = $derived.by(() => {
-    if (projectListGroup === 'none') return [{ id: 'all', name: '', tasks: projectListTasks }];
-    if (projectListGroup === 'project') return [{ id: String(project.id), name: project.name, icon: project.icon || 'folder', tasks: projectListTasks }];
-    if (projectListGroup === 'assignee') {
-      const grouped = new Map();
-      for (const task of projectListTasks) {
-        const id = String(task.assignee_id || 'unassigned');
-        const name = task.assignee?.name || 'Unassigned';
-        const group = grouped.get(id) || { id, name, tasks: [] };
-        group.tasks.push(task);
-        grouped.set(id, group);
-      }
-      return [...grouped.values()];
-    }
-      if (projectListGroup === 'priority') return ['urgent', 'high', 'medium', 'low', 'none'].map(id => ({ id, name: ({ urgent: 'Urgent', high: 'High', medium: 'Medium', low: 'Low', none: 'No priority' })[id], tasks: projectListTasks.filter(task => (task.priority || 'none') === id) })).filter(group => group.tasks.length);
-      if (projectListGroup === 'due') return [
-        { id: 'overdue', name: 'Overdue', tasks: projectListTasks.filter(task => task.due_date && task.status !== 'done' && new Date(`${String(task.due_date).slice(0, 10)}T00:00:00`) < new Date(new Date().toDateString())) },
-        { id: 'upcoming', name: 'Upcoming', tasks: projectListTasks.filter(task => task.due_date && !(task.status !== 'done' && new Date(`${String(task.due_date).slice(0, 10)}T00:00:00`) < new Date(new Date().toDateString()))) },
-        { id: 'nodate', name: 'No due date', tasks: projectListTasks.filter(task => !task.due_date) },
-      ].filter(group => group.tasks.length);
-      return columns.map(column => ({ ...column, tasks: projectListTasks.filter(task => task.status === column.id) })).filter(column => column.tasks.length);
-  });
-
-  onMount(() => {
-    const closeStatusMenu = event => {
-      if (statusMenu && !event.target.closest('.status-picker')) statusMenu = null;
-      if (tableCellMenu && !event.target.closest('[data-table-cell-menu-trigger], [data-table-cell-menu]')) tableCellMenu = null;
-      if (projectStatusMenu && !event.target.closest('[data-project-status], [data-project-status-menu]')) projectStatusMenu = null;
-      if (projectMoreOpen && !event.target.closest('[data-project-more], [data-project-more-menu]')) projectMoreOpen = false;
-      if (savedFilterOpen && !event.target.closest('[data-saved-filter-trigger], [data-saved-filter-builder]')) savedFilterOpen = false;
-      if (savedValueOpenIndex !== null && !event.target.closest('[data-saved-filter-value-trigger], [data-saved-filter-values]')) savedValueOpenIndex = null;
-      if (projectListMenu && !event.target.closest('[data-project-list-menu-trigger], [data-project-list-menu]')) projectListMenu = null;
-      if (fileMenu && !event.target.closest('[data-file-menu-trigger], [data-file-menu]')) fileMenu = null;
-    };
-    const closeOnEscape = event => {
-      if (event.key !== 'Escape') return;
-      if (statusMenu) statusMenu = null;
-      else if (tableCellMenu) tableCellMenu = null;
-      else if (projectStatusMenu) projectStatusMenu = null;
-      else if (projectMoreOpen) projectMoreOpen = false;
-      else if (projectListMenu) projectListMenu = null;
-      else if (fileMenu) fileMenu = null;
-      else if (savedFilterOpen) savedFilterOpen = false;
-      else if (savedValueOpenIndex !== null) savedValueOpenIndex = null;
-      else if (membersDialogOpen) membersDialogOpen = false;
-      else if (editDialogOpen) editDialogOpen = false;
-    };
-    document.addEventListener('pointerdown', closeStatusMenu, true);
-    document.addEventListener('keydown', closeOnEscape);
-    const projectAction = consumeNavigationIntent('project-action');
-    if (projectAction) {
-      tick().then(() => {
-        if (projectAction.action === 'edit') openProjectSettings();
-        if (projectAction.action === 'share') openProjectMembers();
-      });
-    }
-    return () => {
-      projectUploadTimers.forEach(timer => window.clearInterval(timer));
-      projectUploadTimers.clear();
-      document.removeEventListener('pointerdown', closeStatusMenu, true);
-      document.removeEventListener('keydown', closeOnEscape);
-    };
-  });
-
-  $effect(() => { isFavorite = project.is_favorite; });
-
-  const columns = [
-    { id: 'backlog', name: 'Backlog', icon: 'circle-dashed' },
-    { id: 'todo', name: 'To Do', icon: 'circle' },
-    { id: 'progress', name: 'In Progress', icon: 'circle-dot' },
-    { id: 'review', name: 'Review', icon: 'circle-check' },
-    { id: 'done', name: 'Done', icon: 'check-circle-2' },
-  ];
-  const savedFilterFields = [
-    ['status', 'Status', 'circle-dot'], ['assignee', 'Assignee', 'user'], ['priority', 'Priority', 'signal-high'],
-    ['due', 'Due date', 'calendar'], ['project', 'Project', 'folder'], ['labels', 'Labels', 'tag'],
-    ['created', 'Created date', 'calendar-plus'], ['updated', 'Updated date', 'calendar-clock'],
-  ];
-
-  let completedCount = $derived(tasks.filter(task => task.status === 'done').length);
-  let progress = $derived(tasks.length ? Math.round(completedCount / tasks.length * 100) : 0);
-  let overdueCount = $derived(tasks.filter(task => task.status !== 'done' && task.due_date && new Date(`${task.due_date.slice(0, 10)}T00:00:00`) < new Date(new Date().toDateString())).length);
-  let statusCounts = $derived(columns.map(column => ({ ...column, count: tasks.filter(task => task.status === column.id).length })));
-  let comingUp = $derived(tasks.filter(task => task.status !== 'done' && task.due_date).sort((first, second) => new Date(first.due_date) - new Date(second.due_date)).slice(0, 6));
-  let sourceProject = $derived((workspaceData.projects || []).find(item => item.database_id === project.id));
-  let projectTeam = $derived((page.props.teams || TEAMS_SEED).find(team => team.id === project.team));
-  let projectOverviewEvents = $derived((workspaceData.activity || []).filter(item => item.project === sourceProject?.id));
-  $effect(() => {
-    const originalViewIds = new Set((workspaceData.savedViews || []).map(view => view.id));
-    customSavedViews = (S.data.savedViews || []).filter(view => view.project === sourceProject?.id && !originalViewIds.has(view.id));
-  });
-  let savedViews = $derived([
-    ...(workspaceData.savedViews || []).filter(view => view.project === sourceProject?.id),
-    ...customSavedViews,
-  ]);
-  let selectedSavedView = $derived(savedViews.find(view => tab === `v:${view.id}`));
-  let savedViewFiltersDraft = $state(null);
-  let savedViewFilters = $derived(savedViewFiltersDraft ?? selectedSavedView?.filters ?? []);
-  $effect(() => {
-    const selectedView = selectedSavedView;
-    if (!selectedView) return;
-    const viewKey = `sv:${selectedView.id}`;
-    S.views[viewKey] ??= {
-      filters: structuredClone(selectedView.filters || []),
-      sort: { f: 'manual', dir: 1 },
-      group: 'status',
-      q: '',
-      hidden: ['start', 'created', 'deps'],
-      colW: {},
-      showDone: true,
-    };
-    savedViewFiltersDraft = structuredClone(S.views[viewKey].filters || selectedView.filters || []);
-    savedViewQuery = '';
-    savedViewError = '';
-  });
-  let savedViewTasks = $derived.by(() => tasks.filter(task => {
-    const matchesQuery = !savedViewQuery.trim() || `${task.title} ${task.key || ''}`.toLowerCase().includes(savedViewQuery.trim().toLowerCase());
-    return matchesQuery && savedViewFilters.every(filter => {
-      if (!filter.v?.length) return true;
-      let matches;
-      if (filter.f === 'labels') matches = (task.labels || []).some(label => filter.v.includes(label));
-      else if (filter.f === 'assignee') matches = filter.v.includes(String(task.assignee_id || 'none'));
-      else if (filter.f === 'project') matches = filter.v.includes(String(task.project_id));
-      else if (filter.f === 'due') {
-        if (filter.v.includes('nodate') && !task.due_date) matches = true;
-        else if (!task.due_date) matches = false;
-        else {
-          const due = new Date(`${String(task.due_date).slice(0, 10)}T00:00:00`);
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const days = Math.floor((due - today) / 86400000);
-          matches = filter.v.some(value => value === 'overdue' ? days < 0 && task.status !== 'done'
-            : value === 'today' ? days === 0
-              : value === 'week' ? days >= 0 && days <= 7
-                : value === 'later' && days > 7);
-        }
-      } else if (filter.f === 'created' || filter.f === 'updated') {
-        const timestamp = new Date(filter.f === 'created' ? task.created_at : task.updated_at).getTime();
-        matches = Number.isFinite(timestamp) && filter.v.some(value => Date.now() - timestamp <= Number(value) * 86400000);
-      } else matches = filter.v.includes(String(task[filter.f]));
-      return filter.op === 'not' ? !matches : matches;
-    });
-  }));
-  let savedViewGroups = $derived(columns.map(column => ({
-    id: column.id,
-    name: column.name,
-    icon: column.icon,
-    iconType: 'status',
-    tasks: savedViewTasks.filter(task => task.status === column.id),
-  })));
-  let sourceMembers = $derived(workspaceData.members || []);
-  let projectMemberOptions = $derived(sourceMembers
-    .filter(member => member.database_id)
-    .map(member => ({ id: member.database_id, name: member.name, email: member.email, color: member.c, sourceKey: member.id }))
-    .filter(member => member.name.toLowerCase().includes(memberQuery.trim().toLowerCase()) || (member.email || '').toLowerCase().includes(memberQuery.trim().toLowerCase())));
-  let memberById = $derived(new Map(sourceMembers.map(member => [member.id, member])));
-  let memberByDatabaseId = $derived(new Map(sourceMembers.filter(member => member.database_id).map(member => [String(member.database_id), member])));
-  let sourceTasks = $derived(workspaceData.tasks || []);
-  let sourceTaskById = $derived(new Map(sourceTasks.map(task => [task.id, task])));
-  $effect(() => {
-    const baseFiles = (workspaceData.files || []).filter(file => file.project === sourceProject?.id);
-    const savedFiles = S.data.files || [];
-    const savedFilesById = new Map(savedFiles.map(file => [file.id, file]));
-    const baseFileIds = new Set(baseFiles.map(file => file.id));
-    projectFileRecords = [
-      ...baseFiles.map(file => ({ ...(savedFilesById.get(file.id) || file) })),
-      ...savedFiles.filter(file => file.project === sourceProject?.id && !baseFileIds.has(file.id)).map(file => ({ ...file })),
-    ];
-  });
-  let projectFiles = $derived.by(() => {
-    return projectFileRecords
-    .filter(file => file.project === sourceProject?.id && file.name.toLowerCase().includes(fileQuery.toLowerCase()) && (fileType === 'all' || file.type === fileType))
-    .sort((first, second) => fileSort === 'name' ? first.name.localeCompare(second.name) : fileSort === 'type' ? first.type.localeCompare(second.type) : second.at - first.at);
-  });
-  let projectEvents = $derived.by(() => {
-    if (!sourceProject) return [];
-    const activity = (workspaceData.activity || []).filter(item => item.project === sourceProject.id);
-    const comments = (workspaceData.comments || [])
-      .filter(comment => sourceTaskById.get(comment.task)?.project === sourceProject.id)
-      .map(comment => ({ id: comment.id, by: comment.by, verb: 'commented on', task: comment.task, project: sourceProject.id, at: comment.at, extra: '' }));
-    return [...activity, ...comments].sort((first, second) => second.at - first.at);
-  });
-  let eventGroups = $derived.by(() => {
-    const groups = new Map();
-    for (const event of projectEvents) {
-      const bucket = dayBucket(event.at);
-      groups.set(bucket, [...(groups.get(bucket) || []), event]);
-    }
-    return [...groups.entries()];
-  });
-
-  function statusName(value) {
-    return columns.find(column => column.id === value)?.name || value;
-  }
-
-  function toggleProjectListMenu(event, menu) {
-    if (projectListMenu === menu) {
-      projectListMenu = null;
-      return;
-    }
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const width = menu === 'filter' ? 560 : menu === 'sort' ? 240 : 180;
-    projectListMenuPosition = {
-      left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
-      top: Math.min(bounds.bottom + 4, window.innerHeight - 220),
-    };
-    projectListMenu = menu;
-  }
-
-  function matchesProjectListFilter(task, filter) {
-    if (!filter.v?.length) return true;
-    let matches;
-    if (filter.f === 'labels') matches = (task.labels || []).some(label => filter.v.includes(label));
-    else if (filter.f === 'assignee') matches = filter.v.includes(String(task.assignee_id || 'none'));
-    else if (filter.f === 'project') matches = filter.v.includes(String(task.project_id));
-    else if (filter.f === 'due') {
-      if (filter.v.includes('nodate') && !task.due_date) matches = true;
-      else if (!task.due_date) matches = false;
-      else {
-        const due = new Date(`${String(task.due_date).slice(0, 10)}T00:00:00`);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const days = Math.floor((due - today) / 86400000);
-        matches = filter.v.some(value => value === 'overdue' ? days < 0 && task.status !== 'done'
-          : value === 'today' ? days === 0
-            : value === 'week' ? days >= 0 && days <= 7
-              : value === 'later' && days > 7);
-      }
-    } else if (filter.f === 'created' || filter.f === 'updated') {
-      const timestamp = new Date(filter.f === 'created' ? task.created_at : task.updated_at).getTime();
-      matches = Number.isFinite(timestamp) && filter.v.some(value => Date.now() - timestamp <= Number(value) * 86400000);
-    } else matches = filter.v.includes(String(task[filter.f]));
-    return filter.op === 'not' ? !matches : matches;
-  }
-
-  function addProjectListFilter(field) {
-    projectListFilters = [...projectListFilters, { f: field, op: 'is', v: [] }];
-    projectListFilterEditIndex = projectListFilters.length - 1;
-  }
-
-  function updateProjectListFilter(index, values) {
-    projectListFilters = projectListFilters.map((filter, filterIndex) => filterIndex === index ? { ...filter, ...values } : filter);
-  }
-
-  function toggleProjectListFilterValue(index, value) {
-    const filter = projectListFilters[index];
-    const selectedValues = filter.v.includes(value) ? filter.v.filter(item => item !== value) : [...filter.v, value];
-    updateProjectListFilter(index, { v: selectedValues });
-  }
-
-  function removeProjectListFilter(index) {
-    projectListFilters = projectListFilters.filter((_, filterIndex) => filterIndex !== index);
-    if (projectListFilterEditIndex === index) projectListFilterEditIndex = null;
-    else if (projectListFilterEditIndex > index) projectListFilterEditIndex -= 1;
-    if (projectListValueOpenIndex === index) projectListValueOpenIndex = null;
-    else if (projectListValueOpenIndex > index) projectListValueOpenIndex -= 1;
-  }
-
-  function clearProjectListFilters() {
-    projectListFilters = [];
-    projectListFilterEditIndex = null;
-    projectListValueOpenIndex = null;
-  }
-
-  async function toggleStatusMenu(event, task) {
-    if (statusMenu?.taskId === task.id) {
-      statusMenu = null;
-      return;
-    }
-
-    const rect = event.currentTarget.getBoundingClientRect();
-    const menuWidth = 200;
-    const menuHeight = columns.length * 30 + 8;
-    const left = rect.left + menuWidth > window.innerWidth - 8 ? Math.max(8, rect.right - menuWidth) : rect.left;
-    const top = rect.bottom + 4 + menuHeight > window.innerHeight - 8 ? Math.max(8, rect.top - 4 - menuHeight) : rect.bottom + 4;
-    statusMenu = { taskId: task.id, left, top };
-    await tick();
-    document.querySelector('.status-picker .pop [aria-checked="true"]')?.focus({ preventScroll: true });
-  }
-
-  async function chooseStatus(task, nextStatus) {
-    statusMenu = null;
-    await changeStatus(task, nextStatus);
-  }
-
-  function openTableCellMenu(event, task, field) {
-    if (tableCellMenu?.taskId === task.id && tableCellMenu.field === field) {
-      tableCellMenu = null;
-      return;
-    }
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const width = field === 'assignee' ? 240 : field === 'labels' || field === 'deps' ? 220 : 200;
-    tableCellMenu = {
-      taskId: task.id,
-      field,
-      left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
-      top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 300)),
-    };
-    tableCellQuery = '';
-  }
-
-  async function updateTableTask(task, changes, keepMenu = false) {
-    if (!keepMenu) tableCellMenu = null;
-    try {
-      const updated = await httpRequest(taskUpdate(task.id).url, 'PATCH', changes);
-      tasks = tasks.map(item => item.id === updated.id ? { ...item, ...updated } : item);
-      return true;
-    } catch (error) {
-      errorMessage = error.message;
-      return false;
-    }
-  }
-
-  function setTableTaskDate(task, field, value) {
-    void updateTableTask(task, { [field === 'due' ? 'due_date' : 'start_date']: value || null });
-  }
-
-  function tableQuickDate(days) {
-    const date = new Date();
-    date.setDate(date.getDate() + days);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  }
-
-  function toggleTableTaskValue(task, field, value) {
-    const current = task[field] || [];
-    void updateTableTask(task, { [field]: current.includes(value) ? current.filter(item => item !== value) : [...current, value] }, true);
-  }
-
-  function saveTableText(task, field) {
-    const isTitle = field === 'title';
-    const editingId = isTitle ? tableTitleEditId : tableEstimateEditId;
-    if (editingId !== task.id) return;
-    const value = (isTitle ? tableTitleDraft : tableEstimateDraft).trim();
-    if (isTitle) tableTitleEditId = null;
-    else tableEstimateEditId = null;
-    void updateTableTask(task, { [field]: value || null });
-  }
-
-  function saveTableEstimate(task) {
-    saveTableText(task, 'estimate');
-  }
-
-  function projectStatusName(value) {
-    return ({ active: 'In Progress', planning: 'Planning', risk: 'At Risk', hold: 'On Hold', complete: 'Completed', paused: 'On Hold', completed: 'Completed', archived: 'Archived' })[value] || value;
-  }
-
-  function openCreateTask(date = '', initialStatus = 'todo') {
-    taskFormDueDate = date;
-    taskFormStatus = initialStatus;
-    showTaskForm = true;
-  }
-
-  function taskCreated(createdTask) {
-    tasks = [createdTask, ...tasks];
-  }
-
-  function taskUpdated(updatedTask) {
-    tasks = tasks.map(task => task.id === updatedTask.id ? { ...task, ...updatedTask } : task);
-  }
-
-  async function updateSavedViewTask(task, values) {
-    try {
-      const updatedTask = await httpRequest(taskUpdate(task.id).url, 'PATCH', values);
-      taskUpdated(updatedTask);
-    } catch (error) {
-      savedViewError = error.message;
-    }
-  }
-
-  async function updateProjectListTask(task, values) {
-    try {
-      const updatedTask = await httpRequest(taskUpdate(task.id).url, 'PATCH', values);
-      taskUpdated(updatedTask);
-    } catch (error) {
-      errorMessage = error.message;
-    }
-  }
-
-  async function createSavedViewTask(title, group) {
-    try {
-      const createdTask = await httpRequest(taskStore({ project: project.id }).url, 'POST', {
-        title,
-        status: group.id,
-        priority: 'medium',
-      });
-      taskCreated(createdTask);
-    } catch (error) {
-      savedViewError = error.message;
-    }
-  }
-
-  async function createProjectListTask(title, group) {
-    try {
-      const createdTask = await httpRequest(taskStore({ project: project.id }).url, 'POST', {
-        title,
-        status: group.id,
-        priority: 'medium',
-      });
-      taskCreated(createdTask);
-    } catch (error) {
-      errorMessage = error.message;
-    }
-  }
-
-  function removeSavedViewFilter(index) {
-    setSavedViewFilters(savedViewFilters.filter((_, filterIndex) => filterIndex !== index));
-    if (savedFilterEditIndex === index) savedFilterEditIndex = null;
-    else if (savedFilterEditIndex > index) savedFilterEditIndex -= 1;
-    if (savedValueOpenIndex === index) savedValueOpenIndex = null;
-    else if (savedValueOpenIndex > index) savedValueOpenIndex -= 1;
-  }
-
-  function saveProjectView(event) {
-    event.preventDefault();
-    const viewName = saveViewName.trim() || 'Untitled view';
-    const savedView = {
-      id: uid('v'),
-      project: sourceProject?.id || project.source_key,
-      name: viewName,
-      type: saveViewType,
-      filters: structuredClone(projectViewFilters),
-    };
-    S.data.savedViews = [...(S.data.savedViews || []), savedView];
-    saveWorkspaceStore();
-    customSavedViews = [...customSavedViews, savedView];
-    saveViewOpen = false;
-    saveViewName = '';
-    tab = `v:${savedView.id}`;
-  }
-
-  async function openSaveViewDialog() {
-    saveViewName = '';
-    saveViewType = 'list';
-    saveViewOpen = true;
-    await tick();
-    saveViewNameInput?.focus();
-  }
-
-  function savedFilterLabel(filter) {
-    const field = ({ status: 'Status', assignee: 'Assignee', priority: 'Priority', due: 'Due date', project: 'Project', labels: 'Labels', created: 'Created date', updated: 'Updated date' })[filter.f] || filter.f;
-    const values = (filter.v || []).map(value => ({ urgent: 'Urgent', high: 'High', medium: 'Medium', low: 'Low', none: 'No priority', backlog: 'Backlog', todo: 'To Do', progress: 'In Progress', review: 'Review', done: 'Done', overdue: 'Overdue', today: 'Today', week: 'Next 7 days', later: 'Later', nodate: 'No due date' })[value] || value);
-    return `${field} is${filter.op === 'not' ? ' not' : ''} ${values.length ? values.join(', ') : 'any'}`;
-  }
-
-  function filterOptions(filter) {
-    if (filter.f === 'status') return columns.map(column => ({ id: column.id, name: column.name }));
-    if (filter.f === 'priority') return [
-      { id: 'urgent', name: 'Urgent' }, { id: 'high', name: 'High' }, { id: 'medium', name: 'Medium' }, { id: 'low', name: 'Low' }, { id: 'none', name: 'No priority' },
-    ];
-    if (filter.f === 'assignee') return [
-      { id: 'none', name: 'Unassigned' },
-      ...(workspaceData.members || []).filter(member => member.database_id).map(member => ({ id: String(member.database_id), name: member.name })),
-    ];
-    if (filter.f === 'project') return projects.map(item => ({ id: String(item.id), name: item.name }));
-    if (filter.f === 'labels') return LABELS.map(label => ({ id: label.id, name: label.name }));
-    if (filter.f === 'due') return [
-      { id: 'overdue', name: 'Overdue' }, { id: 'today', name: 'Today' }, { id: 'week', name: 'Next 7 days' }, { id: 'later', name: 'Later' }, { id: 'nodate', name: 'No due date' },
-    ];
-    return [{ id: '1', name: 'Last 24 hours' }, { id: '7', name: 'Last 7 days' }, { id: '30', name: 'Last 30 days' }];
-  }
-
-  function updateSavedViewFilter(index, values) {
-    setSavedViewFilters(savedViewFilters.map((filter, filterIndex) => filterIndex === index ? { ...filter, ...values } : filter));
-  }
-
-  function setSavedViewFilters(filters) {
-    const copiedFilters = JSON.parse(JSON.stringify(filters));
-    savedViewFiltersDraft = copiedFilters;
-    if (!selectedSavedView) return;
-    const viewKey = `sv:${selectedSavedView.id}`;
-    S.views[viewKey] ??= { filters: [], sort: { f: 'manual', dir: 1 }, group: 'status', q: '', hidden: ['start', 'created', 'deps'], colW: {}, showDone: true };
-    S.views[viewKey].filters = JSON.parse(JSON.stringify(copiedFilters));
-    saveWorkspaceStore();
-  }
-
-  function toggleSavedViewFilterValue(index, value) {
-    const filter = savedViewFilters[index];
-    const currentValues = filter.v || [];
-    const selectedValues = currentValues.includes(value) ? currentValues.filter(item => item !== value) : [...currentValues, value];
-    updateSavedViewFilter(index, { v: selectedValues });
-  }
-
-  async function toggleSavedValuePopover(event, index) {
-    if (savedValueOpenIndex === index) {
-      savedValueOpenIndex = null;
-      return;
-    }
-    savedFilterOpen = false;
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const width = 200;
-    savedValueOpenIndex = index;
-    savedValuePosition = {
-      left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
-      top: bounds.bottom + 4,
-    };
-    await tick();
-    const popup = document.querySelector('[data-saved-filter-values]');
-    if (!popup) return;
-    const height = popup.getBoundingClientRect().height;
-    savedValuePosition = {
-      left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
-      top: bounds.bottom + height > window.innerHeight - 8 ? Math.max(8, bounds.top - height - 4) : bounds.bottom + 4,
-    };
-  }
-
-  function savedFilterOptionIcon(filter, option) {
-    if (filter.f === 'status') return stIcon(option.id, 14);
-    if (filter.f === 'priority') return prIcon(option.id, 14);
-    if (filter.f === 'project') {
-      const projectOption = projects.find(item => String(item.id) === String(option.id));
-      return `<span class="pdot" style="--c:${PCOLORS[projectOption?.color] || 'var(--gray)'}"></span>`;
-    }
-    if (filter.f === 'labels') {
-      const label = LABELS.find(item => item.id === option.id);
-      return `<span class="pdot" style="--c:${label?.c || 'var(--gray)'}"></span>`;
-    }
-    if (filter.f === 'assignee') {
-      const member = workspaceData.members?.find(item => String(item.database_id) === String(option.id));
-      return member ? `<span class="av sm" style="--c:${member.c || '#8A867E'}">${member.name.split(' ').map(part => part[0]).join('').slice(0, 2)}</span>` : ic('user-round', 14);
-    }
-    return ic(filter.f === 'due' || filter.f === 'created' || filter.f === 'updated' ? 'calendar' : 'circle-dot', 14);
-  }
-
-  async function toggleSavedFilterBuilder(event, editIndex = null) {
-    if (savedFilterOpen) {
-      savedFilterOpen = false;
-      return;
-    }
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const width = Math.min(560, window.innerWidth - 16);
-    savedValueOpenIndex = null;
-    savedFilterPosition = {
-      left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
-      top: Math.max(8, bounds.bottom + 4),
-    };
-    savedFilterEditIndex = editIndex;
-    savedFilterOpen = true;
-    await tick();
-    const popup = document.querySelector('[data-saved-filter-builder]');
-    if (!popup) return;
-    const height = popup.getBoundingClientRect().height;
-    savedFilterPosition = {
-      left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
-      top: bounds.bottom + height > window.innerHeight - 8 ? Math.max(8, bounds.top - height - 4) : bounds.bottom + 4,
-    };
-  }
-
-  function addSavedFilter(field) {
-    setSavedViewFilters([...savedViewFilters, { f: field, op: 'is', v: [] }]);
-    savedFilterEditIndex = savedViewFiltersDraft.length - 1;
-    savedFilterOpen = true;
-  }
-
-  function clearSavedViewFilters() {
-    setSavedViewFilters([]);
-    savedViewQuery = '';
-    savedFilterOpen = false;
-    savedValueOpenIndex = null;
-  }
-
-  function taskSnapshot(task) {
-    return sourceTasks.find(item => item.database_id === task.id || item.id === task.source_key);
-  }
-
-  function taskComments(task) {
-    const sourceTask = taskSnapshot(task);
-    return sourceTask ? (workspaceData.comments || []).filter(comment => comment.task === sourceTask.id).length : 0;
-  }
-
-  function cardSubtasks(task) {
-    const sourceTask = taskSnapshot(task);
-    return task.subtasks?.length ? task.subtasks : sourceTask?.subtasks || [];
-  }
-
-  function cardAttachments(task) {
-    const sourceTask = taskSnapshot(task);
-    return task.attachments?.length ? task.attachments : sourceTask?.attachments || [];
-  }
-
-  function cardLabels(task) {
-    const sourceTask = taskSnapshot(task);
-    return task.labels?.length ? task.labels : sourceTask?.labels || [];
-  }
-
-  function cardKey(task) {
-    return task.key || taskSnapshot(task)?.key || task.source_key || '';
-  }
-
-  function cardDue(task) {
-    const dueDate = task.due_date || taskSnapshot(task)?.due;
-    return dueDate ? formatDate(dueDate) : '';
-  }
-
-  async function changeStatus(task, nextStatus) {
-    if (task.status === nextStatus) return;
-    errorMessage = '';
-    try {
-      const updated = await httpRequest(taskUpdate(task.id).url, 'PATCH', { status: nextStatus });
-      tasks = tasks.map(item => item.id === updated.id ? { ...item, ...updated } : item);
-    } catch (error) {
-      errorMessage = error.message;
-    }
-  }
-
-  function formatDate(value) {
-    if (!value) return '';
-    return new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-
-  function uploadProjectFiles(files) {
-    if (!files.length) return;
-    if (S.ui.offline) {
-      toast("Upload failed — you're offline.", { kind: 'err', action: 'Try again', onAction: () => {} });
-      return;
-    }
-    for (const file of files) {
-      const upload = { id: uid('u'), name: file.name, size: fsize(file.size), type: getFileType(file.name), pct: 0 };
-      uploadingProjectFiles = [...uploadingProjectFiles, upload];
-      const timer = window.setInterval(() => {
-        const nextPct = Math.min(100, upload.pct + 18);
-        upload.pct = nextPct;
-        uploadingProjectFiles = uploadingProjectFiles.map(item => item.id === upload.id ? { ...item, pct: nextPct } : item);
-        if (nextPct < 100) return;
-        window.clearInterval(timer);
-        projectUploadTimers.delete(upload.id);
-        uploadingProjectFiles = uploadingProjectFiles.filter(item => item.id !== upload.id);
-        const record = {
-          id: uid('f'),
-          name: upload.name,
-          type: upload.type,
-          size: upload.size,
-          by: workspaceData.me,
-          at: Date.now(),
-          project: sourceProject?.id,
-          task: null,
-        };
-        S.data.files.unshift(record);
-        saveWorkspaceStore();
-        projectFileRecords = [record, ...projectFileRecords];
-        toast(`Uploaded ${upload.name}`);
-      }, 220);
-      projectUploadTimers.set(upload.id, timer);
-    }
-  }
-
-  function handleProjectFileSelection(event) {
-    uploadProjectFiles([...event.currentTarget.files]);
-    event.currentTarget.value = '';
-  }
-
-  function handleProjectFileDrop(event) {
-    event.preventDefault();
-    event.currentTarget.classList.remove('over');
-    uploadProjectFiles([...event.dataTransfer.files]);
-  }
-
-  function openFileMenu(event, file) {
-    event.stopPropagation();
-    if (fileMenu?.id === file.id) {
-      fileMenu = null;
-      return;
-    }
-    const bounds = event.currentTarget.getBoundingClientRect();
-    fileMenuPosition = {
-      left: Math.max(8, Math.min(bounds.right - 24, window.innerWidth - 208)),
-      top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 200)),
-    };
-    fileMenu = file;
-  }
-
-  function renameProjectFile(event) {
-    event.preventDefault();
-    if (!fileRenameTarget || !fileRenameName.trim()) return;
-    const file = S.data.files.find(item => item.id === fileRenameTarget.id);
-    if (!file) return;
-    file.name = fileRenameName.trim();
-    file.type = getFileType(file.name);
-    projectFileRecords = projectFileRecords.map(item => item.id === file.id ? { ...item, name: file.name, type: file.type } : item);
-    saveWorkspaceStore();
-    fileRenameTarget = null;
-    toast('Changes saved');
-  }
-
-  function duplicateProjectFile(file) {
-    const originalIndex = S.data.files.findIndex(item => item.id === file.id);
-    if (originalIndex < 0) return;
-    const duplicate = { ...S.data.files[originalIndex], id: uid('f'), name: file.name.replace(/(\.[^.]+)$/, ' copy$1'), at: Date.now(), by: S.data.me };
-    S.data.files.splice(originalIndex + 1, 0, duplicate);
-    projectFileRecords = [...projectFileRecords.slice(0, originalIndex + 1), duplicate, ...projectFileRecords.slice(originalIndex + 1)];
-    saveWorkspaceStore();
-    toast('File duplicated');
-  }
-
-  async function copyProjectFileLink(file) {
-    const url = `https://gr8rstudio.com/${S.data.ws.url}/file/${file.id}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast('Link copied');
-    } catch {
-      toast(`Copy isn't available here — ${url}`, { kind: 'info', ms: 6000 });
-    }
-  }
-
-  function deleteProjectFile() {
-    if (!fileDeleteTarget) return;
-    const deletedFile = { ...fileDeleteTarget };
-    const fileName = deletedFile.name;
-    S.data.files = S.data.files.filter(file => file.id !== fileDeleteTarget.id);
-    if (deletedFile.task) {
-      const task = S.data.tasks.find(item => item.id === deletedFile.task);
-      if (task) task.attachments = task.attachments.filter(attachment => attachment.name !== fileName);
-    }
-    projectFileRecords = projectFileRecords.filter(file => file.id !== fileDeleteTarget.id);
-    saveWorkspaceStore();
-    fileDeleteTarget = null;
-    toast(`Deleted ${fileName}`, { action: 'Undo', onAction: () => {
-      S.data.files.push(deletedFile);
-      if (deletedFile.task) {
-        const task = S.data.tasks.find(item => item.id === deletedFile.task);
-        if (task && !task.attachments.some(attachment => attachment.name === fileName)) task.attachments.push(deletedFile);
-      }
-      projectFileRecords = [...projectFileRecords, deletedFile];
-      saveWorkspaceStore();
-    } });
-  }
-
-  function toggleProjectTableColumn(field) {
-    projectTableHidden = projectTableHidden.includes(field)
-      ? projectTableHidden.filter(hiddenField => hiddenField !== field)
-      : [...projectTableHidden, field];
-    S.views[projectTableViewKey] ??= { filters: [], sort: { f: 'manual', dir: 1 }, group: 'status', q: '', hidden: [], colW: {}, showDone: true };
-    S.views[projectTableViewKey].hidden = [...projectTableHidden];
-    saveWorkspaceStore();
-  }
-
-  function resetProjectTableColumnWidths() {
-    projectTableColumnWidths = {};
-    S.views[projectTableViewKey] ??= { filters: [], sort: { f: 'manual', dir: 1 }, group: 'status', q: '', hidden: [...projectTableHidden], colW: {}, showDone: true };
-    S.views[projectTableViewKey].colW = {};
-    saveWorkspaceStore();
-    projectListMenu = null;
-  }
-
-  function startProjectTableColumnResize(event, field) {
-    event.preventDefault();
-    event.stopPropagation();
-    const startX = event.clientX;
-    const startWidth = projectTableColumns.find(([column]) => column === field)?.[2] || 112;
-    const resize = moveEvent => {
-      projectTableColumnWidths = {
-        ...projectTableColumnWidths,
-        [field]: Math.max(64, startWidth + moveEvent.clientX - startX),
-      };
-    };
-    const finish = () => {
-      window.removeEventListener('pointermove', resize);
-      window.removeEventListener('pointerup', finish);
-      S.views[projectTableViewKey] ??= { filters: [], sort: { f: 'manual', dir: 1 }, group: 'status', q: '', hidden: [...projectTableHidden], colW: {}, showDone: true };
-      S.views[projectTableViewKey].colW = Object.fromEntries(Object.entries(projectTableColumnWidths).map(([column, width]) => [column, Math.round(width)]));
-      saveWorkspaceStore();
-    };
-    window.addEventListener('pointermove', resize);
-    window.addEventListener('pointerup', finish, { once: true });
-  }
-
-  function formatLongDate(value) {
-    if (!value) return '—';
-    return fmtDate(value.slice(0, 10), true);
-  }
-
-  function openOverviewStatus(status) {
-    projectOverviewStatusFilter = status;
-    tab = 'list';
-  }
-
-  function openProjectTab(nextTab) {
-    if (nextTab !== 'list') projectOverviewStatusFilter = '';
-    tab = nextTab;
-  }
-
-  function openTaskFromOverview(task) {
-    drawerTaskId = task.id;
-  }
-
-  function daysUntil(value) {
-    if (!value) return null;
-    const due = new Date(`${value.slice(0, 10)}T00:00:00`);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return Math.floor((due - today) / 86400000);
-  }
-
-  function memberInitials(name) {
-    return name.split(' ').map(part => part[0]).join('').slice(0, 2);
-  }
-
-  async function toggleFavorite() {
-    try {
-      const updated = await httpRequest(projectFavorite(project.id).url, 'PATCH', {});
-      isFavorite = updated.is_favorite;
-      project.is_favorite = updated.is_favorite;
-    } catch (error) {
-      errorMessage = error.message;
-    }
-  }
-
-  function openProjectStatusMenu(event) {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const width = 190;
-    projectStatusMenu = {
-      left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
-      top: Math.max(8, bounds.bottom + 4),
-    };
-  }
-
-  function toggleProjectMore(event) {
-    if (projectMoreOpen) {
-      projectMoreOpen = false;
-      return;
-    }
-
-    const bounds = event.currentTarget.getBoundingClientRect();
-    projectMorePosition = {
-      left: Math.max(8, Math.min(bounds.right - 200, window.innerWidth - 208)),
-      top: Math.max(8, bounds.bottom + 4),
-    };
-    projectMoreOpen = true;
-  }
-
-  async function changeProjectStatus(status) {
-    projectStatusMenu = null;
-    await updateProject({ status });
-  }
-
-  async function updateProject(changes) {
-    projectDialogError = '';
-    try {
-      const updated = await httpRequest(projectUpdate(project.id).url, 'PATCH', changes);
-      Object.assign(project, updated);
-      return true;
-    } catch (error) {
-      projectDialogError = error.errors?.name?.[0] || error.message;
-      return false;
-    }
-  }
-
-  function openProjectSettings() {
-    projectForm = {
-      name: project.name,
-      description: project.description || '',
-      status: project.status?.value || project.status,
-      start_date: project.start_date ? project.start_date.slice(0, 10) : '',
-      due_date: project.due_date ? project.due_date.slice(0, 10) : '',
-    };
-    projectDialogError = '';
-    editDialogOpen = true;
-    projectMoreOpen = false;
-  }
-
-  async function saveProjectSettings(event) {
-    event.preventDefault();
-    projectDialogBusy = true;
-    if (await updateProject(projectForm)) editDialogOpen = false;
-    projectDialogBusy = false;
-  }
-
-  function openProjectMembers() {
-    selectedMemberIds = (project.members || []).map(member => member.id);
-    memberQuery = '';
-    memberDialogError = '';
-    membersDialogOpen = true;
-    projectMoreOpen = false;
-  }
-
-  function openProjectConfirmation(action) {
-    projectMoreOpen = false;
-    projectConfirmationText = '';
-    projectConfirmation = action;
-  }
-
-  async function runProjectMoreAction(action) {
-    projectMoreOpen = false;
-
-    if (action === 'duplicate') {
-      try {
-        const copy = await httpRequest(projectDuplicate(project.id).url, 'POST', {});
-        toast(`Duplicated ${project.name}`, {
-          action: 'Open',
-          onAction: () => router.visit(projectShow(copy.id).url),
-        });
-        router.reload({ preserveScroll: true });
-      } catch (error) {
-        errorMessage = error.message;
-      }
-      return;
-    }
-
-    if (action === 'copy') {
-      const link = `https://gr8rstudio.com/${S.data.ws.url}/project/${project.key.toLowerCase()}`;
-      try {
-        await navigator.clipboard.writeText(link);
-        toast('Link copied');
-      } catch {
-        toast(`Copy isn't available here — ${link}`, { kind: 'info', ms: 6000 });
-      }
-      return;
-    }
-
-    if (action === 'move-up' || action === 'move-down') {
-      const sourceProjectId = project.source_key;
-      const order = S.data.projOrder || [];
-      const currentIndex = order.indexOf(sourceProjectId);
-      const nextIndex = action === 'move-up' ? currentIndex - 1 : currentIndex + 1;
-      if (currentIndex >= 0 && nextIndex >= 0 && nextIndex < order.length) {
-        const nextOrder = [...order];
-        [nextOrder[currentIndex], nextOrder[nextIndex]] = [nextOrder[nextIndex], nextOrder[currentIndex]];
-        S.data.projOrder = nextOrder;
-        saveWorkspaceStore();
-      }
-      return;
-    }
-
-    openProjectConfirmation(action);
-  }
-
-  async function confirmProjectAction() {
-    const action = projectConfirmation;
-    if (!action || projectConfirmationBusy) return;
-    if (action === 'delete' && projectConfirmationText !== project.name) return;
-
-    projectConfirmationBusy = true;
-    errorMessage = '';
-
-    try {
-      if (action === 'archive') {
-        await httpRequest(projectUpdate(project.id).url, 'PATCH', { status: 'archived' });
-        toast(`Archived ${project.name}`);
-      } else {
-        await httpRequest(projectDestroy(project.id).url, 'DELETE', {});
-        toast(`Deleted ${project.name}`);
-      }
-      projectConfirmation = null;
-      router.visit(projectsIndex().url);
-    } catch (error) {
-      errorMessage = error.message;
-    } finally {
-      projectConfirmationBusy = false;
-    }
-  }
-
-  function toggleProjectMember(memberId) {
-    selectedMemberIds = selectedMemberIds.includes(memberId)
-      ? selectedMemberIds.filter(id => id !== memberId)
-      : [...selectedMemberIds, memberId];
-  }
-
-  async function saveProjectMembers() {
-    memberDialogError = '';
-    projectDialogBusy = true;
-    try {
-      const result = await httpRequest(projectMembersUpdate(project.id).url, 'PUT', { members: selectedMemberIds });
-      project.members = result.members;
-      membersDialogOpen = false;
-    } catch (error) {
-      memberDialogError = error.errors?.members?.[0] || error.message;
-    } finally {
-      projectDialogBusy = false;
-    }
-  }
+import Select from "../../Components/Select.svelte";
+import Dropdown from "../../Components/Dropdown.svelte";
+import Button from "../../Components/Button.svelte";
+import ErrorMessage from "../../Components/ErrorMessage.svelte";
+import Label from "../../Components/Label.svelte";
+import Input from "../../Components/Input.svelte";
+import Textarea from "../../Components/Textarea.svelte";
+import { onMount, tick } from "svelte";
+import { fade, scale } from "svelte/transition";
+import { Link, router, usePage } from "@inertiajs/svelte";
+import AppLayout from "../../Layouts/AppLayout.svelte";
+import WorkspaceTaskForm from "../../Components/WorkspaceTaskForm.svelte";
+import TaskDrawer from "../../Components/TaskDrawer.svelte";
+import ProjectCalendar from "../../Components/ProjectCalendar.svelte";
+import ProjectTimeline from "../../Components/ProjectTimeline.svelte";
+import WorkspaceTaskList from "../../Components/WorkspaceTaskList.svelte";
+import { update as taskUpdate } from "../../routes/tasks";
+import { store as taskStore } from "../../routes/projects/tasks";
+import {
+	destroy as projectDestroy,
+	duplicate as projectDuplicate,
+	favorite as projectFavorite,
+	index as projectsIndex,
+	update as projectUpdate,
+} from "../../routes/projects";
+import { update as projectMembersUpdate } from "../../routes/projects/members";
+import { show as teamShow } from "../../routes/teams";
+import { useHttpRequest } from "../../lib/http.js";
+import { consumeNavigationIntent } from "../../lib/navigation-intents.js";
+import { ago, dayBucket, fmtDate, relDate, uid } from "@/src/core/utils.js";
+import { save as saveWorkspaceStore } from "@/src/core/store.js";
+import { S } from "@/src/core/store.js";
+import { ic } from "@/src/core/icons.js";
+import { toast } from "@/src/ui/toast.js";
+import { LABELS, PCOLORS, PSTAT, TEAMS_SEED } from "@/src/core/constants.js";
+import {
+	FT,
+	empty,
+	filePrev,
+	fileType as getFileType,
+	fsize,
+	lbl,
+	prIcon,
+	stIcon,
+} from "@/src/ui/helpers.js";
+
+const httpRequest = useHttpRequest();
+let {
+	project,
+	projects = [],
+	workspaceData = {},
+	activeTab = "board",
+} = $props();
+const page = usePage();
+let tasks = $state([]);
+$effect(() => {
+	tasks = [...(project.tasks || [])];
+});
+function getInitialTab() {
+	return activeTab;
+}
+let tab = $state(getInitialTab());
+let savedViewQuery = $state("");
+let savedViewError = $state("");
+let savedFilterOpen = $state(false);
+let savedFilterEditIndex = $state(null);
+let savedFilterPosition = $state({ left: 0, top: 0 });
+let savedValueOpenIndex = $state(null);
+let savedValuePosition = $state({ left: 0, top: 0 });
+let projectViewFilters = $state([]);
+let customSavedViews = $state([]);
+let saveViewOpen = $state(false);
+let saveViewName = $state("");
+let saveViewNameInput = $state(null);
+let saveViewType = $state("list");
+let showTaskForm = $state(false);
+let taskFormStatus = $state("todo");
+let taskFormDueDate = $state("");
+let errorMessage = $state("");
+let isFavorite = $state(false);
+let fileQuery = $state("");
+let fileType = $state("all");
+let fileSort = $state("date");
+let fileView = $state("grid");
+let selectedFile = $state(null);
+let uploadingProjectFiles = $state([]);
+let projectFileRecords = $state([]);
+const projectUploadTimers = new Map();
+let fileMenu = $state(null);
+let fileMenuPosition = $state({ left: 8, top: 8 });
+let fileRenameTarget = $state(null);
+let fileRenameName = $state("");
+let fileDeleteTarget = $state(null);
+let statusMenu = $state(null);
+let tableCellMenu = $state(null);
+let tableCellQuery = $state("");
+let tableTitleEditId = $state(null);
+let tableTitleDraft = $state("");
+let tableEstimateEditId = $state(null);
+let tableEstimateDraft = $state("");
+let projectStatusMenu = $state(null);
+let projectMorePosition = $state({ left: 0, top: 0 });
+let projectMoreOpen = $state(false);
+let projectConfirmation = $state(null);
+let projectConfirmationText = $state("");
+let projectConfirmationBusy = $state(false);
+let membersDialogOpen = $state(false);
+let editDialogOpen = $state(false);
+let projectDialogBusy = $state(false);
+let projectDialogError = $state("");
+let memberDialogError = $state("");
+let memberQuery = $state("");
+let selectedMemberIds = $state([]);
+let projectForm = $state({
+	name: "",
+	description: "",
+	status: "active",
+	start_date: "",
+	due_date: "",
+});
+let drawerTaskId = $state(null);
+let taskSearch = $state("");
+let projectOverviewStatusFilter = $state("");
+let projectListQuery = $state("");
+let projectListGroup = $state("status");
+let projectListSort = $state("manual");
+let projectListSortDirection = $state(1);
+let projectListMenu = $state(null);
+let projectListMenuPosition = $state({ left: 8, top: 8 });
+let projectListFilters = $state([]);
+let projectListFilterEditIndex = $state(null);
+let projectListValueOpenIndex = $state(null);
+function getInitialProjectTablePreferences() {
+	const viewKey = `p:${project.source_key || project.id}`;
+	const savedView = S.views[viewKey];
+	return {
+		viewKey,
+		hidden: savedView?.hidden || ["start", "deps", "created", "project"],
+		columnWidths: { ...(savedView?.colW || {}) },
+	};
+}
+const initialProjectTablePreferences = getInitialProjectTablePreferences();
+const projectTableViewKey = initialProjectTablePreferences.viewKey;
+let projectTableHidden = $state(initialProjectTablePreferences.hidden);
+let projectTableColumnWidths = $state(
+	initialProjectTablePreferences.columnWidths,
+);
+const projectTableColumnDefinitions = [
+	["title", "Task", 314],
+	["status", "Status", 132],
+	["priority", "Priority", 112],
+	["assignee", "Assignee", 156],
+	["due", "Due date", 112],
+	["start", "Start date", 112],
+	["labels", "Labels", 180],
+	["deps", "Dependencies", 150],
+	["estimate", "Estimate", 92],
+	["created", "Created", 112],
+	["project", "Project", 156],
+];
+let projectTableColumns = $derived(
+	projectTableColumnDefinitions
+		.filter(
+			([field]) => field === "title" || !projectTableHidden.includes(field),
+		)
+		.map(([field, label, width]) => [
+			field,
+			label,
+			projectTableColumnWidths[field] || width,
+		]),
+);
+let drawerTask = $derived.by(() => {
+	const selectedTask = tasks.find((task) => task.id === drawerTaskId);
+	return selectedTask
+		? {
+				...selectedTask,
+				project: {
+					id: project.id,
+					name: project.name,
+					key: project.key,
+					color: project.color,
+				},
+				project_id: project.id,
+			}
+		: null;
+});
+let filteredBoardTasks = $derived(
+	tasks.filter(
+		(task) =>
+			!taskSearch.trim() ||
+			`${task.title} ${task.key || ""}`
+				.toLowerCase()
+				.includes(taskSearch.trim().toLowerCase()),
+	),
+);
+let projectListTasks = $derived.by(() => {
+	const filtered = tasks.filter(
+		(task) =>
+			(!projectOverviewStatusFilter ||
+				task.status === projectOverviewStatusFilter) &&
+			(!projectListQuery.trim() ||
+				`${task.title} ${task.key || ""}`
+					.toLowerCase()
+					.includes(projectListQuery.trim().toLowerCase())) &&
+			projectListFilters.every((filter) =>
+				matchesProjectListFilter(task, filter),
+			),
+	);
+	if (projectListSort === "manual") return filtered;
+	return filtered
+		.sort((first, second) => {
+			if (projectListSort === "title")
+				return first.title.localeCompare(second.title);
+			if (projectListSort === "due" || projectListSort === "start")
+				return String(
+					first[projectListSort === "due" ? "due_date" : "start_date"] ||
+						"9999-12-31",
+				).localeCompare(
+					String(
+						second[projectListSort === "due" ? "due_date" : "start_date"] ||
+							"9999-12-31",
+					),
+				);
+			if (projectListSort === "priority")
+				return (
+					["urgent", "high", "medium", "low", "none"].indexOf(first.priority) -
+					["urgent", "high", "medium", "low", "none"].indexOf(second.priority)
+				);
+			if (projectListSort === "status")
+				return (
+					columns.findIndex((column) => column.id === first.status) -
+					columns.findIndex((column) => column.id === second.status)
+				);
+			if (projectListSort === "assignee")
+				return (first.assignee?.name || "").localeCompare(
+					second.assignee?.name || "",
+				);
+			if (projectListSort === "project")
+				return (first.project?.name || "").localeCompare(
+					second.project?.name || "",
+				);
+			if (projectListSort === "estimate")
+				return Number(first.estimate || 0) - Number(second.estimate || 0);
+			return (
+				new Date(
+					projectListSort === "created" ? first.created_at : first.updated_at,
+				) -
+				new Date(
+					projectListSort === "created" ? second.created_at : second.updated_at,
+				)
+			);
+		})
+		.map((task, index, sorted) =>
+			projectListSortDirection > 0 ? task : sorted[sorted.length - index - 1],
+		);
+});
+let projectListGroups = $derived.by(() => {
+	if (projectListGroup === "none")
+		return [{ id: "all", name: "", tasks: projectListTasks }];
+	if (projectListGroup === "project")
+		return [
+			{
+				id: String(project.id),
+				name: project.name,
+				icon: project.icon || "folder",
+				tasks: projectListTasks,
+			},
+		];
+	if (projectListGroup === "assignee") {
+		const grouped = new Map();
+		for (const task of projectListTasks) {
+			const id = String(task.assignee_id || "unassigned");
+			const name = task.assignee?.name || "Unassigned";
+			const group = grouped.get(id) || { id, name, tasks: [] };
+			group.tasks.push(task);
+			grouped.set(id, group);
+		}
+		return [...grouped.values()];
+	}
+	if (projectListGroup === "priority")
+		return ["urgent", "high", "medium", "low", "none"]
+			.map((id) => ({
+				id,
+				name: {
+					urgent: "Urgent",
+					high: "High",
+					medium: "Medium",
+					low: "Low",
+					none: "No priority",
+				}[id],
+				tasks: projectListTasks.filter(
+					(task) => (task.priority || "none") === id,
+				),
+			}))
+			.filter((group) => group.tasks.length);
+	if (projectListGroup === "due")
+		return [
+			{
+				id: "overdue",
+				name: "Overdue",
+				tasks: projectListTasks.filter(
+					(task) =>
+						task.due_date &&
+						task.status !== "done" &&
+						new Date(`${String(task.due_date).slice(0, 10)}T00:00:00`) <
+							new Date(new Date().toDateString()),
+				),
+			},
+			{
+				id: "upcoming",
+				name: "Upcoming",
+				tasks: projectListTasks.filter(
+					(task) =>
+						task.due_date &&
+						!(
+							task.status !== "done" &&
+							new Date(`${String(task.due_date).slice(0, 10)}T00:00:00`) <
+								new Date(new Date().toDateString())
+						),
+				),
+			},
+			{
+				id: "nodate",
+				name: "No due date",
+				tasks: projectListTasks.filter((task) => !task.due_date),
+			},
+		].filter((group) => group.tasks.length);
+	return columns
+		.map((column) => ({
+			...column,
+			tasks: projectListTasks.filter((task) => task.status === column.id),
+		}))
+		.filter((column) => column.tasks.length);
+});
+
+onMount(() => {
+	const closeStatusMenu = (event) => {
+		if (statusMenu && !event.target.closest(".status-picker"))
+			statusMenu = null;
+		if (
+			tableCellMenu &&
+			!event.target.closest(
+				"[data-table-cell-menu-trigger], [data-table-cell-menu]",
+			)
+		)
+			tableCellMenu = null;
+		if (
+			projectStatusMenu &&
+			!event.target.closest("[data-project-status], [data-project-status-menu]")
+		)
+			projectStatusMenu = null;
+		if (
+			projectMoreOpen &&
+			!event.target.closest("[data-project-more], [data-project-more-menu]")
+		)
+			projectMoreOpen = false;
+		if (
+			savedFilterOpen &&
+			!event.target.closest(
+				"[data-saved-filter-trigger], [data-saved-filter-builder]",
+			)
+		)
+			savedFilterOpen = false;
+		if (
+			savedValueOpenIndex !== null &&
+			!event.target.closest(
+				"[data-saved-filter-value-trigger], [data-saved-filter-values]",
+			)
+		)
+			savedValueOpenIndex = null;
+		if (
+			projectListMenu &&
+			!event.target.closest(
+				"[data-project-list-menu-trigger], [data-project-list-menu]",
+			)
+		)
+			projectListMenu = null;
+		if (
+			fileMenu &&
+			!event.target.closest("[data-file-menu-trigger], [data-file-menu]")
+		)
+			fileMenu = null;
+	};
+	const closeOnEscape = (event) => {
+		if (event.key !== "Escape") return;
+		if (statusMenu) statusMenu = null;
+		else if (tableCellMenu) tableCellMenu = null;
+		else if (projectStatusMenu) projectStatusMenu = null;
+		else if (projectMoreOpen) projectMoreOpen = false;
+		else if (projectListMenu) projectListMenu = null;
+		else if (fileMenu) fileMenu = null;
+		else if (savedFilterOpen) savedFilterOpen = false;
+		else if (savedValueOpenIndex !== null) savedValueOpenIndex = null;
+		else if (membersDialogOpen) membersDialogOpen = false;
+		else if (editDialogOpen) editDialogOpen = false;
+	};
+	document.addEventListener("pointerdown", closeStatusMenu, true);
+	document.addEventListener("keydown", closeOnEscape);
+	const projectAction = consumeNavigationIntent("project-action");
+	if (projectAction) {
+		tick().then(() => {
+			if (projectAction.action === "edit") openProjectSettings();
+			if (projectAction.action === "share") openProjectMembers();
+		});
+	}
+	return () => {
+		projectUploadTimers.forEach((timer) => window.clearInterval(timer));
+		projectUploadTimers.clear();
+		document.removeEventListener("pointerdown", closeStatusMenu, true);
+		document.removeEventListener("keydown", closeOnEscape);
+	};
+});
+
+$effect(() => {
+	isFavorite = project.is_favorite;
+});
+
+const columns = [
+	{ id: "backlog", name: "Backlog", icon: "circle-dashed" },
+	{ id: "todo", name: "To Do", icon: "circle" },
+	{ id: "progress", name: "In Progress", icon: "circle-dot" },
+	{ id: "review", name: "Review", icon: "circle-check" },
+	{ id: "done", name: "Done", icon: "check-circle-2" },
+];
+const savedFilterFields = [
+	["status", "Status", "circle-dot"],
+	["assignee", "Assignee", "user"],
+	["priority", "Priority", "signal-high"],
+	["due", "Due date", "calendar"],
+	["project", "Project", "folder"],
+	["labels", "Labels", "tag"],
+	["created", "Created date", "calendar-plus"],
+	["updated", "Updated date", "calendar-clock"],
+];
+
+let completedCount = $derived(
+	tasks.filter((task) => task.status === "done").length,
+);
+let progress = $derived(
+	tasks.length ? Math.round((completedCount / tasks.length) * 100) : 0,
+);
+let overdueCount = $derived(
+	tasks.filter(
+		(task) =>
+			task.status !== "done" &&
+			task.due_date &&
+			new Date(`${task.due_date.slice(0, 10)}T00:00:00`) <
+				new Date(new Date().toDateString()),
+	).length,
+);
+let statusCounts = $derived(
+	columns.map((column) => ({
+		...column,
+		count: tasks.filter((task) => task.status === column.id).length,
+	})),
+);
+let comingUp = $derived(
+	tasks
+		.filter((task) => task.status !== "done" && task.due_date)
+		.sort(
+			(first, second) => new Date(first.due_date) - new Date(second.due_date),
+		)
+		.slice(0, 6),
+);
+let sourceProject = $derived(
+	(workspaceData.projects || []).find(
+		(item) => item.database_id === project.id,
+	),
+);
+let projectTeam = $derived(
+	(page.props.teams || TEAMS_SEED).find((team) => team.id === project.team),
+);
+let projectOverviewEvents = $derived(
+	(workspaceData.activity || []).filter(
+		(item) => item.project === sourceProject?.id,
+	),
+);
+$effect(() => {
+	const originalViewIds = new Set(
+		(workspaceData.savedViews || []).map((view) => view.id),
+	);
+	customSavedViews = (S.data.savedViews || []).filter(
+		(view) =>
+			view.project === sourceProject?.id && !originalViewIds.has(view.id),
+	);
+});
+let savedViews = $derived([
+	...(workspaceData.savedViews || []).filter(
+		(view) => view.project === sourceProject?.id,
+	),
+	...customSavedViews,
+]);
+let selectedSavedView = $derived(
+	savedViews.find((view) => tab === `v:${view.id}`),
+);
+let savedViewFiltersDraft = $state(null);
+let savedViewFilters = $derived(
+	savedViewFiltersDraft ?? selectedSavedView?.filters ?? [],
+);
+$effect(() => {
+	const selectedView = selectedSavedView;
+	if (!selectedView) return;
+	const viewKey = `sv:${selectedView.id}`;
+	S.views[viewKey] ??= {
+		filters: structuredClone(selectedView.filters || []),
+		sort: { f: "manual", dir: 1 },
+		group: "status",
+		q: "",
+		hidden: ["start", "created", "deps"],
+		colW: {},
+		showDone: true,
+	};
+	savedViewFiltersDraft = structuredClone(
+		S.views[viewKey].filters || selectedView.filters || [],
+	);
+	savedViewQuery = "";
+	savedViewError = "";
+});
+let savedViewTasks = $derived.by(() =>
+	tasks.filter((task) => {
+		const matchesQuery =
+			!savedViewQuery.trim() ||
+			`${task.title} ${task.key || ""}`
+				.toLowerCase()
+				.includes(savedViewQuery.trim().toLowerCase());
+		return (
+			matchesQuery &&
+			savedViewFilters.every((filter) => {
+				if (!filter.v?.length) return true;
+				let matches;
+				if (filter.f === "labels")
+					matches = (task.labels || []).some((label) =>
+						filter.v.includes(label),
+					);
+				else if (filter.f === "assignee")
+					matches = filter.v.includes(String(task.assignee_id || "none"));
+				else if (filter.f === "project")
+					matches = filter.v.includes(String(task.project_id));
+				else if (filter.f === "due") {
+					if (filter.v.includes("nodate") && !task.due_date) matches = true;
+					else if (!task.due_date) matches = false;
+					else {
+						const due = new Date(
+							`${String(task.due_date).slice(0, 10)}T00:00:00`,
+						);
+						const today = new Date();
+						today.setHours(0, 0, 0, 0);
+						const days = Math.floor((due - today) / 86400000);
+						matches = filter.v.some((value) =>
+							value === "overdue"
+								? days < 0 && task.status !== "done"
+								: value === "today"
+									? days === 0
+									: value === "week"
+										? days >= 0 && days <= 7
+										: value === "later" && days > 7,
+						);
+					}
+				} else if (filter.f === "created" || filter.f === "updated") {
+					const timestamp = new Date(
+						filter.f === "created" ? task.created_at : task.updated_at,
+					).getTime();
+					matches =
+						Number.isFinite(timestamp) &&
+						filter.v.some(
+							(value) => Date.now() - timestamp <= Number(value) * 86400000,
+						);
+				} else matches = filter.v.includes(String(task[filter.f]));
+				return filter.op === "not" ? !matches : matches;
+			})
+		);
+	}),
+);
+let savedViewGroups = $derived(
+	columns.map((column) => ({
+		id: column.id,
+		name: column.name,
+		icon: column.icon,
+		iconType: "status",
+		tasks: savedViewTasks.filter((task) => task.status === column.id),
+	})),
+);
+let sourceMembers = $derived(workspaceData.members || []);
+let projectMemberOptions = $derived(
+	sourceMembers
+		.filter((member) => member.database_id)
+		.map((member) => ({
+			id: member.database_id,
+			name: member.name,
+			email: member.email,
+			color: member.c,
+			sourceKey: member.id,
+		}))
+		.filter(
+			(member) =>
+				member.name.toLowerCase().includes(memberQuery.trim().toLowerCase()) ||
+				(member.email || "")
+					.toLowerCase()
+					.includes(memberQuery.trim().toLowerCase()),
+		),
+);
+let memberById = $derived(
+	new Map(sourceMembers.map((member) => [member.id, member])),
+);
+let memberByDatabaseId = $derived(
+	new Map(
+		sourceMembers
+			.filter((member) => member.database_id)
+			.map((member) => [String(member.database_id), member]),
+	),
+);
+let sourceTasks = $derived(workspaceData.tasks || []);
+let sourceTaskById = $derived(
+	new Map(sourceTasks.map((task) => [task.id, task])),
+);
+$effect(() => {
+	const baseFiles = (workspaceData.files || []).filter(
+		(file) => file.project === sourceProject?.id,
+	);
+	const savedFiles = S.data.files || [];
+	const savedFilesById = new Map(savedFiles.map((file) => [file.id, file]));
+	const baseFileIds = new Set(baseFiles.map((file) => file.id));
+	projectFileRecords = [
+		...baseFiles.map((file) => ({ ...(savedFilesById.get(file.id) || file) })),
+		...savedFiles
+			.filter(
+				(file) =>
+					file.project === sourceProject?.id && !baseFileIds.has(file.id),
+			)
+			.map((file) => ({ ...file })),
+	];
+});
+let projectFiles = $derived.by(() => {
+	return projectFileRecords
+		.filter(
+			(file) =>
+				file.project === sourceProject?.id &&
+				file.name.toLowerCase().includes(fileQuery.toLowerCase()) &&
+				(fileType === "all" || file.type === fileType),
+		)
+		.sort((first, second) =>
+			fileSort === "name"
+				? first.name.localeCompare(second.name)
+				: fileSort === "type"
+					? first.type.localeCompare(second.type)
+					: second.at - first.at,
+		);
+});
+let projectEvents = $derived.by(() => {
+	if (!sourceProject) return [];
+	const activity = (workspaceData.activity || []).filter(
+		(item) => item.project === sourceProject.id,
+	);
+	const comments = (workspaceData.comments || [])
+		.filter(
+			(comment) =>
+				sourceTaskById.get(comment.task)?.project === sourceProject.id,
+		)
+		.map((comment) => ({
+			id: comment.id,
+			by: comment.by,
+			verb: "commented on",
+			task: comment.task,
+			project: sourceProject.id,
+			at: comment.at,
+			extra: "",
+		}));
+	return [...activity, ...comments].sort(
+		(first, second) => second.at - first.at,
+	);
+});
+let eventGroups = $derived.by(() => {
+	const groups = new Map();
+	for (const event of projectEvents) {
+		const bucket = dayBucket(event.at);
+		groups.set(bucket, [...(groups.get(bucket) || []), event]);
+	}
+	return [...groups.entries()];
+});
+
+function statusName(value) {
+	return columns.find((column) => column.id === value)?.name || value;
+}
+
+function toggleProjectListMenu(event, menu) {
+	if (projectListMenu === menu) {
+		projectListMenu = null;
+		return;
+	}
+	const bounds = event.currentTarget.getBoundingClientRect();
+	const width = menu === "filter" ? 560 : menu === "sort" ? 240 : 180;
+	projectListMenuPosition = {
+		left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
+		top: Math.min(bounds.bottom + 4, window.innerHeight - 220),
+	};
+	projectListMenu = menu;
+}
+
+function matchesProjectListFilter(task, filter) {
+	if (!filter.v?.length) return true;
+	let matches;
+	if (filter.f === "labels")
+		matches = (task.labels || []).some((label) => filter.v.includes(label));
+	else if (filter.f === "assignee")
+		matches = filter.v.includes(String(task.assignee_id || "none"));
+	else if (filter.f === "project")
+		matches = filter.v.includes(String(task.project_id));
+	else if (filter.f === "due") {
+		if (filter.v.includes("nodate") && !task.due_date) matches = true;
+		else if (!task.due_date) matches = false;
+		else {
+			const due = new Date(`${String(task.due_date).slice(0, 10)}T00:00:00`);
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			const days = Math.floor((due - today) / 86400000);
+			matches = filter.v.some((value) =>
+				value === "overdue"
+					? days < 0 && task.status !== "done"
+					: value === "today"
+						? days === 0
+						: value === "week"
+							? days >= 0 && days <= 7
+							: value === "later" && days > 7,
+			);
+		}
+	} else if (filter.f === "created" || filter.f === "updated") {
+		const timestamp = new Date(
+			filter.f === "created" ? task.created_at : task.updated_at,
+		).getTime();
+		matches =
+			Number.isFinite(timestamp) &&
+			filter.v.some(
+				(value) => Date.now() - timestamp <= Number(value) * 86400000,
+			);
+	} else matches = filter.v.includes(String(task[filter.f]));
+	return filter.op === "not" ? !matches : matches;
+}
+
+function addProjectListFilter(field) {
+	projectListFilters = [...projectListFilters, { f: field, op: "is", v: [] }];
+	projectListFilterEditIndex = projectListFilters.length - 1;
+}
+
+function updateProjectListFilter(index, values) {
+	projectListFilters = projectListFilters.map((filter, filterIndex) =>
+		filterIndex === index ? { ...filter, ...values } : filter,
+	);
+}
+
+function toggleProjectListFilterValue(index, value) {
+	const filter = projectListFilters[index];
+	const selectedValues = filter.v.includes(value)
+		? filter.v.filter((item) => item !== value)
+		: [...filter.v, value];
+	updateProjectListFilter(index, { v: selectedValues });
+}
+
+function removeProjectListFilter(index) {
+	projectListFilters = projectListFilters.filter(
+		(_, filterIndex) => filterIndex !== index,
+	);
+	if (projectListFilterEditIndex === index) projectListFilterEditIndex = null;
+	else if (projectListFilterEditIndex > index) projectListFilterEditIndex -= 1;
+	if (projectListValueOpenIndex === index) projectListValueOpenIndex = null;
+	else if (projectListValueOpenIndex > index) projectListValueOpenIndex -= 1;
+}
+
+function clearProjectListFilters() {
+	projectListFilters = [];
+	projectListFilterEditIndex = null;
+	projectListValueOpenIndex = null;
+}
+
+async function toggleStatusMenu(event, task) {
+	if (statusMenu?.taskId === task.id) {
+		statusMenu = null;
+		return;
+	}
+
+	const rect = event.currentTarget.getBoundingClientRect();
+	const menuWidth = 200;
+	const menuHeight = columns.length * 30 + 8;
+	const left =
+		rect.left + menuWidth > window.innerWidth - 8
+			? Math.max(8, rect.right - menuWidth)
+			: rect.left;
+	const top =
+		rect.bottom + 4 + menuHeight > window.innerHeight - 8
+			? Math.max(8, rect.top - 4 - menuHeight)
+			: rect.bottom + 4;
+	statusMenu = { taskId: task.id, left, top };
+	await tick();
+	document
+		.querySelector('.status-picker .pop [aria-checked="true"]')
+		?.focus({ preventScroll: true });
+}
+
+async function chooseStatus(task, nextStatus) {
+	statusMenu = null;
+	await changeStatus(task, nextStatus);
+}
+
+function openTableCellMenu(event, task, field) {
+	if (tableCellMenu?.taskId === task.id && tableCellMenu.field === field) {
+		tableCellMenu = null;
+		return;
+	}
+	const bounds = event.currentTarget.getBoundingClientRect();
+	const width =
+		field === "assignee"
+			? 240
+			: field === "labels" || field === "deps"
+				? 220
+				: 200;
+	tableCellMenu = {
+		taskId: task.id,
+		field,
+		left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
+		top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 300)),
+	};
+	tableCellQuery = "";
+}
+
+async function updateTableTask(task, changes, keepMenu = false) {
+	if (!keepMenu) tableCellMenu = null;
+	try {
+		const updated = await httpRequest(
+			taskUpdate(task.id).url,
+			"PATCH",
+			changes,
+		);
+		tasks = tasks.map((item) =>
+			item.id === updated.id ? { ...item, ...updated } : item,
+		);
+		return true;
+	} catch (error) {
+		errorMessage = error.message;
+		return false;
+	}
+}
+
+function setTableTaskDate(task, field, value) {
+	void updateTableTask(task, {
+		[field === "due" ? "due_date" : "start_date"]: value || null,
+	});
+}
+
+function tableQuickDate(days) {
+	const date = new Date();
+	date.setDate(date.getDate() + days);
+	return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function toggleTableTaskValue(task, field, value) {
+	const current = task[field] || [];
+	void updateTableTask(
+		task,
+		{
+			[field]: current.includes(value)
+				? current.filter((item) => item !== value)
+				: [...current, value],
+		},
+		true,
+	);
+}
+
+function saveTableText(task, field) {
+	const isTitle = field === "title";
+	const editingId = isTitle ? tableTitleEditId : tableEstimateEditId;
+	if (editingId !== task.id) return;
+	const value = (isTitle ? tableTitleDraft : tableEstimateDraft).trim();
+	if (isTitle) tableTitleEditId = null;
+	else tableEstimateEditId = null;
+	void updateTableTask(task, { [field]: value || null });
+}
+
+function saveTableEstimate(task) {
+	saveTableText(task, "estimate");
+}
+
+function projectStatusName(value) {
+	return (
+		{
+			active: "In Progress",
+			planning: "Planning",
+			risk: "At Risk",
+			hold: "On Hold",
+			complete: "Completed",
+			paused: "On Hold",
+			completed: "Completed",
+			archived: "Archived",
+		}[value] || value
+	);
+}
+
+function openCreateTask(date = "", initialStatus = "todo") {
+	taskFormDueDate = date;
+	taskFormStatus = initialStatus;
+	showTaskForm = true;
+}
+
+function taskCreated(createdTask) {
+	tasks = [createdTask, ...tasks];
+}
+
+function taskUpdated(updatedTask) {
+	tasks = tasks.map((task) =>
+		task.id === updatedTask.id ? { ...task, ...updatedTask } : task,
+	);
+}
+
+async function updateSavedViewTask(task, values) {
+	try {
+		const updatedTask = await httpRequest(
+			taskUpdate(task.id).url,
+			"PATCH",
+			values,
+		);
+		taskUpdated(updatedTask);
+	} catch (error) {
+		savedViewError = error.message;
+	}
+}
+
+async function updateProjectListTask(task, values) {
+	try {
+		const updatedTask = await httpRequest(
+			taskUpdate(task.id).url,
+			"PATCH",
+			values,
+		);
+		taskUpdated(updatedTask);
+	} catch (error) {
+		errorMessage = error.message;
+	}
+}
+
+async function createSavedViewTask(title, group) {
+	try {
+		const createdTask = await httpRequest(
+			taskStore({ project: project.id }).url,
+			"POST",
+			{
+				title,
+				status: group.id,
+				priority: "medium",
+			},
+		);
+		taskCreated(createdTask);
+	} catch (error) {
+		savedViewError = error.message;
+	}
+}
+
+async function createProjectListTask(title, group) {
+	try {
+		const createdTask = await httpRequest(
+			taskStore({ project: project.id }).url,
+			"POST",
+			{
+				title,
+				status: group.id,
+				priority: "medium",
+			},
+		);
+		taskCreated(createdTask);
+	} catch (error) {
+		errorMessage = error.message;
+	}
+}
+
+function removeSavedViewFilter(index) {
+	setSavedViewFilters(
+		savedViewFilters.filter((_, filterIndex) => filterIndex !== index),
+	);
+	if (savedFilterEditIndex === index) savedFilterEditIndex = null;
+	else if (savedFilterEditIndex > index) savedFilterEditIndex -= 1;
+	if (savedValueOpenIndex === index) savedValueOpenIndex = null;
+	else if (savedValueOpenIndex > index) savedValueOpenIndex -= 1;
+}
+
+function saveProjectView(event) {
+	event.preventDefault();
+	const viewName = saveViewName.trim() || "Untitled view";
+	const savedView = {
+		id: uid("v"),
+		project: sourceProject?.id || project.source_key,
+		name: viewName,
+		type: saveViewType,
+		filters: structuredClone(projectViewFilters),
+	};
+	S.data.savedViews = [...(S.data.savedViews || []), savedView];
+	saveWorkspaceStore();
+	customSavedViews = [...customSavedViews, savedView];
+	saveViewOpen = false;
+	saveViewName = "";
+	tab = `v:${savedView.id}`;
+}
+
+async function openSaveViewDialog() {
+	saveViewName = "";
+	saveViewType = "list";
+	saveViewOpen = true;
+	await tick();
+	saveViewNameInput?.focus();
+}
+
+function savedFilterLabel(filter) {
+	const field =
+		{
+			status: "Status",
+			assignee: "Assignee",
+			priority: "Priority",
+			due: "Due date",
+			project: "Project",
+			labels: "Labels",
+			created: "Created date",
+			updated: "Updated date",
+		}[filter.f] || filter.f;
+	const values = (filter.v || []).map(
+		(value) =>
+			({
+				urgent: "Urgent",
+				high: "High",
+				medium: "Medium",
+				low: "Low",
+				none: "No priority",
+				backlog: "Backlog",
+				todo: "To Do",
+				progress: "In Progress",
+				review: "Review",
+				done: "Done",
+				overdue: "Overdue",
+				today: "Today",
+				week: "Next 7 days",
+				later: "Later",
+				nodate: "No due date",
+			})[value] || value,
+	);
+	return `${field} is${filter.op === "not" ? " not" : ""} ${values.length ? values.join(", ") : "any"}`;
+}
+
+function filterOptions(filter) {
+	if (filter.f === "status")
+		return columns.map((column) => ({ id: column.id, name: column.name }));
+	if (filter.f === "priority")
+		return [
+			{ id: "urgent", name: "Urgent" },
+			{ id: "high", name: "High" },
+			{ id: "medium", name: "Medium" },
+			{ id: "low", name: "Low" },
+			{ id: "none", name: "No priority" },
+		];
+	if (filter.f === "assignee")
+		return [
+			{ id: "none", name: "Unassigned" },
+			...(workspaceData.members || [])
+				.filter((member) => member.database_id)
+				.map((member) => ({
+					id: String(member.database_id),
+					name: member.name,
+				})),
+		];
+	if (filter.f === "project")
+		return projects.map((item) => ({ id: String(item.id), name: item.name }));
+	if (filter.f === "labels")
+		return LABELS.map((label) => ({ id: label.id, name: label.name }));
+	if (filter.f === "due")
+		return [
+			{ id: "overdue", name: "Overdue" },
+			{ id: "today", name: "Today" },
+			{ id: "week", name: "Next 7 days" },
+			{ id: "later", name: "Later" },
+			{ id: "nodate", name: "No due date" },
+		];
+	return [
+		{ id: "1", name: "Last 24 hours" },
+		{ id: "7", name: "Last 7 days" },
+		{ id: "30", name: "Last 30 days" },
+	];
+}
+
+function updateSavedViewFilter(index, values) {
+	setSavedViewFilters(
+		savedViewFilters.map((filter, filterIndex) =>
+			filterIndex === index ? { ...filter, ...values } : filter,
+		),
+	);
+}
+
+function setSavedViewFilters(filters) {
+	const copiedFilters = JSON.parse(JSON.stringify(filters));
+	savedViewFiltersDraft = copiedFilters;
+	if (!selectedSavedView) return;
+	const viewKey = `sv:${selectedSavedView.id}`;
+	S.views[viewKey] ??= {
+		filters: [],
+		sort: { f: "manual", dir: 1 },
+		group: "status",
+		q: "",
+		hidden: ["start", "created", "deps"],
+		colW: {},
+		showDone: true,
+	};
+	S.views[viewKey].filters = JSON.parse(JSON.stringify(copiedFilters));
+	saveWorkspaceStore();
+}
+
+function toggleSavedViewFilterValue(index, value) {
+	const filter = savedViewFilters[index];
+	const currentValues = filter.v || [];
+	const selectedValues = currentValues.includes(value)
+		? currentValues.filter((item) => item !== value)
+		: [...currentValues, value];
+	updateSavedViewFilter(index, { v: selectedValues });
+}
+
+async function toggleSavedValuePopover(event, index) {
+	if (savedValueOpenIndex === index) {
+		savedValueOpenIndex = null;
+		return;
+	}
+	savedFilterOpen = false;
+	const bounds = event.currentTarget.getBoundingClientRect();
+	const width = 200;
+	savedValueOpenIndex = index;
+	savedValuePosition = {
+		left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
+		top: bounds.bottom + 4,
+	};
+	await tick();
+	const popup = document.querySelector("[data-saved-filter-values]");
+	if (!popup) return;
+	const height = popup.getBoundingClientRect().height;
+	savedValuePosition = {
+		left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
+		top:
+			bounds.bottom + height > window.innerHeight - 8
+				? Math.max(8, bounds.top - height - 4)
+				: bounds.bottom + 4,
+	};
+}
+
+function savedFilterOptionIcon(filter, option) {
+	if (filter.f === "status") return stIcon(option.id, 14);
+	if (filter.f === "priority") return prIcon(option.id, 14);
+	if (filter.f === "project") {
+		const projectOption = projects.find(
+			(item) => String(item.id) === String(option.id),
+		);
+		return `<span class="pdot" style="--c:${PCOLORS[projectOption?.color] || "var(--gray)"}"></span>`;
+	}
+	if (filter.f === "labels") {
+		const label = LABELS.find((item) => item.id === option.id);
+		return `<span class="pdot" style="--c:${label?.c || "var(--gray)"}"></span>`;
+	}
+	if (filter.f === "assignee") {
+		const member = workspaceData.members?.find(
+			(item) => String(item.database_id) === String(option.id),
+		);
+		return member
+			? `<span class="av sm" style="--c:${member.c || "#8A867E"}">${member.name
+					.split(" ")
+					.map((part) => part[0])
+					.join("")
+					.slice(0, 2)}</span>`
+			: ic("user-round", 14);
+	}
+	return ic(
+		filter.f === "due" || filter.f === "created" || filter.f === "updated"
+			? "calendar"
+			: "circle-dot",
+		14,
+	);
+}
+
+function projectDropdownElement(id, tag, options = {}) {
+	return { id, type: "element", tag, ...options };
+}
+
+function projectDropdownAction(id, action, payload, label, options = {}) {
+	return { id, type: "action", action, payload, label, ...options };
+}
+
+function filterListForScope(scope) {
+	return scope === "saved" ? savedViewFilters : projectListFilters;
+}
+
+function filterEditIndexForScope(scope) {
+	return scope === "saved" ? savedFilterEditIndex : projectListFilterEditIndex;
+}
+
+function filterLeadingItem(filter, option, id) {
+	if (filter.f === "status")
+		return projectDropdownElement(`${id}-graphic`, "span", {
+			graphic: { type: "status", value: option.id, size: 14 },
+		});
+	if (filter.f === "priority")
+		return projectDropdownElement(`${id}-graphic`, "span", {
+			graphic: { type: "priority", value: option.id, size: 14 },
+		});
+	if (filter.f === "project") {
+		const projectOption = projects.find(
+			(item) => String(item.id) === String(option.id),
+		);
+		return projectDropdownElement(`${id}-graphic`, "span", {
+			className: "pdot",
+			style: `--c:${PCOLORS[projectOption?.color] || "var(--gray)"}`,
+		});
+	}
+	if (filter.f === "labels") {
+		const label = LABELS.find((item) => item.id === option.id);
+		return projectDropdownElement(`${id}-graphic`, "span", {
+			className: "pdot",
+			style: `--c:${label?.c || "var(--gray)"}`,
+		});
+	}
+	if (filter.f === "assignee") {
+		const member = workspaceData.members?.find(
+			(item) => String(item.database_id) === String(option.id),
+		);
+		return member
+			? projectDropdownElement(`${id}-graphic`, "span", {
+					graphic: {
+						type: "avatar",
+						initials: member.name
+							.split(" ")
+							.map((part) => part[0])
+							.join("")
+							.slice(0, 2),
+						color: member.c || "#8A867E",
+					},
+				})
+			: projectDropdownElement(`${id}-graphic`, "span", {
+					icon: "user-round",
+					iconSize: 14,
+				});
+	}
+	return projectDropdownElement(`${id}-graphic`, "span", {
+		icon:
+			filter.f === "due" || filter.f === "created" || filter.f === "updated"
+				? "calendar"
+				: "circle-dot",
+		iconSize: 14,
+	});
+}
+
+function filterValueToggleItem(filter, scope, index, option) {
+	const selected = (filter.v || []).includes(String(option.id));
+	const id = `${scope}-filter-value-${index}-${option.id}`;
+	return projectDropdownElement(id, "label", {
+		className: "mi",
+		style: "cursor:pointer",
+		items: [
+			projectDropdownElement(`${id}-checkbox`, "input", {
+				elementType: "checkbox",
+				className: "check",
+				checked: selected,
+				payload: `${scope}|${index}|${option.id}`,
+				events: { change: "toggle-filter-value" },
+			}),
+			filterLeadingItem(filter, option, id),
+			projectDropdownElement(`${id}-label`, "span", { text: option.name }),
+		],
+	});
+}
+
+function filterValueDropdownItems(scope, index) {
+	const filter = filterListForScope(scope)[index];
+	if (!filter) return [];
+	return [
+		projectDropdownElement(`${scope}-value-heading`, "div", {
+			className: "mh",
+			text: `${savedFilterFields.find(([field]) => field === filter.f)?.[1] || filter.f} ${filter.op === "not" ? "is not" : "is"}`,
+		}),
+		...filterOptions(filter).map((option) =>
+			filterValueToggleItem(filter, scope, index, option),
+		),
+	];
+}
+
+function filterBuilderDropdownItems(scope) {
+	const filters = filterListForScope(scope);
+	const editingIndex = filterEditIndexForScope(scope);
+	const items = [
+		projectDropdownElement(`${scope}-filter-heading`, "div", {
+			className: "mh fb-h",
+			items: [
+				projectDropdownElement(`${scope}-filter-heading-title`, "span", {
+					text: "Filter by",
+				}),
+				...(filters.length
+					? [
+							projectDropdownElement(`${scope}-filter-clear`, "button", {
+								className: "btn btn-ghost btn-sm",
+								text: "Clear all",
+								payload: scope,
+								events: { click: "clear-filters" },
+							}),
+						]
+					: []),
+			],
+		}),
+	];
+
+	if (filters.length) {
+		items.push(
+			projectDropdownElement(`${scope}-filter-rows`, "div", {
+				className: "fb-rows",
+				items: filters.flatMap((filter, index) => {
+					const filterOptionsForRow = filterOptions(filter);
+					const editing = editingIndex === index;
+					return [
+						projectDropdownElement(`${scope}-filter-row-${index}`, "div", {
+							className: "frow",
+							items: [
+								projectDropdownElement(
+									`${scope}-filter-conjunction-${index}`,
+									"span",
+									{ className: "conj", text: index ? "and" : "Where" },
+								),
+								projectDropdownElement(
+									`${scope}-filter-field-${index}`,
+									"select",
+									{
+										className: "select",
+										ariaLabel: "Field",
+										value: filter.f,
+										payload: `${scope}|${index}`,
+										events: { change: "set-filter-field" },
+										items: savedFilterFields.map(([field, label]) =>
+											projectDropdownElement(
+												`${scope}-field-option-${index}-${field}`,
+												"option",
+												{ value: field, text: label },
+											),
+										),
+									},
+								),
+								projectDropdownElement(
+									`${scope}-filter-operator-${index}`,
+									"select",
+									{
+										className: "select",
+										ariaLabel: "Operator",
+										value: filter.op,
+										payload: `${scope}|${index}`,
+										events: { change: "set-filter-operator" },
+										items: [
+											projectDropdownElement(
+												`${scope}-operator-is-${index}`,
+												"option",
+												{ value: "is", text: "is" },
+											),
+											projectDropdownElement(
+												`${scope}-operator-not-${index}`,
+												"option",
+												{ value: "not", text: "is not" },
+											),
+										],
+									},
+								),
+								projectDropdownElement(
+									`${scope}-filter-values-${index}`,
+									"button",
+									{
+										className: "valbtn",
+										ariaLabel: `Values for ${savedFilterFields.find(([field]) => field === filter.f)?.[1] || filter.f}`,
+										ariaExpanded: editing,
+										payload: `${scope}|${index}`,
+										events: { click: "toggle-filter-editor" },
+										items: [
+											projectDropdownElement(
+												`${scope}-filter-values-label-${index}`,
+												"span",
+												{
+													className: "trunc grow",
+													text: filter.v?.length
+														? filterOptionsForRow
+																.filter((option) =>
+																	filter.v.includes(String(option.id)),
+																)
+																.map((option) => option.name)
+																.join(", ")
+														: "Select…",
+												},
+											),
+											projectDropdownElement(
+												`${scope}-filter-values-chevron-${index}`,
+												"span",
+												{ icon: "chevron-down", iconSize: 12 },
+											),
+										],
+									},
+								),
+								projectDropdownElement(
+									`${scope}-filter-remove-${index}`,
+									"button",
+									{
+										className: "ibtn ibtn-xs",
+										ariaLabel: "Remove filter",
+										payload: `${scope}|${index}`,
+										icon: "trash-2",
+										iconSize: 13,
+										events: { click: "remove-filter" },
+									},
+								),
+							],
+						}),
+						...(editing
+							? [
+									projectDropdownElement(
+										`${scope}-filter-options-${index}`,
+										"div",
+										{
+											style:
+												"margin-left:50px;border:1px solid var(--border);border-radius:var(--r);padding:4px;max-height:200px;overflow:auto",
+											items: filterOptionsForRow.map((option) =>
+												filterValueToggleItem(filter, scope, index, option),
+											),
+										},
+									),
+								]
+							: []),
+					];
+				}),
+			}),
+		);
+	} else {
+		items.push(
+			projectDropdownElement(`${scope}-filter-empty`, "p", {
+				className: "fb-empty",
+				text: "No filters applied. Combine filters to narrow the task list, e.g. Status is In Progress and Assignee is Sarah.",
+			}),
+		);
+	}
+
+	items.push({ id: `${scope}-filter-separator`, type: "separator" });
+	items.push(
+		projectDropdownElement(`${scope}-filter-add`, "div", {
+			className: "fb-add",
+			items: [
+				projectDropdownElement(`${scope}-filter-add-label`, "span", {
+					className: "faint",
+					text: "Add filter:",
+				}),
+				...savedFilterFields.map(([field, label, icon]) =>
+					projectDropdownElement(`${scope}-filter-add-${field}`, "button", {
+						className: "badge",
+						style: "cursor:pointer",
+						icon,
+						iconSize: 11,
+						text: label,
+						payload: `${scope}|${field}`,
+						events: { click: "add-filter" },
+					}),
+				),
+			],
+		}),
+	);
+	return items;
+}
+
+function projectListSortDropdownItems() {
+	const options = [
+		["manual", "Manual"],
+		["priority", "Priority"],
+		["due", "Due date"],
+		["start", "Start date"],
+		["title", "Title"],
+		["status", "Status"],
+		["assignee", "Assignee"],
+		["created", "Created"],
+		["updated", "Last updated"],
+	];
+	return [
+		projectDropdownElement("project-list-sort-heading", "div", {
+			className: "mh",
+			text: "Sort by",
+		}),
+		...options.map(([value, label]) =>
+			projectDropdownAction(
+				`project-list-sort-${value}`,
+				"set-project-list-sort",
+				value,
+				label,
+				{
+					role: "menuitemradio",
+					checked: projectListSort === value,
+				},
+			),
+		),
+		{ id: "project-list-sort-separator", type: "separator" },
+		projectDropdownElement("project-list-sort-direction", "div", {
+			className: "seg",
+			style: "margin:6px",
+			items: [
+				projectDropdownElement("project-list-sort-ascending", "button", {
+					className: projectListSortDirection > 0 ? "on" : "",
+					icon: "arrow-up",
+					iconSize: 12,
+					text: "Ascending",
+					payload: 1,
+					events: { click: "set-project-list-sort-direction" },
+				}),
+				projectDropdownElement("project-list-sort-descending", "button", {
+					className: projectListSortDirection < 0 ? "on" : "",
+					icon: "arrow-down",
+					iconSize: 12,
+					text: "Descending",
+					payload: -1,
+					events: { click: "set-project-list-sort-direction" },
+				}),
+			],
+		}),
+	];
+}
+
+function projectListGroupDropdownItems() {
+	return [
+		["status", "Status"],
+		["priority", "Priority"],
+		["assignee", "Assignee"],
+		["project", "Project"],
+		["due", "Due date"],
+		["none", "None"],
+	].map(([value, label]) =>
+		projectDropdownAction(
+			`project-list-group-${value}`,
+			"set-project-list-group",
+			value,
+			label,
+			{
+				role: "menuitemradio",
+				checked: projectListGroup === value,
+			},
+		),
+	);
+}
+
+function projectTableColumnsDropdownItems() {
+	return [
+		projectDropdownElement("project-table-columns-heading", "div", {
+			className: "mh",
+			text: "Visible columns",
+		}),
+		...projectTableColumnDefinitions.slice(1).map(([field, label]) =>
+			projectDropdownElement(`project-table-column-${field}`, "label", {
+				className: "mi",
+				style: "cursor:pointer",
+				items: [
+					projectDropdownElement(
+						`project-table-column-input-${field}`,
+						"input",
+						{
+							elementType: "checkbox",
+							className: "check",
+							checked: !projectTableHidden.includes(field),
+							payload: field,
+							events: { change: "toggle-project-table-column" },
+						},
+					),
+					projectDropdownElement(
+						`project-table-column-label-${field}`,
+						"span",
+						{ text: label },
+					),
+				],
+			}),
+		),
+		{ id: "project-table-columns-separator", type: "separator" },
+		projectDropdownAction(
+			"project-table-column-reset",
+			"reset-project-table-column-widths",
+			null,
+			"Reset widths",
+			{ icon: "rotate-ccw", iconSize: 14 },
+		),
+	];
+}
+
+function tableCellDropdownItems(task) {
+	const field = tableCellMenu.field;
+	if (field === "priority") {
+		return [
+			projectDropdownElement("table-priority-heading", "div", {
+				className: "mh",
+				text: "Priority",
+			}),
+			...["urgent", "high", "medium", "low", "none"].map((priority) =>
+				projectDropdownAction(
+					`table-priority-${priority}`,
+					"set-table-priority",
+					priority,
+					priority === "none"
+						? "No priority"
+						: priority[0].toUpperCase() + priority.slice(1),
+					{
+						role: "menuitemradio",
+						checked: task.priority === priority,
+						graphic: { type: "priority", value: priority },
+					},
+				),
+			),
+		];
+	}
+
+	if (field === "assignee") {
+		const members = sourceMembers.filter(
+			(member) =>
+				member.database_id &&
+				member.name.toLowerCase().includes(tableCellQuery.trim().toLowerCase()),
+		);
+		return [
+			projectDropdownElement("table-assignee-heading", "div", {
+				className: "mh",
+				text: "Assign to",
+			}),
+			projectDropdownElement("table-assignee-search-wrap", "div", {
+				className: "pin",
+				items: [
+					projectDropdownElement("table-assignee-search", "input", {
+						ariaLabel: "Assign to…",
+						placeholder: "Assign to…",
+						value: tableCellQuery,
+						events: { input: "search-table-cell" },
+					}),
+				],
+			}),
+			projectDropdownAction(
+				"table-assignee-none",
+				"set-table-assignee",
+				null,
+				"Unassigned",
+				{
+					role: "menuitemradio",
+					checked: !task.assignee_id,
+					icon: "user-round",
+				},
+			),
+			...members.map((member) =>
+				projectDropdownAction(
+					`table-assignee-${member.database_id}`,
+					"set-table-assignee",
+					member.database_id,
+					member.name,
+					{
+						role: "menuitemradio",
+						checked: String(task.assignee_id) === String(member.database_id),
+						graphic: {
+							type: "avatar",
+							initials: memberInitials(member.name),
+							color: member.c || "#8A867E",
+						},
+					},
+				),
+			),
+		];
+	}
+
+	if (field === "due" || field === "start") {
+		const property = field === "due" ? "due_date" : "start_date";
+		return [
+			projectDropdownElement("table-date-heading", "div", {
+				className: "mh",
+				text: field === "due" ? "Due date" : "Start date",
+			}),
+			projectDropdownElement("table-date-shortcuts", "div", {
+				className: "row",
+				style: "gap:4px;padding:4px;flex-wrap:wrap",
+				items: [
+					...[
+						["Today", 0],
+						["Tomorrow", 1],
+						["Next week", 7],
+						["In 2 weeks", 14],
+					].map(([label, days]) =>
+						projectDropdownElement(`table-date-shortcut-${days}`, "button", {
+							className: "badge",
+							text: label,
+							payload: tableQuickDate(days),
+							events: { click: "set-table-date" },
+						}),
+					),
+					...(task[property]
+						? [
+								projectDropdownElement("table-date-clear", "button", {
+									className: "badge",
+									text: "Clear",
+									payload: "",
+									events: { click: "set-table-date" },
+								}),
+							]
+						: []),
+				],
+			}),
+			{ id: "table-date-separator", type: "separator" },
+			projectDropdownElement("table-date-input-wrap", "div", {
+				className: "pin",
+				items: [
+					projectDropdownElement("table-date-input", "input", {
+						elementType: "date",
+						ariaLabel: field === "due" ? "Due date" : "Start date",
+						value: String(task[property] || "").slice(0, 10),
+						events: { change: "set-table-date-input" },
+					}),
+				],
+			}),
+		];
+	}
+
+	if (field === "labels") {
+		return [
+			projectDropdownElement("table-labels-heading", "div", {
+				className: "mh",
+				text: "Labels",
+			}),
+			projectDropdownElement("table-labels-search-wrap", "div", {
+				className: "pin",
+				items: [
+					projectDropdownElement("table-labels-search", "input", {
+						ariaLabel: "Filter labels…",
+						placeholder: "Filter labels…",
+						value: tableCellQuery,
+						events: { input: "search-table-cell" },
+					}),
+				],
+			}),
+			...LABELS.filter((label) =>
+				label.name.toLowerCase().includes(tableCellQuery.trim().toLowerCase()),
+			).map((label) =>
+				projectDropdownElement(`table-label-${label.id}`, "label", {
+					className: "mi",
+					style: "cursor:pointer",
+					items: [
+						projectDropdownElement(`table-label-input-${label.id}`, "input", {
+							elementType: "checkbox",
+							className: "check",
+							checked: (task.labels || []).includes(label.id),
+							payload: label.id,
+							events: { change: "toggle-table-label" },
+						}),
+						projectDropdownElement(`table-label-name-${label.id}`, "span", {
+							text: label.name,
+						}),
+					],
+				}),
+			),
+		];
+	}
+
+	const dependencies = tasks.filter(
+		(item) =>
+			item.id !== task.id &&
+			`${item.key} ${item.title}`
+				.toLowerCase()
+				.includes(tableCellQuery.trim().toLowerCase()),
+	);
+	return [
+		projectDropdownElement("table-dependencies-heading", "div", {
+			className: "mh",
+			text: "Dependencies",
+		}),
+		projectDropdownElement("table-dependencies-search-wrap", "div", {
+			className: "pin",
+			items: [
+				projectDropdownElement("table-dependencies-search", "input", {
+					ariaLabel: "Search tasks…",
+					placeholder: "Search tasks…",
+					value: tableCellQuery,
+					events: { input: "search-table-cell" },
+				}),
+			],
+		}),
+		...dependencies.map((dependency) =>
+			projectDropdownElement(`table-dependency-${dependency.id}`, "label", {
+				className: "mi",
+				style: "cursor:pointer",
+				items: [
+					projectDropdownElement(
+						`table-dependency-input-${dependency.id}`,
+						"input",
+						{
+							elementType: "checkbox",
+							className: "check",
+							checked: (task.dependencies || []).includes(
+								dependency.source_key,
+							),
+							payload: dependency.source_key,
+							events: { change: "toggle-table-dependency" },
+						},
+					),
+					projectDropdownElement(
+						`table-dependency-label-${dependency.id}`,
+						"span",
+						{ text: `${dependency.key} · ${dependency.title}` },
+					),
+				],
+			}),
+		),
+	];
+}
+
+function handleProjectDropdownAction(action, item, context) {
+	if (action === "set-project-status" && typeof item.payload === "string")
+		void changeProjectStatus(item.payload);
+	if (action === "add-filter" && typeof item.payload === "string") {
+		const [scope, field] = item.payload.split("|");
+		if (scope === "saved") addSavedFilter(field);
+		else addProjectListFilter(field);
+	}
+	if (action === "clear-filters" && typeof item.payload === "string") {
+		if (item.payload === "saved") clearSavedViewFilters();
+		else clearProjectListFilters();
+	}
+	if (
+		action === "set-filter-field" &&
+		typeof item.payload === "string" &&
+		typeof context?.value === "string"
+	) {
+		const [scope, indexValue] = item.payload.split("|");
+		const index = Number(indexValue);
+		if (scope === "saved") {
+			updateSavedViewFilter(index, { f: context.value, v: [] });
+			savedFilterEditIndex = index;
+		} else {
+			updateProjectListFilter(index, { f: context.value, v: [] });
+			projectListFilterEditIndex = index;
+		}
+	}
+	if (
+		action === "set-filter-operator" &&
+		typeof item.payload === "string" &&
+		typeof context?.value === "string"
+	) {
+		const [scope, indexValue] = item.payload.split("|");
+		const index = Number(indexValue);
+		if (scope === "saved") updateSavedViewFilter(index, { op: context.value });
+		else updateProjectListFilter(index, { op: context.value });
+	}
+	if (action === "toggle-filter-editor" && typeof item.payload === "string") {
+		const [scope, indexValue] = item.payload.split("|");
+		const index = Number(indexValue);
+		if (scope === "saved")
+			savedFilterEditIndex = savedFilterEditIndex === index ? null : index;
+		else {
+			projectListFilterEditIndex =
+				projectListFilterEditIndex === index ? null : index;
+			projectListValueOpenIndex = null;
+		}
+	}
+	if (action === "remove-filter" && typeof item.payload === "string") {
+		const [scope, indexValue] = item.payload.split("|");
+		if (scope === "saved") removeSavedViewFilter(Number(indexValue));
+		else removeProjectListFilter(Number(indexValue));
+	}
+	if (action === "toggle-filter-value" && typeof item.payload === "string") {
+		const [scope, indexValue, value] = item.payload.split("|");
+		if (scope === "saved")
+			toggleSavedViewFilterValue(Number(indexValue), value);
+		else toggleProjectListFilterValue(Number(indexValue), value);
+	}
+	if (action === "set-project-list-sort" && typeof item.payload === "string")
+		projectListSort = item.payload;
+	if (
+		action === "set-project-list-sort-direction" &&
+		typeof item.payload === "number"
+	)
+		projectListSortDirection = item.payload;
+	if (action === "set-project-list-group" && typeof item.payload === "string") {
+		projectListGroup = item.payload;
+		projectListMenu = null;
+	}
+	if (
+		action === "toggle-project-table-column" &&
+		typeof item.payload === "string"
+	)
+		toggleProjectTableColumn(item.payload);
+	if (action === "reset-project-table-column-widths")
+		resetProjectTableColumnWidths();
+	if (action === "set-table-priority" && typeof item.payload === "string") {
+		const task = tasks.find(
+			(candidate) => candidate.id === tableCellMenu?.taskId,
+		);
+		if (task) void updateTableTask(task, { priority: item.payload });
+	}
+	if (action === "search-table-cell")
+		tableCellQuery = String(context?.value ?? "");
+	if (action === "set-table-assignee") {
+		const task = tasks.find(
+			(candidate) => candidate.id === tableCellMenu?.taskId,
+		);
+		if (task) void updateTableTask(task, { assignee_id: item.payload });
+	}
+	if (action === "set-table-date" && typeof item.payload === "string") {
+		const task = tasks.find(
+			(candidate) => candidate.id === tableCellMenu?.taskId,
+		);
+		if (task) setTableTaskDate(task, tableCellMenu.field, item.payload);
+	}
+	if (action === "set-table-date-input") {
+		const task = tasks.find(
+			(candidate) => candidate.id === tableCellMenu?.taskId,
+		);
+		if (task)
+			setTableTaskDate(task, tableCellMenu.field, String(context?.value ?? ""));
+	}
+	if (action === "toggle-table-label" && typeof item.payload === "string") {
+		const task = tasks.find(
+			(candidate) => candidate.id === tableCellMenu?.taskId,
+		);
+		if (task) toggleTableTaskValue(task, "labels", item.payload);
+	}
+	if (
+		action === "toggle-table-dependency" &&
+		typeof item.payload === "string"
+	) {
+		const task = tasks.find(
+			(candidate) => candidate.id === tableCellMenu?.taskId,
+		);
+		if (task) toggleTableTaskValue(task, "dependencies", item.payload);
+	}
+	if (action === "choose-status" && typeof item.payload === "string") {
+		const task = tasks.find((candidate) => candidate.id === statusMenu?.taskId);
+		if (task) void chooseStatus(task, item.payload);
+	}
+	if (
+		action === "file-action" &&
+		typeof item.payload === "string" &&
+		fileMenu
+	) {
+		const file = fileMenu;
+		fileMenu = null;
+		if (item.payload === "preview") selectedFile = file;
+		if (item.payload === "rename") {
+			fileRenameTarget = file;
+			fileRenameName = file.name;
+		}
+		if (item.payload === "copy") void copyProjectFileLink(file);
+		if (item.payload === "duplicate") duplicateProjectFile(file);
+		if (item.payload === "delete") fileDeleteTarget = file;
+	}
+}
+
+function projectFileMenuItems() {
+	return [
+		projectDropdownAction("file-preview", "file-action", "preview", "Preview", {
+			icon: "eye",
+		}),
+		projectDropdownAction("file-rename", "file-action", "rename", "Rename", {
+			icon: "pencil",
+		}),
+		projectDropdownAction(
+			"file-copy-link",
+			"file-action",
+			"copy",
+			"Copy link",
+			{ icon: "link" },
+		),
+		projectDropdownAction(
+			"file-duplicate",
+			"file-action",
+			"duplicate",
+			"Duplicate",
+			{ icon: "copy" },
+		),
+		{ id: "file-menu-separator", type: "separator" },
+		projectDropdownAction("file-delete", "file-action", "delete", "Delete", {
+			icon: "trash-2",
+			danger: true,
+		}),
+	];
+}
+
+async function toggleSavedFilterBuilder(event, editIndex = null) {
+	if (savedFilterOpen) {
+		savedFilterOpen = false;
+		return;
+	}
+	const bounds = event.currentTarget.getBoundingClientRect();
+	const width = Math.min(560, window.innerWidth - 16);
+	savedValueOpenIndex = null;
+	savedFilterPosition = {
+		left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
+		top: Math.max(8, bounds.bottom + 4),
+	};
+	savedFilterEditIndex = editIndex;
+	savedFilterOpen = true;
+	await tick();
+	const popup = document.querySelector("[data-saved-filter-builder]");
+	if (!popup) return;
+	const height = popup.getBoundingClientRect().height;
+	savedFilterPosition = {
+		left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
+		top:
+			bounds.bottom + height > window.innerHeight - 8
+				? Math.max(8, bounds.top - height - 4)
+				: bounds.bottom + 4,
+	};
+}
+
+function addSavedFilter(field) {
+	setSavedViewFilters([...savedViewFilters, { f: field, op: "is", v: [] }]);
+	savedFilterEditIndex = savedViewFiltersDraft.length - 1;
+	savedFilterOpen = true;
+}
+
+function clearSavedViewFilters() {
+	setSavedViewFilters([]);
+	savedViewQuery = "";
+	savedFilterOpen = false;
+	savedValueOpenIndex = null;
+}
+
+function taskSnapshot(task) {
+	return sourceTasks.find(
+		(item) => item.database_id === task.id || item.id === task.source_key,
+	);
+}
+
+function taskComments(task) {
+	const sourceTask = taskSnapshot(task);
+	return sourceTask
+		? (workspaceData.comments || []).filter(
+				(comment) => comment.task === sourceTask.id,
+			).length
+		: 0;
+}
+
+function cardSubtasks(task) {
+	const sourceTask = taskSnapshot(task);
+	return task.subtasks?.length ? task.subtasks : sourceTask?.subtasks || [];
+}
+
+function cardAttachments(task) {
+	const sourceTask = taskSnapshot(task);
+	return task.attachments?.length
+		? task.attachments
+		: sourceTask?.attachments || [];
+}
+
+function cardLabels(task) {
+	const sourceTask = taskSnapshot(task);
+	return task.labels?.length ? task.labels : sourceTask?.labels || [];
+}
+
+function cardKey(task) {
+	return task.key || taskSnapshot(task)?.key || task.source_key || "";
+}
+
+function cardDue(task) {
+	const dueDate = task.due_date || taskSnapshot(task)?.due;
+	return dueDate ? formatDate(dueDate) : "";
+}
+
+async function changeStatus(task, nextStatus) {
+	if (task.status === nextStatus) return;
+	errorMessage = "";
+	try {
+		const updated = await httpRequest(taskUpdate(task.id).url, "PATCH", {
+			status: nextStatus,
+		});
+		tasks = tasks.map((item) =>
+			item.id === updated.id ? { ...item, ...updated } : item,
+		);
+	} catch (error) {
+		errorMessage = error.message;
+	}
+}
+
+function formatDate(value) {
+	if (!value) return "";
+	return new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString(
+		"en-US",
+		{ month: "short", day: "numeric" },
+	);
+}
+
+function uploadProjectFiles(files) {
+	if (!files.length) return;
+	if (S.ui.offline) {
+		toast("Upload failed — you're offline.", {
+			kind: "err",
+			action: "Try again",
+			onAction: () => {},
+		});
+		return;
+	}
+	for (const file of files) {
+		const upload = {
+			id: uid("u"),
+			name: file.name,
+			size: fsize(file.size),
+			type: getFileType(file.name),
+			pct: 0,
+		};
+		uploadingProjectFiles = [...uploadingProjectFiles, upload];
+		const timer = window.setInterval(() => {
+			const nextPct = Math.min(100, upload.pct + 18);
+			upload.pct = nextPct;
+			uploadingProjectFiles = uploadingProjectFiles.map((item) =>
+				item.id === upload.id ? { ...item, pct: nextPct } : item,
+			);
+			if (nextPct < 100) return;
+			window.clearInterval(timer);
+			projectUploadTimers.delete(upload.id);
+			uploadingProjectFiles = uploadingProjectFiles.filter(
+				(item) => item.id !== upload.id,
+			);
+			const record = {
+				id: uid("f"),
+				name: upload.name,
+				type: upload.type,
+				size: upload.size,
+				by: workspaceData.me,
+				at: Date.now(),
+				project: sourceProject?.id,
+				task: null,
+			};
+			S.data.files.unshift(record);
+			saveWorkspaceStore();
+			projectFileRecords = [record, ...projectFileRecords];
+			toast(`Uploaded ${upload.name}`);
+		}, 220);
+		projectUploadTimers.set(upload.id, timer);
+	}
+}
+
+function handleProjectFileSelection(event) {
+	uploadProjectFiles([...event.currentTarget.files]);
+	event.currentTarget.value = "";
+}
+
+function handleProjectFileDrop(event) {
+	event.preventDefault();
+	event.currentTarget.classList.remove("over");
+	uploadProjectFiles([...event.dataTransfer.files]);
+}
+
+function openFileMenu(event, file) {
+	event.stopPropagation();
+	if (fileMenu?.id === file.id) {
+		fileMenu = null;
+		return;
+	}
+	const bounds = event.currentTarget.getBoundingClientRect();
+	fileMenuPosition = {
+		left: Math.max(8, Math.min(bounds.right - 24, window.innerWidth - 208)),
+		top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 200)),
+	};
+	fileMenu = file;
+}
+
+function renameProjectFile(event) {
+	event.preventDefault();
+	if (!fileRenameTarget || !fileRenameName.trim()) return;
+	const file = S.data.files.find((item) => item.id === fileRenameTarget.id);
+	if (!file) return;
+	file.name = fileRenameName.trim();
+	file.type = getFileType(file.name);
+	projectFileRecords = projectFileRecords.map((item) =>
+		item.id === file.id ? { ...item, name: file.name, type: file.type } : item,
+	);
+	saveWorkspaceStore();
+	fileRenameTarget = null;
+	toast("Changes saved");
+}
+
+function duplicateProjectFile(file) {
+	const originalIndex = S.data.files.findIndex((item) => item.id === file.id);
+	if (originalIndex < 0) return;
+	const duplicate = {
+		...S.data.files[originalIndex],
+		id: uid("f"),
+		name: file.name.replace(/(\.[^.]+)$/, " copy$1"),
+		at: Date.now(),
+		by: S.data.me,
+	};
+	S.data.files.splice(originalIndex + 1, 0, duplicate);
+	projectFileRecords = [
+		...projectFileRecords.slice(0, originalIndex + 1),
+		duplicate,
+		...projectFileRecords.slice(originalIndex + 1),
+	];
+	saveWorkspaceStore();
+	toast("File duplicated");
+}
+
+async function copyProjectFileLink(file) {
+	const url = `https://gr8rstudio.com/${S.data.ws.url}/file/${file.id}`;
+	try {
+		await navigator.clipboard.writeText(url);
+		toast("Link copied");
+	} catch {
+		toast(`Copy isn't available here — ${url}`, { kind: "info", ms: 6000 });
+	}
+}
+
+function deleteProjectFile() {
+	if (!fileDeleteTarget) return;
+	const deletedFile = { ...fileDeleteTarget };
+	const fileName = deletedFile.name;
+	S.data.files = S.data.files.filter((file) => file.id !== fileDeleteTarget.id);
+	if (deletedFile.task) {
+		const task = S.data.tasks.find((item) => item.id === deletedFile.task);
+		if (task)
+			task.attachments = task.attachments.filter(
+				(attachment) => attachment.name !== fileName,
+			);
+	}
+	projectFileRecords = projectFileRecords.filter(
+		(file) => file.id !== fileDeleteTarget.id,
+	);
+	saveWorkspaceStore();
+	fileDeleteTarget = null;
+	toast(`Deleted ${fileName}`, {
+		action: "Undo",
+		onAction: () => {
+			S.data.files.push(deletedFile);
+			if (deletedFile.task) {
+				const task = S.data.tasks.find((item) => item.id === deletedFile.task);
+				if (
+					task &&
+					!task.attachments.some((attachment) => attachment.name === fileName)
+				)
+					task.attachments.push(deletedFile);
+			}
+			projectFileRecords = [...projectFileRecords, deletedFile];
+			saveWorkspaceStore();
+		},
+	});
+}
+
+function toggleProjectTableColumn(field) {
+	projectTableHidden = projectTableHidden.includes(field)
+		? projectTableHidden.filter((hiddenField) => hiddenField !== field)
+		: [...projectTableHidden, field];
+	S.views[projectTableViewKey] ??= {
+		filters: [],
+		sort: { f: "manual", dir: 1 },
+		group: "status",
+		q: "",
+		hidden: [],
+		colW: {},
+		showDone: true,
+	};
+	S.views[projectTableViewKey].hidden = [...projectTableHidden];
+	saveWorkspaceStore();
+}
+
+function resetProjectTableColumnWidths() {
+	projectTableColumnWidths = {};
+	S.views[projectTableViewKey] ??= {
+		filters: [],
+		sort: { f: "manual", dir: 1 },
+		group: "status",
+		q: "",
+		hidden: [...projectTableHidden],
+		colW: {},
+		showDone: true,
+	};
+	S.views[projectTableViewKey].colW = {};
+	saveWorkspaceStore();
+	projectListMenu = null;
+}
+
+function startProjectTableColumnResize(event, field) {
+	event.preventDefault();
+	event.stopPropagation();
+	const startX = event.clientX;
+	const startWidth =
+		projectTableColumns.find(([column]) => column === field)?.[2] || 112;
+	const resize = (moveEvent) => {
+		projectTableColumnWidths = {
+			...projectTableColumnWidths,
+			[field]: Math.max(64, startWidth + moveEvent.clientX - startX),
+		};
+	};
+	const finish = () => {
+		window.removeEventListener("pointermove", resize);
+		window.removeEventListener("pointerup", finish);
+		S.views[projectTableViewKey] ??= {
+			filters: [],
+			sort: { f: "manual", dir: 1 },
+			group: "status",
+			q: "",
+			hidden: [...projectTableHidden],
+			colW: {},
+			showDone: true,
+		};
+		S.views[projectTableViewKey].colW = Object.fromEntries(
+			Object.entries(projectTableColumnWidths).map(([column, width]) => [
+				column,
+				Math.round(width),
+			]),
+		);
+		saveWorkspaceStore();
+	};
+	window.addEventListener("pointermove", resize);
+	window.addEventListener("pointerup", finish, { once: true });
+}
+
+function formatLongDate(value) {
+	if (!value) return "—";
+	return fmtDate(value.slice(0, 10), true);
+}
+
+function openOverviewStatus(status) {
+	projectOverviewStatusFilter = status;
+	tab = "list";
+}
+
+function openProjectTab(nextTab) {
+	if (nextTab !== "list") projectOverviewStatusFilter = "";
+	tab = nextTab;
+}
+
+function openTaskFromOverview(task) {
+	drawerTaskId = task.id;
+}
+
+function daysUntil(value) {
+	if (!value) return null;
+	const due = new Date(`${value.slice(0, 10)}T00:00:00`);
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
+	return Math.floor((due - today) / 86400000);
+}
+
+function memberInitials(name) {
+	return name
+		.split(" ")
+		.map((part) => part[0])
+		.join("")
+		.slice(0, 2);
+}
+
+async function toggleFavorite() {
+	try {
+		const updated = await httpRequest(
+			projectFavorite(project.id).url,
+			"PATCH",
+			{},
+		);
+		isFavorite = updated.is_favorite;
+		project.is_favorite = updated.is_favorite;
+	} catch (error) {
+		errorMessage = error.message;
+	}
+}
+
+function openProjectStatusMenu(event) {
+	const bounds = event.currentTarget.getBoundingClientRect();
+	const width = 190;
+	projectStatusMenu = {
+		left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
+		top: Math.max(8, bounds.bottom + 4),
+	};
+}
+
+function toggleProjectMore(event) {
+	if (projectMoreOpen) {
+		projectMoreOpen = false;
+		return;
+	}
+
+	const bounds = event.currentTarget.getBoundingClientRect();
+	projectMorePosition = {
+		left: Math.max(8, Math.min(bounds.right - 200, window.innerWidth - 208)),
+		top: Math.max(8, bounds.bottom + 4),
+	};
+	projectMoreOpen = true;
+}
+
+async function changeProjectStatus(status) {
+	projectStatusMenu = null;
+	await updateProject({ status });
+}
+
+async function updateProject(changes) {
+	projectDialogError = "";
+	try {
+		const updated = await httpRequest(
+			projectUpdate(project.id).url,
+			"PATCH",
+			changes,
+		);
+		Object.assign(project, updated);
+		return true;
+	} catch (error) {
+		projectDialogError = error.errors?.name?.[0] || error.message;
+		return false;
+	}
+}
+
+function openProjectSettings() {
+	projectForm = {
+		name: project.name,
+		description: project.description || "",
+		status: project.status?.value || project.status,
+		start_date: project.start_date ? project.start_date.slice(0, 10) : "",
+		due_date: project.due_date ? project.due_date.slice(0, 10) : "",
+	};
+	projectDialogError = "";
+	editDialogOpen = true;
+	projectMoreOpen = false;
+}
+
+async function saveProjectSettings(event) {
+	event.preventDefault();
+	projectDialogBusy = true;
+	if (await updateProject(projectForm)) editDialogOpen = false;
+	projectDialogBusy = false;
+}
+
+function openProjectMembers() {
+	selectedMemberIds = (project.members || []).map((member) => member.id);
+	memberQuery = "";
+	memberDialogError = "";
+	membersDialogOpen = true;
+	projectMoreOpen = false;
+}
+
+function openProjectConfirmation(action) {
+	projectMoreOpen = false;
+	projectConfirmationText = "";
+	projectConfirmation = action;
+}
+
+async function runProjectMoreAction(action) {
+	projectMoreOpen = false;
+
+	if (action === "duplicate") {
+		try {
+			const copy = await httpRequest(
+				projectDuplicate(project.id).url,
+				"POST",
+				{},
+			);
+			toast(`Duplicated ${project.name}`, {
+				action: "Open",
+				onAction: () => router.visit(projectShow(copy.id).url),
+			});
+			router.reload({ preserveScroll: true });
+		} catch (error) {
+			errorMessage = error.message;
+		}
+		return;
+	}
+
+	if (action === "copy") {
+		const link = `https://gr8rstudio.com/${S.data.ws.url}/project/${project.key.toLowerCase()}`;
+		try {
+			await navigator.clipboard.writeText(link);
+			toast("Link copied");
+		} catch {
+			toast(`Copy isn't available here — ${link}`, { kind: "info", ms: 6000 });
+		}
+		return;
+	}
+
+	if (action === "move-up" || action === "move-down") {
+		const sourceProjectId = project.source_key;
+		const order = S.data.projOrder || [];
+		const currentIndex = order.indexOf(sourceProjectId);
+		const nextIndex =
+			action === "move-up" ? currentIndex - 1 : currentIndex + 1;
+		if (currentIndex >= 0 && nextIndex >= 0 && nextIndex < order.length) {
+			const nextOrder = [...order];
+			[nextOrder[currentIndex], nextOrder[nextIndex]] = [
+				nextOrder[nextIndex],
+				nextOrder[currentIndex],
+			];
+			S.data.projOrder = nextOrder;
+			saveWorkspaceStore();
+		}
+		return;
+	}
+
+	openProjectConfirmation(action);
+}
+
+async function confirmProjectAction() {
+	const action = projectConfirmation;
+	if (!action || projectConfirmationBusy) return;
+	if (action === "delete" && projectConfirmationText !== project.name) return;
+
+	projectConfirmationBusy = true;
+	errorMessage = "";
+
+	try {
+		if (action === "archive") {
+			await httpRequest(projectUpdate(project.id).url, "PATCH", {
+				status: "archived",
+			});
+			toast(`Archived ${project.name}`);
+		} else {
+			await httpRequest(projectDestroy(project.id).url, "DELETE", {});
+			toast(`Deleted ${project.name}`);
+		}
+		projectConfirmation = null;
+		router.visit(projectsIndex().url);
+	} catch (error) {
+		errorMessage = error.message;
+	} finally {
+		projectConfirmationBusy = false;
+	}
+}
+
+function toggleProjectMember(memberId) {
+	selectedMemberIds = selectedMemberIds.includes(memberId)
+		? selectedMemberIds.filter((id) => id !== memberId)
+		: [...selectedMemberIds, memberId];
+}
+
+async function saveProjectMembers() {
+	memberDialogError = "";
+	projectDialogBusy = true;
+	try {
+		const result = await httpRequest(
+			projectMembersUpdate(project.id).url,
+			"PUT",
+			{ members: selectedMemberIds },
+		);
+		project.members = result.members;
+		membersDialogOpen = false;
+	} catch (error) {
+		memberDialogError = error.errors?.members?.[0] || error.message;
+	} finally {
+		projectDialogBusy = false;
+	}
+}
 </script>
 
 <svelte:head><title>{tab === 'overview' ? 'Overview' : selectedSavedView?.name || statusName(tab)} · {project.name}</title></svelte:head>
@@ -1145,16 +2555,45 @@
         </div>
       </div>
       {#if projectStatusMenu}
-        <Dropdown class="pop enter" data-project-status-menu role="menu" style={`left:${projectStatusMenu.left}px;top:${projectStatusMenu.top}px;width:190px`}>
-          {#each Object.entries(PSTAT) as [status, details] (status)}<button type="button" class="mi" role="menuitemradio" aria-checked={project.status === status} onclick={() => changeProjectStatus(status)}><span class="pdot" style={`--c:${details.c};border-radius:50%;width:8px;height:8px`}></span><span>{details.name}</span>{#if project.status === status}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
-        </Dropdown>
+        <Dropdown
+          config={{
+            className: 'pop enter', dataAttributes: { 'data-project-status-menu': true }, role: 'menu',
+            style: `left:${projectStatusMenu.left}px;top:${projectStatusMenu.top}px;width:190px`,
+            items: Object.entries(PSTAT).map(([status, details]) => ({
+              id: `project-status-${status}`, type: 'element', tag: 'button', className: 'mi', role: 'menuitemradio',
+              ariaChecked: project.status === status, payload: status, events: { click: 'set-project-status' },
+              items: [
+                { id: `project-status-dot-${status}`, type: 'element', tag: 'span', className: 'pdot', style: `--c:${details.c};border-radius:50%;width:8px;height:8px` },
+                { id: `project-status-label-${status}`, type: 'element', tag: 'span', text: details.name },
+                ...(project.status === status ? [{ id: `project-status-check-${status}`, type: 'element', tag: 'span', className: 'ck', icon: 'check', iconSize: 14 }] : []),
+              ],
+            })),
+          }}
+          onAction={handleProjectDropdownAction}
+        />
       {/if}
       {#if projectMoreOpen}
-        <Dropdown class="pop enter" data-project-more-menu role="menu" style={`left:${projectMorePosition.left}px;top:${projectMorePosition.top}px;width:200px`}>
-          <button type="button" class="mi" role="menuitem" onclick={openProjectSettings}>{@html ic('pencil', 14)}<span>Rename &amp; edit</span></button>
-          <button type="button" class="mi" role="menuitem" onclick={openProjectMembers}>{@html ic('share-2', 14)}<span>Share project</span></button>
-          <button type="button" class="mi" role="menuitem" onclick={() => { projectMoreOpen = false; toggleFavorite(); }}>{@html ic('star', 14)}<span>{isFavorite ? 'Remove from favorites' : 'Add to favorites'}</span></button>
-        </Dropdown>
+        <Dropdown
+          config={{
+            className: 'pop enter',
+            dataAttributes: { 'data-project-more-menu': true },
+            role: 'menu',
+            style: `left:${projectMorePosition.left}px;top:${projectMorePosition.top}px;width:200px`,
+            items: [
+              { id: 'rename-edit', type: 'action', action: 'rename', label: 'Rename & edit', icon: 'pencil', iconSize: 14 },
+              { id: 'share-project', type: 'action', action: 'share', label: 'Share project', icon: 'share-2', iconSize: 14 },
+              { id: 'toggle-favorite', type: 'action', action: 'toggle-favorite', label: isFavorite ? 'Remove from favorites' : 'Add to favorites', icon: 'star', iconSize: 14 },
+            ],
+          }}
+          onAction={action => {
+            if (action === 'rename') openProjectSettings();
+            if (action === 'share') openProjectMembers();
+            if (action === 'toggle-favorite') {
+              projectMoreOpen = false;
+              toggleFavorite();
+            }
+          }}
+        />
       {/if}
       <nav class="tabs" aria-label="Project views">
         {#each [['overview', 'Overview', 'layout-dashboard'], ['board', 'Board', 'square-kanban'], ['list', 'List', 'list'], ['table', 'Table', 'table-2'], ['calendar', 'Calendar', 'calendar'], ['timeline', 'Timeline', 'chart-gantt'], ['files', 'Files', 'paperclip'], ['activity', 'Activity', 'activity']] as [id, label, icon]}
@@ -1179,33 +2618,26 @@
         </div>
         {#if savedViewFilters.length}<div class="chipsbar">{@html ic('list-filter', 13)}{#each savedViewFilters as filter, index (index)}<span class="chip"><button type="button" data-saved-filter-value-trigger aria-haspopup="menu" aria-expanded={savedValueOpenIndex === index} onclick={event => toggleSavedValuePopover(event, index)}>{@html ic(savedFilterFields.find(([field]) => field === filter.f)?.[2] || 'list-filter', 12)}<b>{savedFilterFields.find(([field]) => field === filter.f)?.[1] || filter.f}</b> {filter.op === 'not' ? 'is not' : 'is'} <span>{filter.v?.length ? filterOptions(filter).filter(option => filter.v.includes(String(option.id))).map(option => option.name).join(', ') : 'any'}</span></button><button class="ibtn" type="button" aria-label="Remove filter" onclick={() => removeSavedViewFilter(index)}>{@html ic('x', 12)}</button></span>{#if index < savedViewFilters.length - 1}<span class="muted">and</span>{/if}{/each}<Button type="button" variant="ghost" size="sm" data-saved-filter-trigger aria-haspopup="dialog" aria-expanded={savedFilterOpen} onclick={event => toggleSavedFilterBuilder(event)}>{@html ic('plus', 12)}Add</Button><span class="sp"></span><Button type="button" variant="ghost" size="sm" onclick={clearSavedViewFilters}>Clear all</Button></div>{/if}
         {#if savedFilterOpen}
-          <Dropdown class="pop enter fbuild" data-saved-filter-builder role="dialog" aria-label="Filter by" style={`left:${savedFilterPosition.left}px;top:${savedFilterPosition.top}px;width:${Math.min(560, window.innerWidth - 16)}px;max-width:${Math.min(560, window.innerWidth - 16)}px`}>
-            <div class="mh fb-h">Filter by{#if savedViewFilters.length}<Button type="button" variant="ghost" size="sm" onclick={clearSavedViewFilters}>Clear all</Button>{/if}</div>
-            {#if savedViewFilters.length}
-              <div class="fb-rows">
-                {#each savedViewFilters as filter, index (index)}
-                  <div class="frow">
-                    <span class="conj">{index ? 'and' : 'Where'}</span>
-                    <Select class="select" aria-label="Field" value={filter.f} onchange={event => { updateSavedViewFilter(index, { f: event.currentTarget.value, v: [] }); savedFilterEditIndex = index; }}>
-                      {#each savedFilterFields as [field, label] (field)}<option value={field}>{label}</option>{/each}
-                    </Select>
-                    <Select class="select" aria-label="Operator" value={filter.op} onchange={event => updateSavedViewFilter(index, { op: event.currentTarget.value })}><option value="is">is</option><option value="not">is not</option></Select>
-                    <button type="button" class="valbtn" aria-label={`Values for ${savedFilterFields.find(([field]) => field === filter.f)?.[1] || filter.f}`} aria-expanded={savedFilterEditIndex === index} onclick={() => savedFilterEditIndex = savedFilterEditIndex === index ? null : index}><span class="trunc grow">{#if filter.v.length}{filterOptions(filter).filter(option => filter.v.includes(String(option.id))).map(option => option.name).join(', ')}{:else}<span class="faint">Select…</span>{/if}</span>{@html ic('chevron-down', 12)}</button>
-                    <button type="button" class="ibtn ibtn-xs" aria-label="Remove filter" onclick={() => removeSavedViewFilter(index)}>{@html ic('trash-2', 13)}</button>
-                  </div>
-                  {#if savedFilterEditIndex === index}<div style="margin-left:50px;border:1px solid var(--border);border-radius:var(--r);padding:4px;max-height:200px;overflow:auto">{#each filterOptions(filter) as option (option.id)}<label class="mi" style="cursor:pointer;min-height:28px"><input type="checkbox" class="check" checked={filter.v.includes(String(option.id))} onchange={() => toggleSavedViewFilterValue(index, String(option.id))} />{option.name}</label>{/each}</div>{/if}
-                {/each}
-              </div>
-            {:else}<p class="fb-empty">No filters applied. Combine filters to narrow the task list, e.g. Status is In Progress and Assignee is Sarah.</p>{/if}
-            <div class="msep"></div><div class="fb-add"><span class="faint">Add filter:</span>{#each savedFilterFields as [field, label, icon] (field)}<button type="button" class="badge" style="cursor:pointer" onclick={() => addSavedFilter(field)}>{@html ic(icon, 11)}{label}</button>{/each}</div>
-          </Dropdown>
+          <Dropdown
+            config={{
+              className: 'pop enter fbuild', dataAttributes: { 'data-saved-filter-builder': true }, role: 'dialog', label: 'Filter by',
+              style: `left:${savedFilterPosition.left}px;top:${savedFilterPosition.top}px;width:${Math.min(560, window.innerWidth - 16)}px;max-width:${Math.min(560, window.innerWidth - 16)}px`,
+              items: filterBuilderDropdownItems('saved'),
+            }}
+            onAction={handleProjectDropdownAction}
+          />
         {/if}
         {#if savedValueOpenIndex !== null && savedViewFilters[savedValueOpenIndex]}
           {@const valueFilter = savedViewFilters[savedValueOpenIndex]}
-          <Dropdown class="pop enter" data-saved-filter-values role="menu" aria-label={`${savedFilterFields.find(([field]) => field === valueFilter.f)?.[1] || valueFilter.f} ${valueFilter.op === 'not' ? 'is not' : 'is'}`} style={`left:${savedValuePosition.left}px;top:${savedValuePosition.top}px;width:200px`}>
-            <div class="mh">{savedFilterFields.find(([field]) => field === valueFilter.f)?.[1] || valueFilter.f} {valueFilter.op === 'not' ? 'is not' : 'is'}</div>
-            {#each filterOptions(valueFilter) as option (option.id)}<label class="mi" style="cursor:pointer"><input type="checkbox" class="check" checked={valueFilter.v?.includes(String(option.id)) || false} onchange={() => toggleSavedViewFilterValue(savedValueOpenIndex, String(option.id))} />{@html savedFilterOptionIcon(valueFilter, option)}{option.name}</label>{/each}
-          </Dropdown>
+          <Dropdown
+            config={{
+              className: 'pop enter', dataAttributes: { 'data-saved-filter-values': true }, role: 'menu',
+              label: `${savedFilterFields.find(([field]) => field === valueFilter.f)?.[1] || valueFilter.f} ${valueFilter.op === 'not' ? 'is not' : 'is'}`,
+              style: `left:${savedValuePosition.left}px;top:${savedValuePosition.top}px;width:200px`,
+              items: filterValueDropdownItems('saved', savedValueOpenIndex),
+            }}
+            onAction={handleProjectDropdownAction}
+          />
         {/if}
         {#if savedViewError}<div class="alert danger" role="alert">{savedViewError}</div>{/if}
         <WorkspaceTaskList groups={savedViewGroups} {projects} members={project.members || []} {workspaceData} columns={['status', 'assignee', 'priority', 'due', 'labels']} onOpen={task => drawerTaskId = task.id} onUpdate={updateSavedViewTask} onCreate={createSavedViewTask} />
@@ -1300,11 +2732,15 @@
         {#if tableCellMenu}
           {@const boardMenuTask = tasks.find(item => item.id === tableCellMenu.taskId)}
           {#if boardMenuTask && ['priority', 'assignee', 'due'].includes(tableCellMenu.field)}
-            <Dropdown class="pop floating enter" data-board-card-menu data-table-cell-menu role="menu" aria-label={tableCellMenu.field === 'due' ? 'Due date' : tableCellMenu.field} style={`left:${tableCellMenu.left}px;top:${tableCellMenu.top}px;z-index:50;width:${tableCellMenu.field === 'assignee' ? 240 : 220}px`}>
-              {#if tableCellMenu.field === 'priority'}<div class="mh">Priority</div>{#each ['urgent', 'high', 'medium', 'low', 'none'] as priority (priority)}<button type="button" class="mi" role="menuitemradio" aria-checked={boardMenuTask.priority === priority} onclick={() => updateTableTask(boardMenuTask, { priority })}>{@html prIcon(priority, 14)}{priority === 'none' ? 'No priority' : priority[0].toUpperCase() + priority.slice(1)}{#if boardMenuTask.priority === priority}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
-              {:else if tableCellMenu.field === 'assignee'}<div class="mh">Assign to</div><div class="pin"><input bind:value={tableCellQuery} placeholder="Assign to…" aria-label="Assign to…" /></div><button type="button" class="mi" role="menuitemradio" aria-checked={!boardMenuTask.assignee_id} onclick={() => updateTableTask(boardMenuTask, { assignee_id: null })}>{@html ic('user-round', 14)}Unassigned{#if !boardMenuTask.assignee_id}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{#each sourceMembers.filter(member => member.database_id && member.name.toLowerCase().includes(tableCellQuery.trim().toLowerCase())) as member (member.database_id)}<button type="button" class="mi" role="menuitemradio" aria-checked={String(boardMenuTask.assignee_id) === String(member.database_id)} onclick={() => updateTableTask(boardMenuTask, { assignee_id: member.database_id })}><span class="av sm" style={`--c:${member.c || '#8A867E'}`}>{memberInitials(member.name)}</span><span class="trunc">{member.name}</span>{#if String(boardMenuTask.assignee_id) === String(member.database_id)}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
-              {:else}<div class="mh">Due date</div><div class="row" style="gap:4px;padding:4px;flex-wrap:wrap">{#each [['Today', 0], ['Tomorrow', 1], ['Next week', 7], ['In 2 weeks', 14]] as [label, days] (label)}<button type="button" class="badge" onclick={() => setTableTaskDate(boardMenuTask, 'due', tableQuickDate(days))}>{label}</button>{/each}{#if boardMenuTask.due_date}<button type="button" class="badge" onclick={() => setTableTaskDate(boardMenuTask, 'due', '')}>Clear</button>{/if}</div><div class="msep"></div><div class="pin"><input type="date" aria-label="Due date" value={String(boardMenuTask.due_date || '').slice(0, 10)} onchange={event => setTableTaskDate(boardMenuTask, 'due', event.currentTarget.value)} /></div>{/if}
-            </Dropdown>
+            <Dropdown
+              config={{
+                className: 'pop floating enter', dataAttributes: { 'data-board-card-menu': true, 'data-table-cell-menu': true }, role: 'menu',
+                label: tableCellMenu.field === 'due' ? 'Due date' : tableCellMenu.field,
+                style: `left:${tableCellMenu.left}px;top:${tableCellMenu.top}px;z-index:50;width:${tableCellMenu.field === 'assignee' ? 240 : 220}px`,
+                items: tableCellDropdownItems(boardMenuTask),
+              }}
+              onAction={handleProjectDropdownAction}
+            />
           {/if}
         {/if}
       {:else if tab === 'list'}
@@ -1316,44 +2752,37 @@
           <span class="sp"></span><Button type="button" variant="primary" size="sm" onclick={() => openCreateTask()}>{@html ic('plus', 13)}New task</Button>
         </div>
         {#if projectListMenu === 'filter'}
-          <Dropdown class="pop enter fbuild" data-project-list-menu role="dialog" aria-label="Filter by" style={`position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:min(560px,calc(100vw - 16px));max-width:min(560px,calc(100vw - 16px));z-index:40`}>
-            <div class="mh fb-h">Filter by{#if projectListFilters.length}<Button type="button" variant="ghost" size="sm" onclick={clearProjectListFilters}>Clear all</Button>{/if}</div>
-            {#if projectListFilters.length}
-              <div class="fb-rows">
-                {#each projectListFilters as filter, index (index)}
-                  <div class="frow">
-                    <span class="conj">{index ? 'and' : 'Where'}</span>
-                    <Select class="select" aria-label="Field" value={filter.f} onchange={event => { updateProjectListFilter(index, { f: event.currentTarget.value, v: [] }); projectListFilterEditIndex = index; }}>
-                      {#each savedFilterFields as [field, label] (field)}<option value={field}>{label}</option>{/each}
-                    </Select>
-                    <Select class="select" aria-label="Operator" value={filter.op} onchange={event => updateProjectListFilter(index, { op: event.currentTarget.value })}><option value="is">is</option><option value="not">is not</option></Select>
-                    <button type="button" class="valbtn" aria-label={`Values for ${savedFilterFields.find(([field]) => field === filter.f)?.[1] || filter.f}`} aria-expanded={projectListFilterEditIndex === index} onclick={() => { projectListFilterEditIndex = projectListFilterEditIndex === index ? null : index; projectListValueOpenIndex = null; }}><span class="trunc grow">{#if filter.v.length}{filterOptions(filter).filter(option => filter.v.includes(String(option.id))).map(option => option.name).join(', ')}{:else}<span class="faint">Select…</span>{/if}</span>{@html ic('chevron-down', 12)}</button>
-                    <button type="button" class="ibtn ibtn-xs" aria-label="Remove filter" onclick={() => removeProjectListFilter(index)}>{@html ic('trash-2', 13)}</button>
-                  </div>
-                  {#if projectListFilterEditIndex === index}<div style="margin-left:50px;border:1px solid var(--border);border-radius:var(--r);padding:4px;max-height:200px;overflow:auto">{#each filterOptions(filter) as option (option.id)}<label class="mi" style="cursor:pointer;min-height:28px"><input type="checkbox" class="check" checked={filter.v.includes(String(option.id))} onchange={() => toggleProjectListFilterValue(index, String(option.id))} />{@html savedFilterOptionIcon(filter, option)}{option.name}</label>{/each}</div>{/if}
-                {/each}
-              </div>
-            {:else}<p class="fb-empty">No filters applied. Combine filters to narrow the task list, e.g. Status is In Progress and Assignee is Sarah.</p>{/if}
-            <div class="msep"></div><div class="fb-add"><span class="faint">Add filter:</span>{#each savedFilterFields as [field, label, icon] (field)}<button type="button" class="badge" style="cursor:pointer" onclick={() => addProjectListFilter(field)}>{@html ic(icon, 11)}{label}</button>{/each}</div>
-          </Dropdown>
+          <Dropdown
+            config={{
+              className: 'pop enter fbuild', dataAttributes: { 'data-project-list-menu': true }, role: 'dialog', label: 'Filter by',
+              style: `position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:min(560px,calc(100vw - 16px));max-width:min(560px,calc(100vw - 16px));z-index:40`,
+              items: filterBuilderDropdownItems('project-list'),
+            }}
+            onAction={handleProjectDropdownAction}
+          />
         {:else if projectListMenu === 'sort'}
-          <Dropdown class="pop enter" data-project-list-menu role="menu" aria-label="Sort tasks" style={`position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:240px;z-index:40`}>
-            <div class="mh">Sort by</div>
-            {#each [['manual', 'Manual'], ['priority', 'Priority'], ['due', 'Due date'], ['start', 'Start date'], ['title', 'Title'], ['status', 'Status'], ['assignee', 'Assignee'], ['created', 'Created'], ['updated', 'Last updated']] as [value, label] (value)}<button type="button" class="mi" role="menuitemradio" aria-checked={projectListSort === value} onclick={() => projectListSort = value}>{label}{#if projectListSort === value}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
-            <div class="msep"></div><div class="seg" style="margin:6px"><button type="button" class:on={projectListSortDirection > 0} onclick={() => projectListSortDirection = 1}>{@html ic('arrow-up', 12)}Ascending</button><button type="button" class:on={projectListSortDirection < 0} onclick={() => projectListSortDirection = -1}>{@html ic('arrow-down', 12)}Descending</button></div>
-          </Dropdown>
+          <Dropdown
+            config={{ className: 'pop enter', dataAttributes: { 'data-project-list-menu': true }, role: 'menu', label: 'Sort tasks', style: `position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:240px;z-index:40`, items: projectListSortDropdownItems() }}
+            onAction={handleProjectDropdownAction}
+          />
         {:else if projectListMenu === 'group'}
-          <Dropdown class="pop enter" data-project-list-menu role="menu" aria-label="Group tasks" style={`position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:180px;z-index:40`}>
-            {#each [['status', 'Status'], ['priority', 'Priority'], ['assignee', 'Assignee'], ['project', 'Project'], ['due', 'Due date'], ['none', 'None']] as [value, label] (value)}<button type="button" class="mi" role="menuitemradio" aria-checked={projectListGroup === value} onclick={() => { projectListGroup = value; projectListMenu = null; }}>{label}{#if projectListGroup === value}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
-          </Dropdown>
+          <Dropdown
+            config={{ className: 'pop enter', dataAttributes: { 'data-project-list-menu': true }, role: 'menu', label: 'Group tasks', style: `position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:180px;z-index:40`, items: projectListGroupDropdownItems() }}
+            onAction={handleProjectDropdownAction}
+          />
         {/if}
         {#if projectListFilters.length}<div class="chipsbar">{@html ic('list-filter', 13)}{#each projectListFilters as filter, index (index)}<span class="chip"><button type="button" aria-label={`Values for ${savedFilterFields.find(([field]) => field === filter.f)?.[1] || filter.f}`} aria-expanded={projectListValueOpenIndex === index} onclick={event => { const bounds = event.currentTarget.getBoundingClientRect(); projectListMenuPosition = { left: Math.max(8, Math.min(bounds.left, window.innerWidth - 208)), top: Math.min(bounds.bottom + 4, window.innerHeight - 220) }; projectListValueOpenIndex = projectListValueOpenIndex === index ? null : index; }}>{@html ic(savedFilterFields.find(([field]) => field === filter.f)?.[2] || 'list-filter', 12)}<b>{savedFilterFields.find(([field]) => field === filter.f)?.[1] || filter.f}</b> {filter.op === 'not' ? 'is not' : 'is'} <span>{filter.v.length ? filterOptions(filter).filter(option => filter.v.includes(String(option.id))).map(option => option.name).join(', ') : 'any'}</span></button><button class="ibtn" type="button" aria-label="Remove filter" onclick={() => removeProjectListFilter(index)}>{@html ic('x', 12)}</button></span>{#if index < projectListFilters.length - 1}<span class="muted">and</span>{/if}{/each}<Button type="button" variant="ghost" size="sm" data-project-list-menu-trigger aria-haspopup="dialog" onclick={event => toggleProjectListMenu(event, 'filter')}>{@html ic('plus', 12)}Add</Button><span class="sp"></span><Button type="button" variant="ghost" size="sm" onclick={clearProjectListFilters}>Clear all</Button></div>{/if}
         {#if projectListValueOpenIndex !== null && projectListFilters[projectListValueOpenIndex]}
           {@const valueFilter = projectListFilters[projectListValueOpenIndex]}
-          <Dropdown class="pop enter" data-project-list-menu role="menu" aria-label={`${savedFilterFields.find(([field]) => field === valueFilter.f)?.[1] || valueFilter.f} ${valueFilter.op === 'not' ? 'is not' : 'is'}`} style={`position:fixed;left:${projectListMenuPosition.left}px;top:${projectListMenuPosition.top}px;width:200px;z-index:41`}>
-            <div class="mh">{savedFilterFields.find(([field]) => field === valueFilter.f)?.[1] || valueFilter.f} {valueFilter.op === 'not' ? 'is not' : 'is'}</div>
-            {#each filterOptions(valueFilter) as option (option.id)}<label class="mi" style="cursor:pointer"><input type="checkbox" class="check" checked={valueFilter.v.includes(String(option.id))} onchange={() => toggleProjectListFilterValue(projectListValueOpenIndex, String(option.id))} />{@html savedFilterOptionIcon(valueFilter, option)}{option.name}</label>{/each}
-          </Dropdown>
+          <Dropdown
+            config={{
+              className: 'pop enter', dataAttributes: { 'data-project-list-menu': true }, role: 'menu',
+              label: `${savedFilterFields.find(([field]) => field === valueFilter.f)?.[1] || valueFilter.f} ${valueFilter.op === 'not' ? 'is not' : 'is'}`,
+              style: `position:fixed;left:${projectListMenuPosition.left}px;top:${projectListMenuPosition.top}px;width:200px;z-index:41`,
+              items: filterValueDropdownItems('project-list', projectListValueOpenIndex),
+            }}
+            onAction={handleProjectDropdownAction}
+          />
         {/if}
         <div>
           {#if projectOverviewStatusFilter}<div class="row" style="padding-bottom:10px"><span class="faint">Status: {statusName(projectOverviewStatusFilter)}</span><Button type="button" variant="ghost" size="sm" onclick={() => projectOverviewStatusFilter = ''}>Clear filter</Button></div>{/if}
@@ -1369,17 +2798,29 @@
           <span class="sp"></span><Button type="button" variant="primary" size="sm" onclick={() => openCreateTask()}>{@html ic('plus', 13)}New task</Button>
         </div>
         {#if projectListMenu === 'filter'}
-          <Dropdown class="pop enter fbuild" data-project-list-menu role="dialog" aria-label="Filter by" style={`position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:min(560px,calc(100vw - 16px));max-width:min(560px,calc(100vw - 16px));z-index:40`}>
-            <div class="mh fb-h">Filter by{#if projectListFilters.length}<Button type="button" variant="ghost" size="sm" onclick={clearProjectListFilters}>Clear all</Button>{/if}</div>
-            {#if projectListFilters.length}<div class="fb-rows">{#each projectListFilters as filter, index (index)}<div class="frow"><span class="conj">{index ? 'and' : 'Where'}</span><Select class="select" aria-label="Field" value={filter.f} onchange={event => { updateProjectListFilter(index, { f: event.currentTarget.value, v: [] }); projectListFilterEditIndex = index; }}><option value="status">Status</option><option value="assignee">Assignee</option><option value="priority">Priority</option><option value="due">Due date</option><option value="project">Project</option><option value="labels">Labels</option><option value="created">Created date</option><option value="updated">Updated date</option></Select><Select class="select" aria-label="Operator" value={filter.op} onchange={event => updateProjectListFilter(index, { op: event.currentTarget.value })}><option value="is">is</option><option value="not">is not</option></Select><button type="button" class="valbtn" aria-label={`Values for ${filter.f}`} onclick={() => projectListFilterEditIndex = projectListFilterEditIndex === index ? null : index}><span class="trunc grow">{filter.v.length ? filterOptions(filter).filter(option => filter.v.includes(String(option.id))).map(option => option.name).join(', ') : 'Select…'}</span>{@html ic('chevron-down', 12)}</button><button type="button" class="ibtn ibtn-xs" aria-label="Remove filter" onclick={() => removeProjectListFilter(index)}>{@html ic('trash-2', 13)}</button></div>{#if projectListFilterEditIndex === index}<div style="margin-left:50px;border:1px solid var(--border);border-radius:var(--r);padding:4px;max-height:200px;overflow:auto">{#each filterOptions(filter) as option (option.id)}<label class="mi" style="cursor:pointer;min-height:28px"><input type="checkbox" class="check" checked={filter.v.includes(String(option.id))} onchange={() => toggleProjectListFilterValue(index, String(option.id))} />{option.name}</label>{/each}</div>{/if}{/each}</div>{:else}<p class="fb-empty">No filters applied. Combine filters to narrow the task list.</p>{/if}
-            <div class="msep"></div><div class="fb-add"><span class="faint">Add filter:</span>{#each [['status', 'Status'], ['assignee', 'Assignee'], ['priority', 'Priority'], ['due', 'Due date'], ['project', 'Project'], ['labels', 'Labels'], ['created', 'Created date'], ['updated', 'Updated date']] as [field, label] (field)}<button type="button" class="badge" style="cursor:pointer" onclick={() => addProjectListFilter(field)}>{label}</button>{/each}</div>
-          </Dropdown>
+          <Dropdown
+            config={{
+              className: 'pop enter fbuild', dataAttributes: { 'data-project-list-menu': true }, role: 'dialog', label: 'Filter by',
+              style: `position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:min(560px,calc(100vw - 16px));max-width:min(560px,calc(100vw - 16px));z-index:40`,
+              items: filterBuilderDropdownItems('project-list'),
+            }}
+            onAction={handleProjectDropdownAction}
+          />
         {:else if projectListMenu === 'sort'}
-          <Dropdown class="pop enter" data-project-list-menu role="menu" aria-label="Sort tasks" style={`position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:240px;z-index:40`}><div class="mh">Sort by</div>{#each [['manual', 'Manual'], ['priority', 'Priority'], ['due', 'Due date'], ['start', 'Start date'], ['title', 'Title'], ['status', 'Status'], ['assignee', 'Assignee'], ['created', 'Created'], ['updated', 'Last updated']] as [value, label] (value)}<button type="button" class="mi" role="menuitemradio" aria-checked={projectListSort === value} onclick={() => projectListSort = value}>{label}{#if projectListSort === value}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}<div class="msep"></div><div class="seg" style="margin:6px"><button type="button" class:on={projectListSortDirection > 0} onclick={() => projectListSortDirection = 1}>{@html ic('arrow-up', 12)}Ascending</button><button type="button" class:on={projectListSortDirection < 0} onclick={() => projectListSortDirection = -1}>{@html ic('arrow-down', 12)}Descending</button></div></Dropdown>
+          <Dropdown
+          config={{ className: 'pop enter', dataAttributes: { 'data-project-list-menu': true }, role: 'menu', label: 'Sort tasks', style: `position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:240px;z-index:40`, items: projectListSortDropdownItems() }}
+          onAction={handleProjectDropdownAction}
+        />
         {:else if projectListMenu === 'group'}
-          <Dropdown class="pop enter" data-project-list-menu role="menu" aria-label="Group tasks" style={`position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:180px;z-index:40`}>{#each [['status', 'Status'], ['priority', 'Priority'], ['assignee', 'Assignee'], ['project', 'Project'], ['due', 'Due date'], ['none', 'None']] as [value, label] (value)}<button type="button" class="mi" role="menuitemradio" aria-checked={projectListGroup === value} onclick={() => { projectListGroup = value; projectListMenu = null; }}>{label}{#if projectListGroup === value}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}</Dropdown>
+          <Dropdown
+          config={{ className: 'pop enter', dataAttributes: { 'data-project-list-menu': true }, role: 'menu', label: 'Group tasks', style: `position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:180px;z-index:40`, items: projectListGroupDropdownItems() }}
+          onAction={handleProjectDropdownAction}
+        />
         {:else if projectListMenu === 'columns'}
-          <Dropdown class="pop enter" data-project-list-menu role="menu" aria-label="Table columns" style={`position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:200px;z-index:40`}><div class="mh">Visible columns</div>{#each projectTableColumnDefinitions.slice(1) as [field, label] (field)}<label class="mi" style="cursor:pointer"><input type="checkbox" class="check" checked={!projectTableHidden.includes(field)} onchange={() => toggleProjectTableColumn(field)} />{label}</label>{/each}<div class="msep"></div><button type="button" class="mi" role="menuitem" onclick={resetProjectTableColumnWidths}>{@html ic('rotate-ccw', 14)}Reset widths</button></Dropdown>
+          <Dropdown
+          config={{ className: 'pop enter', dataAttributes: { 'data-project-list-menu': true }, role: 'menu', label: 'Table columns', style: `position:fixed;top:${projectListMenuPosition.top}px;left:${projectListMenuPosition.left}px;width:200px;z-index:40`, items: projectTableColumnsDropdownItems() }}
+          onAction={handleProjectDropdownAction}
+        />
         {/if}
         {#if projectListFilters.length}<div class="chipsbar">{@html ic('list-filter', 13)}{#each projectListFilters as filter, index (index)}<span class="chip"><button type="button" aria-label={`Values for ${filter.f}`} onclick={event => { const bounds = event.currentTarget.getBoundingClientRect(); projectListMenuPosition = { left: Math.max(8, Math.min(bounds.left, window.innerWidth - 208)), top: Math.min(bounds.bottom + 4, window.innerHeight - 220) }; projectListFilterEditIndex = projectListFilterEditIndex === index ? null : index; projectListMenu = 'filter'; }}>{filter.f} is {filter.v.length ? filterOptions(filter).filter(option => filter.v.includes(String(option.id))).map(option => option.name).join(', ') : 'any'}</button><button type="button" class="ibtn" aria-label="Remove filter" onclick={() => removeProjectListFilter(index)}>{@html ic('x', 12)}</button></span>{/each}<span class="sp"></span><Button type="button" variant="ghost" size="sm" onclick={clearProjectListFilters}>Clear all</Button></div>{/if}
         {#if projectListTasks.length}
@@ -1390,7 +2831,17 @@
               {#each group.tasks as task (task.id)}<tr>
                 {#each projectTableColumns as [field] (field)}
                   {#if field === 'title'}<td class="sticky cellbtn" role="button" tabindex="0" title="Double-click to rename" onclick={() => tableTitleEditId !== task.id && (drawerTaskId = task.id)} ondblclick={event => { event.stopPropagation(); tableTitleEditId = task.id; tableTitleDraft = task.title; }} onkeydown={event => event.key === 'Enter' && tableTitleEditId !== task.id && (drawerTaskId = task.id)}>{#if tableTitleEditId === task.id}<input class="inline-in" aria-label="Title" value={tableTitleDraft} oninput={event => tableTitleDraft = event.currentTarget.value} onclick={event => event.stopPropagation()} onkeydown={event => { if (event.key === 'Enter') saveTableText(task, 'title'); if (event.key === 'Escape') tableTitleEditId = null; }} onblur={() => saveTableText(task, 'title')} />{:else}<span class="row" style="gap:8px">{@html stIcon(task.status, 13)}<span class="trunc" style="font-weight:450">{task.title}</span><span class="mono faint" style="font-size:11px;margin-left:auto">{task.key}</span></span>{/if}</td>
-                  {:else if field === 'status'}<td class="cellbtn"><div class="status-picker"><button type="button" class="pillbtn" aria-label={`Status: ${statusName(task.status)}`} aria-haspopup="menu" aria-expanded={statusMenu?.taskId === task.id} onclick={event => toggleStatusMenu(event, task)}>{@html stIcon(task.status, 13)}<span>{statusName(task.status)}</span></button>{#if statusMenu?.taskId === task.id}<Dropdown class="pop floating enter" role="menu" style={`left:${statusMenu.left}px;top:${statusMenu.top}px`}>{#each columns as option}<button type="button" class="mi" role="menuitemradio" aria-checked={task.status === option.id} onclick={() => chooseStatus(task, option.id)}>{@html stIcon(option.id, 14)}<span class="trunc">{option.name}</span>{#if task.status === option.id}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}</Dropdown>{/if}</div></td>
+                  {:else if field === 'status'}<td class="cellbtn"><div class="status-picker"><button type="button" class="pillbtn" aria-label={`Status: ${statusName(task.status)}`} aria-haspopup="menu" aria-expanded={statusMenu?.taskId === task.id} onclick={event => toggleStatusMenu(event, task)}>{@html stIcon(task.status, 13)}<span>{statusName(task.status)}</span></button>{#if statusMenu?.taskId === task.id}<Dropdown
+                    config={{
+                      className: 'pop floating enter', role: 'menu',
+                      style: `left:${statusMenu.left}px;top:${statusMenu.top}px`,
+                      items: columns.map(option => ({
+                        id: `task-status-${option.id}`, type: 'action', action: 'choose-status', payload: option.id,
+                        role: 'menuitemradio', checked: task.status === option.id, graphic: { type: 'status', value: option.id }, label: option.name,
+                      })),
+                    }}
+                    onAction={handleProjectDropdownAction}
+                  />{/if}</div></td>
                   {:else if field === 'priority'}<td class="cellbtn" role="button" tabindex="0" data-table-cell-menu-trigger onclick={event => openTableCellMenu(event, task, 'priority')}>{@html prIcon(task.priority, 13)}<span style="margin-left:6px">{task.priority === 'none' ? '—' : task.priority[0].toUpperCase() + task.priority.slice(1)}</span></td>
                   {:else if field === 'assignee'}<td class="cellbtn" role="button" tabindex="0" data-table-cell-menu-trigger onclick={event => openTableCellMenu(event, task, 'assignee')}>{#if task.assignee}<span class="row" style="gap:6px"><span class="av sm" style={`--c:${task.assignee.color || task.assignee.c || '#8A867E'}`}>{memberInitials(task.assignee.name)}</span><span class="trunc">{task.assignee.name}</span></span>{:else}<span class="faint">Unassigned</span>{/if}</td>
                   {:else if field === 'due'}<td class="cellbtn num" role="button" tabindex="0" data-table-cell-menu-trigger onclick={event => openTableCellMenu(event, task, 'due')}>{task.due_date ? formatDate(task.due_date) : '—'}</td>
@@ -1403,13 +2854,15 @@
                 {/each}
                 {#if tableCellMenu?.taskId === task.id}
                   <td style="display:contents">
-                  <Dropdown class="pop floating enter" data-table-cell-menu role="menu" aria-label={tableCellMenu.field === 'due' || tableCellMenu.field === 'start' ? `${tableCellMenu.field} date` : tableCellMenu.field} style={`left:${tableCellMenu.left}px;top:${tableCellMenu.top}px;z-index:50;width:${tableCellMenu.field === 'assignee' ? 240 : 220}px`}>
-                    {#if tableCellMenu.field === 'priority'}<div class="mh">Priority</div>{#each ['urgent', 'high', 'medium', 'low', 'none'] as priority (priority)}<button type="button" class="mi" role="menuitemradio" aria-checked={task.priority === priority} onclick={() => updateTableTask(task, { priority })}>{@html prIcon(priority, 14)}{priority === 'none' ? 'No priority' : priority[0].toUpperCase() + priority.slice(1)}{#if task.priority === priority}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
-                    {:else if tableCellMenu.field === 'assignee'}<div class="mh">Assign to</div><div class="pin"><input bind:value={tableCellQuery} placeholder="Assign to…" aria-label="Assign to…" /></div><button type="button" class="mi" role="menuitemradio" aria-checked={!task.assignee_id} onclick={() => updateTableTask(task, { assignee_id: null })}>{@html ic('user-round', 14)}Unassigned{#if !task.assignee_id}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{#each sourceMembers.filter(member => member.database_id && member.name.toLowerCase().includes(tableCellQuery.trim().toLowerCase())) as member (member.database_id)}<button type="button" class="mi" role="menuitemradio" aria-checked={String(task.assignee_id) === String(member.database_id)} onclick={() => updateTableTask(task, { assignee_id: member.database_id })}><span class="av sm" style={`--c:${member.c || '#8A867E'}`}>{memberInitials(member.name)}</span><span class="trunc">{member.name}</span>{#if String(task.assignee_id) === String(member.database_id)}<span class="ck">{@html ic('check', 14)}</span>{/if}</button>{/each}
-                    {:else if tableCellMenu.field === 'due' || tableCellMenu.field === 'start'}{@const dateField = tableCellMenu.field}<div class="mh">{dateField === 'due' ? 'Due date' : 'Start date'}</div><div class="row" style="gap:4px;padding:4px;flex-wrap:wrap">{#each [['Today', 0], ['Tomorrow', 1], ['Next week', 7], ['In 2 weeks', 14]] as [label, days] (label)}<button type="button" class="badge" onclick={() => setTableTaskDate(task, dateField, tableQuickDate(days))}>{label}</button>{/each}{#if task[dateField === 'due' ? 'due_date' : 'start_date']}<button type="button" class="badge" onclick={() => setTableTaskDate(task, dateField, '')}>Clear</button>{/if}</div><div class="msep"></div><div class="pin"><input type="date" aria-label={dateField === 'due' ? 'Due date' : 'Start date'} value={String(task[dateField === 'due' ? 'due_date' : 'start_date'] || '').slice(0, 10)} onchange={event => setTableTaskDate(task, dateField, event.currentTarget.value)} /></div>
-                    {:else if tableCellMenu.field === 'labels'}<div class="mh">Labels</div><div class="pin"><input bind:value={tableCellQuery} placeholder="Filter labels…" aria-label="Filter labels…" /></div>{#each LABELS.filter(label => label.name.toLowerCase().includes(tableCellQuery.trim().toLowerCase())) as label (label.id)}<label class="mi" style="cursor:pointer"><input type="checkbox" class="check" checked={(task.labels || []).includes(label.id)} onchange={() => toggleTableTaskValue(task, 'labels', label.id)} />{label.name}</label>{/each}
-                    {:else if tableCellMenu.field === 'deps'}<div class="mh">Dependencies</div><div class="pin"><input bind:value={tableCellQuery} placeholder="Search tasks…" aria-label="Search tasks…" /></div>{#each tasks.filter(item => item.id !== task.id && `${item.key} ${item.title}`.toLowerCase().includes(tableCellQuery.trim().toLowerCase())) as dependency (dependency.id)}<label class="mi" style="cursor:pointer"><input type="checkbox" class="check" checked={(task.dependencies || []).includes(dependency.source_key)} onchange={() => toggleTableTaskValue(task, 'dependencies', dependency.source_key)} />{dependency.key} · {dependency.title}</label>{/each}{/if}
-                  </Dropdown>
+                  <Dropdown
+                    config={{
+                      className: 'pop floating enter', dataAttributes: { 'data-table-cell-menu': true, 'data-board-card-menu': true },
+                      role: 'menu', label: tableCellMenu.field === 'due' || tableCellMenu.field === 'start' ? `${tableCellMenu.field} date` : tableCellMenu.field,
+                      style: `left:${tableCellMenu.left}px;top:${tableCellMenu.top}px;z-index:50;width:${tableCellMenu.field === 'assignee' ? 240 : 220}px`,
+                      items: tableCellDropdownItems(task),
+                    }}
+                    onAction={handleProjectDropdownAction}
+                  />
                   </td>
                 {/if}
               </tr>{/each}
@@ -1479,14 +2932,14 @@
   </div>
 
   {#if fileMenu}
-    <Dropdown class="pop enter" data-file-menu role="menu" tabindex="-1" style={`left:${fileMenuPosition.left}px;top:${fileMenuPosition.top}px`} onpointerdown={event => event.stopPropagation()}>
-      <button type="button" class="mi" role="menuitem" onclick={() => { selectedFile = fileMenu; fileMenu = null; }}>{@html ic('eye', 15)}Preview</button>
-      <button type="button" class="mi" role="menuitem" onclick={() => { fileRenameTarget = fileMenu; fileRenameName = fileMenu.name; fileMenu = null; }}>{@html ic('pencil', 15)}Rename</button>
-      <button type="button" class="mi" role="menuitem" onclick={() => { void copyProjectFileLink(fileMenu); fileMenu = null; }}>{@html ic('link', 15)}Copy link</button>
-      <button type="button" class="mi" role="menuitem" onclick={() => { duplicateProjectFile(fileMenu); fileMenu = null; }}>{@html ic('copy', 15)}Duplicate</button>
-      <div class="msep"></div>
-      <button type="button" class="mi danger" role="menuitem" onclick={() => { fileDeleteTarget = fileMenu; fileMenu = null; }}>{@html ic('trash-2', 15)}Delete</button>
-    </Dropdown>
+    <Dropdown
+      config={{
+        className: 'pop enter', dataAttributes: { 'data-file-menu': true }, role: 'menu', tabIndex: -1,
+        stopPointerDownPropagation: true, style: `left:${fileMenuPosition.left}px;top:${fileMenuPosition.top}px`,
+        items: projectFileMenuItems(),
+      }}
+      onAction={handleProjectDropdownAction}
+    />
   {/if}
   {#if fileRenameTarget}
     <div class="modal-wrap" transition:fade={{ duration: 180 }} role="presentation" onclick={event => event.target === event.currentTarget && (fileRenameTarget = null)}>
