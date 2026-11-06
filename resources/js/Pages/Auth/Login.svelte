@@ -1,8 +1,8 @@
 <script>
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
+  import PasswordInput from "../../Components/PasswordInput.svelte";
   import { useForm } from '@inertiajs/svelte';
-  import { tick } from 'svelte';
   import { register } from '../../routes';
   import { store as loginRoute } from '../../routes/login';
   import { request as passwordRequest } from '../../routes/password';
@@ -11,14 +11,7 @@
   import AuthThemeToggle from '../../Components/AuthThemeToggle.svelte';
 
   let { status = null } = $props();
-  let showPassword = $state(false);
   const form = useForm({ email: 'hello@gr8rstudio.com', password: '', remember: true });
-
-  async function togglePasswordVisibility() {
-    showPassword = !showPassword;
-    await tick();
-    document.getElementById('l-pw')?.focus();
-  }
 
   async function submit(event) {
     event.preventDefault();
@@ -52,10 +45,7 @@
       </div>
       <div class="field">
         <div class="row"><Label for="l-pw">Password</Label><span class="sp"></span><a class="link" href={passwordRequest.url()}>Forgot password?</a></div>
-        <div class="inwrap">
-          <Input size="large" class="auth-password-input" error={!!form.errors.password} id="l-pw" type={showPassword ? 'text' : 'password'} bind:value={form.password} autocomplete="current-password" style="padding-right:38px" />
-          <button type="button" class="ibtn ibtn-sm" style="position:absolute;right:5px" onclick={togglePasswordVisibility} aria-label={showPassword ? 'Hide password' : 'Show password'}>{@html ic(showPassword ? 'eye-off' : 'eye', 15)}</button>
-        </div>
+        <PasswordInput size="large" error={!!form.errors.password} id="l-pw" bind:value={form.password} autocomplete="current-password" revealable />
         {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{/if}
       </div>
       <label class="row" style="font-size:13px;gap:8px;cursor:pointer"><input type="checkbox" class="check" bind:checked={form.remember} />Remember me for 30 days</label>

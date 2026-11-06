@@ -1,6 +1,7 @@
 <script>
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
+  import PasswordInput from "../../Components/PasswordInput.svelte";
   import { useForm } from '@inertiajs/svelte';
   import { store as registerRoute } from '../../routes/register';
   import { login } from '../../routes';
@@ -49,7 +50,7 @@
       </div>
       <div class="field">
         <Label for="s-pw">Password</Label>
-        <Input size="large" error={!!form.errors.password} id="s-pw" type="password" bind:value={form.password} autocomplete="new-password" required />
+        <PasswordInput size="large" error={!!form.errors.password} id="s-pw" bind:value={form.password} autocomplete="new-password" required />
         {@html strengthMeter(form.password)}
         {#if form.errors.password}<span class="err">{@html ic('circle-alert', 12)}{form.errors.password}</span>{:else}<span class="hint">At least 10 characters with a number or symbol.</span>{/if}
       </div>
