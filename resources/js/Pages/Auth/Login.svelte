@@ -5,6 +5,7 @@
   import Label from "../../Components/Label.svelte";
   import Input from "../../Components/Input.svelte";
   import InputPassword from "../../Components/InputPassword.svelte";
+  import Checkbox from "../../Components/Checkbox.svelte";
   import { useForm } from '@inertiajs/svelte';
   import { register } from '../../routes';
   import { store as loginRoute } from '../../routes/login';
@@ -43,7 +44,7 @@
         <InputPassword size="large" error={!!form.errors.password} id="l-pw" bind:value={form.password} autocomplete="current-password" revealable />
         {#if form.errors.password}<ErrorMessage message={form.errors.password} />{/if}
       </div>
-      <label class="row" style="font-size:13px;gap:8px;cursor:pointer"><input type="checkbox" class="check" bind:checked={form.remember} />Remember me for 30 days</label>
+      <label class="row" style="font-size:13px;gap:8px;cursor:pointer"><Checkbox bind:checked={form.remember} />Remember me for 30 days</label>
       <Button variant="primary" size="lg" block loading={form.processing} disabled={form.processing}>{form.processing ? 'Signing in…' : 'Sign in'}</Button>
       <div class="or">or</div>
       <AuthSocialButtons />
